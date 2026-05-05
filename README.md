@@ -7,8 +7,9 @@ git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
 cd YOUR_REPO_NAME
 
 **🔹 2. Setup Backend**
-cd Backend
-npm install
+- cd Backend
+  
+- npm install
 
 **▶️ Start Backend Server:**
 npm start
@@ -17,8 +18,9 @@ npm start
 
 **Open new terminal:**
 
-cd Frontend
-npm install
+- cd Frontend
+  
+- npm install
 
 **▶️ Start Frontend:**
 
