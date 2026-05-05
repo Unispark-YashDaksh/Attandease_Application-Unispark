@@ -28,5 +28,7 @@ npm run dev
 
 **Important Notes**
 -Make sure Node.js is installed
+
 - .env file should be configured properly (if required)
--Do not upload node_modules to GitHub
+
+- Do not upload node_modules to GitHub
