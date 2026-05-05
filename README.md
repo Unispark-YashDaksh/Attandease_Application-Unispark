@@ -2,10 +2,11 @@
 
 **Follow the steps below to run the project locally 👇**
 
-🔹 1. Clone the Repository
+**🔹 1. Clone the Repository**
 git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
 cd YOUR_REPO_NAME
-🔹 2. Setup Backend
+
+**🔹 2. Setup Backend**
 cd Backend
 npm install
 
