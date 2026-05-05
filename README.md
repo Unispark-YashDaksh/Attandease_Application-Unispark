@@ -11,9 +11,9 @@ cd Backend
 npm install
 
 **▶️ Start Backend Server:**
-
 npm start
-🔹 3. Setup Frontend
+
+**🔹 3. Setup Frontend**
 
 **Open new terminal:**
 
