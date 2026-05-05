@@ -1,0 +1,88 @@
+/* Main Layout */
+.main-container {
+  padding: 20px;
+}
+
+/* Title */
+.title {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+/* Upload */
+.upload-box {
+  max-width: 400px;
+  margin-bottom: 20px;
+}
+
+/* Calendar Section */
+.calendar-section {
+  margin-top: 30px;
+}
+
+/* Center Calendar */
+.calendar-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Calendar Box */
+.react-calendar {
+  width: 100%;
+  max-width: 650px;
+  height: 520px;
+  border-radius: 12px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+
+/* Each Day Box */
+.react-calendar__tile {
+  height: 75px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+}
+
+/* Hover */
+.react-calendar__tile:hover {
+  background: #f0f0f0;
+}
+
+/* Selected Date */
+.react-calendar__tile--active {
+  background: #0d6efd !important;
+  color: white;
+}
+
+/* Today Highlight */
+.react-calendar__tile--now {
+  background: #fff3cd !important;
+}
+
+/* Holiday Text */
+.holiday-text {
+  color: red;
+  font-size: 10px;
+  margin-top: 4px;
+  text-align: center;
+}
+
+/* Navigation Header */
+.react-calendar__navigation {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Upcoming Box */
+.upcoming-box {
+  margin-top: 30px;
+  padding: 15px;
+  border-radius: 10px;
+  background: #f8f9fa;
+  max-width: 400px;
+}

@@ -1,0 +1,27 @@
+.SideBarList{
+    margin-bottom: 1rem;
+    list-style: none;
+    font-size: 1.5rem;
+    
+}
+
+.SideBarList a{
+    text-decoration: none;
+}
+
+.Stats-Div{
+    height: 5rem;
+    width: 10rem;
+    border: 1px solid black;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.large-stats-div{
+    height: 25rem;
+    width: 30rem;
+    border: 1px solid black;
+    border-radius: 10px;
+    margin: 0 auto;
+    text-align: center;
+}
