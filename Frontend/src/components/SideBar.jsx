@@ -15,10 +15,10 @@ function SideBar(){
                     <a href="dashbord">Dashboard</a>
                 </li>
                 <li className="SideBarList">
-                    <a href="/">Punch In/Out</a>
+                    <a href="/masterMmangement">Master Management</a>
                 </li>
                 <li className="SideBarList">
-                    <a href="LeaveManag">Leave Management</a>
+                    <a href="LeaveManag"></a>
                 </li>
                 <li className="SideBarList">
                     <a href="holidays">Holidays</a>
@@ -27,7 +27,7 @@ function SideBar(){
                     <a href="/">Reports</a>
                 </li>
                 <li className="SideBarList">
-                    <a href="/">Employees</a>
+                    <a href="/Employees">Employees</a>
                 </li>
                 <li className="SideBarList">
                     <a href="/">Settings</a>

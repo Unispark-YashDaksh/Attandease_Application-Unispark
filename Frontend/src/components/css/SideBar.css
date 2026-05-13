@@ -9,6 +9,10 @@
     text-decoration: none;
 }
 
+.SideBarList a{
+    font-size: 20px;
+}
+
 .Stats-Div{
     height: 5rem;
     width: 10rem;

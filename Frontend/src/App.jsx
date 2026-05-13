@@ -6,6 +6,8 @@ import Dashboard from './components/Dashboard';
 import LeaveManagement from './components/LeaveManagement';
 import './App.css'
 import HolidaysManagement from './components/HolidaysManagement';
+import Employees from './components/Employees';
+import MasterManagement from './components/MasterManagement';
 
 
 function App() {
@@ -20,7 +22,9 @@ function App() {
       >
        <Route path='dashbord' element= {<Dashboard/>}></Route>
        <Route path='LeaveManag' element={<LeaveManagement/>}></Route>
-        <Route path='holidays' element={<HolidaysManagement/>}></Route>
+       <Route path='holidays' element={<HolidaysManagement/>}></Route>
+        <Route path='masterMmangement' element={<MasterManagement/>}></Route>
+        <Route path='Employees' element={<Employees/>}></Route>
       </Route>
     </Routes>
     
