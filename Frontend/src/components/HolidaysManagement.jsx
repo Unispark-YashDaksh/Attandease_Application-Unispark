@@ -4,6 +4,8 @@ import "react-calendar/dist/Calendar.css";
 import "./css/calendar.css"
 import "./css/HolidayManagement.css"
 import * as XLSX from "xlsx";
+import { useEffect } from "react";
+import axios from "axios";
 function HolidaysManagement() {
     const [date, setDate] = useState(new Date()); // Selected Date stored
     const [holidays, setHolidays]= useState({}); // All Object stored in array
@@ -24,7 +26,7 @@ function HolidaysManagement() {
     }
 
     // Convert into Friendly format which is "YYYY-MM-DD"
-    //This fuction & logic how's work
+    //This fuction & logic how's works
     // 1----> Why Subtracted 25569------ because excel start counting from 1 Jan 1900 but javascript date starts counting from 1 Jan 1970 so there are 25569 days. between 1900 and 1970. so we subtract it to align with javascript system.
     const excelDateToJSDate= (excelDate)=>{
         const date= new Date((excelDate -25569)*86400*1000);
@@ -32,12 +34,65 @@ function HolidaysManagement() {
         //3------->  Why used ----- becuase JavaScirpt Date Works in milliseconds. not seconds.  so JS automatiicaly count this new Date(177746089256). ex=17746089256
         return date.toISOString().split("T")[0];
     }
+
+    // Fetch Holidays From DB
+const fetchHolidays = async () => {
+
+    try {
+
+        const response = await axios.get(
+            `http://localhost:8081/fetch-holidays`
+        );
+
+        const holidayObj = {};
+
+        const holidayArr = [];
+
+
+
+        response.data.result.forEach((item) => {
+            const formattedDate = new Date(item.holiday_date).toISOString().split("T")[0];
+            holidayObj[formattedDate] = item.holiday_name;
+
+            holidayArr.push({
+                date: formattedDate,
+                name: item.holiday_name
+            });
+
+        });
+
+
+
+
+        setHolidays(holidayObj);
+
+        setHolidayList(holidayArr);
+
+    }
+
+    catch (err) {
+
+        console.log(err);
+
+    }
+};
+
+
+
+
+// Component Load
+useEffect(() => {
+
+    fetchHolidays();
+
+}, []);
+
     const handleFileUpload=(e)=>{
         const file= e.target.files[0];
 
         const reader= new FileReader();
 
-        reader.onload= (event)=> {
+        reader.onload= async(event)=> {
             const data= new Uint8Array(event.target.result);
             const workbook= XLSX.read(data, {type: "array"});
 
@@ -50,27 +105,40 @@ function HolidaysManagement() {
 
             console.log(jsonData); // Debugging Check
 
+              
+
             const holidayObj= {};
             const holidayArr= [];
 
+          
+                // one by one insert data in db thats why used for of of
+             for (const item of jsonData) {
 
-            jsonData.forEach((item)=>{
+    const formattedDate = excelDateToJSDate(item.Date);
 
-                const formattedDate= excelDateToJSDate(item.Date);
-                const name= item["Holiday Name"];
+    const name = item["Holiday Name"];
 
-                if(formattedDate && name){
-                    holidayObj[formattedDate]= name;
+    if (formattedDate && name) {
 
-                    holidayArr.push({
-                        date: formattedDate,
-                        name: name
-                    });
-                }
-            });
+        holidayObj[formattedDate] = name;
 
-            setHolidays(holidayObj);
-            setHolidayList(holidayArr);
+        holidayArr.push({
+            date: formattedDate,
+            name: name
+        });
+
+        // Save Holiday Into Database
+        await axios.post(
+            `http://localhost:8081/addHolidays`,
+            {
+                holidayDate: formattedDate,
+                holidayName: name
+            }
+        );
+    }
+}
+
+fetchHolidays();
         };
 
         reader.readAsArrayBuffer(file);

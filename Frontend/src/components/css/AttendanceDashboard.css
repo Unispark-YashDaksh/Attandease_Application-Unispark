@@ -1,0 +1,142 @@
+#attendance-dashboard{
+    height: 150px;
+    width: 150px;
+    border-radius: 15px;
+    border: 2px solid rebeccapurple;
+}
+
+.filters-section{
+    height: 100px;
+    width: 90%;
+    border: 2px solid rebeccapurple;
+    border-radius: 10px;
+}
+
+.filters-section{
+   display: inline-flex;
+   justify-content: space-around;
+}
+
+.filters-section select{
+    height: 40px;
+    width: 70px;
+}
+
+.filters-section input{
+    height: 40px;
+    width: 150px;
+}
+
+.attendance-table-container{
+    width: 95%;
+    margin: auto;
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid #d9d9d9;
+}
+
+.attendance-table{
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.attendance-table thead{
+    background: #f5f6fb;
+}
+
+.attendance-table th{
+    padding: 22px 15px;
+    text-align: left;
+    font-size: 14px;
+    color: #2d3559;
+}
+
+.attendance-table td{
+    padding: 22px 15px;
+    border-top: 1px solid #ececec;
+    vertical-align: middle;
+}
+
+.employee-cell{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.employee-image{
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.employee-cell h6{
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.employee-cell p{
+    margin: 0;
+    color: gray;
+    font-size: 13px;
+}
+
+.punch-in{
+    color: #00a86b;
+    font-weight: 700;
+}
+
+.late-punch{
+    color: red;
+    font-weight: 700;
+}
+
+.on-time{
+    color: #00a86b;
+    font-size: 13px;
+}
+
+.late-text{
+    color: red;
+    font-size: 13px;
+}
+
+.status{
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.present{
+    background: #d8f5e4;
+    color: #008f5a;
+}
+
+.late{
+    background: #ffe8c7;
+    color: #d98200;
+}
+
+.mode{
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.office{
+    background: #ece9ff;
+    color: #6d57ff;
+}
+
+.correct-btn{
+    border: 1px solid #0d6efd;
+    background: white;
+    color: #0d6efd;
+    padding: 7px 15px;
+    border-radius: 8px;
+    font-weight: 600;
+}

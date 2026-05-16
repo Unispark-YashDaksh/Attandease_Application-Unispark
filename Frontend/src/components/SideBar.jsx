@@ -11,8 +11,11 @@ function SideBar(){
                 </div>
                <div>
                 <ul>
-                 <li className="SideBarList">
+                 {/* <li className="SideBarList">
                     <a href="dashbord">Dashboard</a>
+                </li> */}
+                <li className="SideBarList">
+                    <a href="/dailyAttendance">Daily Attendance</a>
                 </li>
                 <li className="SideBarList">
                     <a href="/masterMmangement">Master Management</a>
@@ -28,9 +31,6 @@ function SideBar(){
                 </li>
                 <li className="SideBarList">
                     <a href="/Employees">Employees</a>
-                </li>
-                <li className="SideBarList">
-                    <a href="/">Settings</a>
                 </li>
                 </ul>
                </div>

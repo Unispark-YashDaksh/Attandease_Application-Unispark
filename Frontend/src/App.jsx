@@ -8,6 +8,7 @@ import './App.css'
 import HolidaysManagement from './components/HolidaysManagement';
 import Employees from './components/Employees';
 import MasterManagement from './components/MasterManagement';
+import DailyAttendance from './components/DailyAttendance';
 
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
        <Route path='holidays' element={<HolidaysManagement/>}></Route>
         <Route path='masterMmangement' element={<MasterManagement/>}></Route>
         <Route path='Employees' element={<Employees/>}></Route>
+        <Route path='dailyAttendance' element={<DailyAttendance/>}></Route>
       </Route>
     </Routes>
     
