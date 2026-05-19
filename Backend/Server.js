@@ -59,7 +59,46 @@ app.get("/fetch-departments", (req, res)=>{
     
     })
 })
+// this api not connected with frontend
+app.post("/addDesignation", (req, res)=>{
+    console.log(req.body);
+    const designationName= req.body.designationName;
+    const department_id= req.body.department_id;
 
+    const sql= `INSERT INTO designations(designation_name, department_id) VALUES(?,?)`
+
+    pool.query(sql,[designationName, department_id], (err, result)=>{
+        if(err){
+            return res.send({
+                success: false,
+                message: err
+            })
+        }
+        res.json({
+            success: true,
+            message: "Data Saved Successfully",
+        })
+    })
+});
+
+// this api not conneted with frontend
+app.get("/fetch-designation", (req, res)=>{
+    const sql= `SELECT * FROM designations`;
+
+    pool.query(sql, (err, result)=>{
+        if(err){
+            res.send({
+                success: false,
+                message: err
+            })
+        }
+        res.json({
+            success: true,
+            message: "Fetching Successfully",
+            result
+        })
+    })
+})
 app.post("/addBranch", (req, res)=>{
     console.log(req.body)
     const branchName= req.body.branchName;
@@ -222,7 +261,131 @@ app.get("/fetch-roles", (req, res)=>{
             result
         })
     })
+});
+
+
+app.post("/addNewEmployee", (req, res) => {
+
+    console.log(req.body);
+
+    const employeeForm = req.body.addEmployeeForm;
+
+    const sql = `
+    INSERT INTO employee_master(
+        employee_code,
+        employee_name,
+        gender,
+        designation_id,
+        department_id,
+        branch_id,
+        shift_id,
+        role_id,
+        reporting_manager_id,
+        employeement_status,
+        employee_mobile_no,
+        employee_email_id,
+        employee_joining_date,
+        city,
+        emergency_contact_no,
+        employee_adhar_no,
+        employee_bank_account_no,
+        employee_bank_name,
+        employee_bank_ifsc_code,
+        employee_uan_no
+    )
+    
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `;
+
+    pool.query(
+        sql,
+        [
+            employeeForm.employee_code,
+            employeeForm.employee_name,
+            employeeForm.gender,
+            employeeForm.designation_id,
+            employeeForm.department_id,
+            employeeForm.branch_id,
+            employeeForm.shift_id,
+            employeeForm.role_id,
+
+            // if empty then store NULL
+            employeeForm.reporting_manager_id || null,
+
+            // if empty then ACTIVE
+            employeeForm.employeement_status || "ACTIVE",
+
+            employeeForm.employee_mobile_no,
+            employeeForm.employee_email_id,
+
+            // if empty then NULL
+            employeeForm.employee_joining_date || null,
+
+            employeeForm.city,
+            employeeForm.emergency_contact_no,
+            employeeForm.employee_adhar_no,
+            employeeForm.employee_bank_account_no,
+            employeeForm.employee_bank_name,
+            employeeForm.employee_bank_ifsc_code,
+            employeeForm.employee_uan_no
+        ],
+
+        (err, result) => {
+
+            // VERY IMPORTANT
+            if (err) {
+
+                console.log(err);
+
+                return res.send({
+                    success: false,
+                    message: err
+                });
+            }
+
+            res.json({
+                success: true,
+                message: "Data Added Successfully"
+            });
+
+        }
+    );
+
+});
+
+app.get("/fetch-employees", (req, res)=>{
+    const sql= `SELECT employee_master.*,
+    departments.department_name,
+    designations.designation_name,
+    branches.branch_name,
+    shift_master.shift_name,
+    roles.role_name
+
+    FROM employee_master
+    JOIN departments ON employee_master.department_id= departments.id
+    JOIN designations ON employee_master.designation_id= designations.id
+    JOIN branches ON employee_master.branch_id= branches.id
+    JOIN shift_master ON employee_master.shift_id= shift_master.id
+    JOIN roles ON employee_master.role_id = roles.id
+    `;
+
+    pool.query(sql,(err, result)=>{
+        if(err){
+            console.log(err)
+            return res.send({
+                success: false,
+                message: err
+            })
+        }
+        res.json({
+            success: true,
+            message: "Fetching Employees",
+            result
+        })
+    })
 })
+
+
 app.listen(port, ()=>{
     console.log(`Server Listening Port ${port}`)
 })

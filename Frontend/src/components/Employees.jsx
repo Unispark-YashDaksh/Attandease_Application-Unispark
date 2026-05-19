@@ -2,11 +2,23 @@ import React from "react";
 import { useState } from "react";
 import AddNewEmployeeForm from "./AddNewEmployeeForm";
 import "./css/Employees.css"
+import axios from "axios";
+import { useEffect } from "react";
 
 
 function EmployeeMaster() {
-    const [showModal, setshowModal]= useState(false)
+    const [showModal, setshowModal]= useState(false);
+    const [allEmployees, setAllEmployees]= useState([]);
 
+    const fetchEmployees= async()=>{
+        const response= await axios.get(`http://localhost:8081/fetch-employees`);
+        console.log(response.data.result);
+        setAllEmployees(response.data.result);
+    }
+
+    useEffect(()=>{
+        fetchEmployees();
+    },[])
     return (
 
         <div className="container-fluid p-4">
@@ -110,18 +122,19 @@ function EmployeeMaster() {
 
                         <thead className="table-light">
 
+
                             <tr>
 
-                                <th>PHOTO</th>
-                                <th>CODE</th>
-                                <th>NAME</th>
-                                <th>DEPARTMENT</th>
-                                <th>DESIGNATION</th>
-                                <th>BRANCH</th>
-                                <th>MANAGER</th>
-                                <th>STATUS</th>
-                                <th>JOINING</th>
-                                <th>ACTIONS</th>
+                                <th>Photo</th>
+                                <th>Employee Code</th>
+                                <th>Employee Name</th>
+                                <th>Department</th>
+                                <th>Designation</th>
+                                <th>Branch Name</th>
+                                <th>Reporting Manager</th>
+                                <th>Status</th>
+                                <th>Joining Date</th>
+                                <th>Actions</th>
 
                             </tr>
 
@@ -131,8 +144,9 @@ function EmployeeMaster() {
 
                         <tbody>
 
-                            {/* Row 1 */}
-                            <tr>
+                            { allEmployees.map((item)=>{
+                                return(
+                                     <tr key={item.id}>
 
                                 <td>
                                     <img
@@ -143,36 +157,36 @@ function EmployeeMaster() {
                                 </td>
 
                                 <td className="fw-bold text-primary">
-                                    EMP001
+                                    {item.employee_code}
                                 </td>
 
                                 <td>
                                     <div>
                                         <h6 className="mb-0">
-                                            Jordan Henderson
+                                            {item.employee_name}
                                         </h6>
 
                                         <small className="text-muted">
-                                            j.henderson@hrms.com
+                                            
                                         </small>
                                     </div>
                                 </td>
 
-                                <td>Engineering</td>
+                                <td>{item.department_name}</td>
 
-                                <td>Lead Architect</td>
+                                <td>{item.designation_name}</td>
 
-                                <td>New York HQ</td>
+                                <td>{item.branch_name}</td>
 
-                                <td>Sarah Jenkins</td>
+                                <td></td>
 
                                 <td>
                                     <span className="badge bg-success">
-                                        ACTIVE
+                                      {item.employeement_status}
                                     </span>
                                 </td>
 
-                                <td>12 Jan 2021</td>
+                                <td>{item.employee_joining_date}</td>
 
                                 <td>
                                     <button className="btn btn-sm btn-outline-primary me-2">
@@ -189,69 +203,9 @@ function EmployeeMaster() {
                                 </td>
 
                             </tr>
-
-
-
-
-                            {/* Row 2 */}
-                            <tr>
-
-                                <td>
-                                    <img
-                                        src="https://i.pravatar.cc/40?img=2"
-                                        alt=""
-                                        className="rounded-circle"
-                                    />
-                                </td>
-
-                                <td className="fw-bold text-primary">
-                                    EMP002
-                                </td>
-
-                                <td>
-                                    <div>
-                                        <h6 className="mb-0">
-                                            Elena Rodriguez
-                                        </h6>
-
-                                        <small className="text-muted">
-                                            e.rodriguez@hrms.com
-                                        </small>
-                                    </div>
-                                </td>
-
-                                <td>Marketing</td>
-
-                                <td>Brand Strategist</td>
-
-                                <td>London Hub</td>
-
-                                <td>Marcus Thorne</td>
-
-                                <td>
-                                    <span className="badge bg-success">
-                                        ACTIVE
-                                    </span>
-                                </td>
-
-                                <td>05 Mar 2022</td>
-
-                                <td>
-                                    <button className="btn btn-sm btn-outline-primary me-2">
-                                        View
-                                    </button>
-
-                                    <button className="btn btn-sm btn-outline-warning me-2">
-                                        Edit
-                                    </button>
-
-                                    <button className="btn btn-sm btn-outline-danger">
-                                        Delete
-                                    </button>
-                                </td>
-
-                            </tr>
-
+                                )
+                               
+                            })}
                         </tbody>
 
                     </table>
@@ -265,7 +219,8 @@ function EmployeeMaster() {
 
                     <div className="modal-container">
 
-                        <AddNewEmployeeForm />
+                    <AddNewEmployeeForm
+                    setshowModal={setshowModal}/>
 
                         <button className="btn btn-secondary me-3" onClick={()=>{setshowModal(false)}}>
                             Close

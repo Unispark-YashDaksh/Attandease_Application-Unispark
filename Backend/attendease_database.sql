@@ -11,9 +11,9 @@ department_id INT,
 branch_id INT,
 shift_id INT,
 role_id INT,
-reporting_manager_id INT NOT NULL,
+reporting_manager_id INT NULL,
 employeement_status ENUM('ACTIVE', 'RESIGNED') DEFAULT 'ACTIVE',
-employee_mobile_no NUMERIC,
+employee_mobile_no ,
 employee_email_id VARCHAR(100),
 employee_joining_date DATE,
 city VARCHAR(50),
@@ -44,9 +44,10 @@ FOREIGN KEY (reporting_manager_id)
 REFERENCES employee_master(id)
 );
 
+SELECT * FROM employee_master;
 
 ALTER  TABLE employee_master
-ADD gender ENUM('Male','Female');
+MODIFY employee_mobile_no VARCHAR(15);
 CREATE TABLE departments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     department_name VARCHAR(100) UNIQUE NOT NULL,
@@ -109,6 +110,8 @@ CREATE TABLE designations (
     ON DELETE SET NULL
 );
 
+SELECT * FROM designations;
+
 
 CREATE TABLE roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -117,6 +120,7 @@ CREATE TABLE roles (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+	
 
 CREATE TABLE branches (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -173,3 +177,5 @@ CREATE TABLE shift_master (
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+SELECT * FROM shift_master;
