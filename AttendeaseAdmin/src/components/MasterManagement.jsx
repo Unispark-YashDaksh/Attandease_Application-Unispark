@@ -13,6 +13,7 @@ function MasterManagement(){
 
     return(
         <div>
+            <h3>Master Management</h3>
                 {/*Changend class to className*/}
                 <nav className="navbar navbar-expand-lg bg-body-tertiary">
                 <div className="container-fluid">
@@ -41,13 +42,13 @@ function MasterManagement(){
                 </div>
                 </nav>
 
-                {activeTab==="department" && <Department/>}
-                {activeTab=== "designation" && <Designation/>}
-                {activeTab=== "branches" && <Branches/>}
-                {activeTab=== "shifts" && <Shifts/>}
-                {activeTab=== "roles" && <Roles/>}
-        </div>
-    )
+      {activeTab === "department" && <Department />}
+      {activeTab === "designation" && <Designation />}
+      {activeTab === "branches" && <Branches />}
+      {activeTab === "shifts" && <Shifts />}
+      {activeTab === "roles" && <Roles />}
+    </div>
+  );
 }
 
 export default MasterManagement;
