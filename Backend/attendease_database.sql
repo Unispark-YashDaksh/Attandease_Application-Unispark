@@ -104,12 +104,16 @@ SELECT * FROM departments;
 CREATE TABLE designations (
     id INT PRIMARY KEY AUTO_INCREMENT,
     designation_name VARCHAR(100) NOT NULL,
-    department_id INT,	
+    department_id INT,
     
     FOREIGN KEY (department_id)
     REFERENCES departments(id)
     ON DELETE SET NULL
 );
+
+ALTER TABLE designations
+ADD COLUMN status ENUM('Active', 'Inactive') DEFAULT 'Active',
+ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
 SELECT * FROM designations;
 

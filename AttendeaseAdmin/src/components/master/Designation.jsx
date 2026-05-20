@@ -9,6 +9,7 @@ import "../css/designation.css";
 // to be moved to .env file in for better security and configurability
 const Fetch_API_URL = "http://localhost:8081/fetch-designation";
 const Post_API_URL = "http://localhost:8081/addDesignation";
+const Fetch_Dept_ID = "http://localhost:8081/fetch-departments";
 
 const roleIcons = [
   "engineering",
@@ -21,6 +22,7 @@ const roleIcons = [
 
 function Designation() {
   const [designation, setDesignation] = useState([]); // created a state variable to hold the list of designations
+  const [departmentsID, setDepartmentsID] = useState([]); // created a state variable to hold the list of departments for the department filter dropdown
   const [showModal, setShowModal] = useState(false); // created a state variable to control the visibility of the add/edit modal
   const [showFilter, setShowFilter] = useState(false); // created a state variable to control the visibility of the filter modal
   const [viewMode, setViewMode] = useState("all"); // created a state variable to control the current view mode (all roles or by department)
@@ -34,14 +36,14 @@ function Designation() {
   // created a state variable to hold the current filter criteria for designation name, department, and status
   const [filterCriteria, setFilterCriteria] = useState({
     designation_name: "",
-    department: "",
+    department_id: "",
     status: "",
   });
 
   // created a state variable to hold the form data for adding/editing a designation, initialized with empty values for designation name and department, and "Active" as the default status
   const [formData, setFormData] = useState({
     designation_name: "",
-    department: "",
+    department_id: "",
     status: "Active",
   });
 
@@ -58,6 +60,26 @@ function Designation() {
     .filter(Boolean)
     .sort()
     .at(-1);
+
+  const fetchDepartments = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(Fetch_Dept_ID);
+      const deptData = Array.isArray(response.data)
+        ? response.data
+        : response.data.departments ||
+          response.data.data ||
+          response.data.result ||
+          [];
+      setDepartmentsID(deptData);
+      setError(null);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      setError("Failed to fetch departments. Please try again later.");
+      setLoading(false);
+    }
+  };
 
   // to fetch the list of designations from the server when the component mounts, and to handle loading and error states during the fetch operation
   const fetchDesignations = async () => {
@@ -83,6 +105,7 @@ function Designation() {
   // useEffect hook to call the fetchDesignations function when the component mounts.
   useEffect(() => {
     fetchDesignations();
+    fetchDepartments();
   }, []);
 
   // to handle changes to the form inputs for adding/editing a designation.
@@ -104,7 +127,7 @@ function Designation() {
       setEditingId(null);
       setFormData({
         designation_name: "",
-        department: "",
+        department_id: "",
         status: "Active",
       });
       setShowModal(true);
@@ -120,7 +143,7 @@ function Designation() {
       setEditingId(designation.id);
       setFormData({
         designation_name: designation.designation_name,
-        department: designation.department,
+        department_id: designation.department_id,
         status: designation.status,
       });
       setShowModal(true);
@@ -197,8 +220,8 @@ function Designation() {
         }
 
         if (
-          filterCriteria.department &&
-          d.department !== filterCriteria.department
+          filterCriteria.department_id &&
+          d.department_id !== parseInt(filterCriteria.department_id)
         ) {
           return false;
         }
@@ -252,7 +275,7 @@ function Designation() {
     try {
       setFilterCriteria({
         designation_name: "",
-        department: "",
+        department_id: "",
         status: "",
       });
     } catch (error) {
@@ -275,6 +298,11 @@ function Designation() {
       grouped[dept].push(d);
     });
     return grouped;
+  };
+
+  const getDepartmentName = (deptID) => {
+    const dept = departmentsID.find((d) => d.id === deptID);
+    return dept ? dept.department_name : "Not assigned";
   };
 
   if (loading) {
@@ -471,7 +499,7 @@ function Designation() {
                             <span>{d.designation_name}</span>
                           </div>
                         </td>
-                        <td>{d.department || "Not assigned"}</td>
+                        <td>{getDepartmentName(d.department_id)}</td>
                         <td>{formatDate(d.created_at)}</td>
                         <td>
                           <span
@@ -492,7 +520,7 @@ function Designation() {
                               aria-label={`Edit ${d.designation_name} designation`}
                               onClick={() => openEditModal(d)}
                             >
-                              <span className="material-symobols-outlined">
+                              <span className="material-symbols-outlined">
                                 edit
                               </span>
                             </button>
@@ -702,16 +730,22 @@ function Designation() {
                     required
                   />
 
-                  <label htmlFor="department">Department</label>
-                  <input
-                    id="department"
+                  <label htmlFor="department_id">Department</label>
+                  <select
+                    id="department_id"
                     type="text"
-                    name="department"
+                    name="department_id"
                     placeholder="Department"
-                    value={formData.department}
+                    value={formData.department_id}
                     onChange={handleChange}
-                    required
-                  />
+                  >
+                    <option value="">Select Department</option>
+                    {departmentsID.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.department_name}
+                      </option>
+                    ))}
+                  </select>
 
                   <label htmlFor="status">Status</label>
                   <select
@@ -769,21 +803,17 @@ function Designation() {
                     onChange={handleFilterChange}
                   />
 
-                  <label htmlFor="filter_department">Department</label>
+                  <label htmlFor="filter_department_id">Department</label>
                   <select
-                    id="filter_department"
-                    name="department"
-                    value={filterCriteria.department}
+                    id="filter_department_id"
+                    name="department_id"
+                    value={filterCriteria.department_id}
                     onChange={handleFilterChange}
                   >
                     <option value="">All Departments</option>
-                    {[
-                      ...new Set(
-                        designation.map((d) => d.department).filter(Boolean),
-                      ),
-                    ].map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
+                    {departmentsID.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.department_name}
                       </option>
                     ))}
                   </select>

@@ -51,9 +51,9 @@ function Department(){
                     
                        {showInputRow=== true &&  <tr>
                             <td>
-                                <div class="input-group mb-3">
+                                <div className="input-group mb-3">
                                      <input type="text" className= "form-control" onChange={(event)=>{setDepartmentName(event.target.value)}} />
-                                    <button class="btn btn-outline-secondary" type="button" onClick={handleAddDepartment}>Submit</button>
+                                    <button className="btn btn-outline-secondary" type="button" onClick={handleAddDepartment}>Submit</button>
                                 </div>
                             </td>
                         </tr>}
