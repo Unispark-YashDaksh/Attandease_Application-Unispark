@@ -2,7 +2,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import "../css/designation.css";
 
@@ -22,16 +21,24 @@ const roleIcons = [
 
 function Designation() {
   const [designation, setDesignation] = useState([]); // created a state variable to hold the list of designations
+
   const [departmentsID, setDepartmentsID] = useState([]); // created a state variable to hold the list of departments for the department filter dropdown
+
   const [showModal, setShowModal] = useState(false); // created a state variable to control the visibility of the add/edit modal
+
   const [showFilter, setShowFilter] = useState(false); // created a state variable to control the visibility of the filter modal
+
   const [viewMode, setViewMode] = useState("all"); // created a state variable to control the current view mode (all roles or by department)
 
-  const [editingId, setEditingId] = useState(null); // created a state variable to hold the ID of the designation being edited (null when adding a new designation)
-  const [loading, setLoading] = useState(true); // created a state variable to indicate whether the designations are currently being loaded from the server
-  const [error, setError] = useState(null); // created a state variable to hold any error messages that occur during API calls or other operations
+  const [currentPage, setCurrentPage] = useState(1); // created a state variable to hold the current page number for pagination
 
-  const nav = useNavigate();
+  const itemsPerPage = 10; // defined a constant for the number of items to display per page in the pagination
+
+  const [editingId, setEditingId] = useState(null); // created a state variable to hold the ID of the designation being edited (null when adding a new designation)
+
+  const [loading, setLoading] = useState(true); // created a state variable to indicate whether the designations are currently being loaded from the server
+
+  const [error, setError] = useState(null); // created a state variable to hold any error messages that occur during API calls or other operations
 
   // created a state variable to hold the current filter criteria for designation name, department, and status
   const [filterCriteria, setFilterCriteria] = useState({
@@ -287,10 +294,24 @@ function Designation() {
 
   const filteredDesignations = filterDesignations();
 
+  const totalPages = Math.ceil(filteredDesignations.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedDesignations = filteredDesignations.slice(
+    startIndex,
+    endIndex,
+  );
+  const showingForm = filteredDesignations.length ? startIndex + 1 : 0;
+  const showingTo = Math.min(endIndex, filteredDesignations.length);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterCriteria, viewMode, designation]);
+
   // to group the designations by their department.
   const groupByDepartment = () => {
     const grouped = {};
-    filteredDesignations.forEach((d) => {
+    paginatedDesignations.forEach((d) => {
       const dept = d.department || "Unassigned";
       if (!grouped[dept]) {
         grouped[dept] = [];
@@ -322,33 +343,6 @@ function Designation() {
   return (
     <div className="designation-page">
       <main className="designation-main">
-        <nav className="breadcrumb-container">
-          <span className="material-symbols-outlined breadcrumb-icon">
-            home
-          </span>
-          <button
-            type="button"
-            className="breadcrumb-link"
-            onClick={() => nav("/dashbord")}
-          >
-            Home
-          </button>
-          <span className="material-symbols-outlined breadcrumb-separator">
-            chevron_right
-          </span>
-          <button
-            type="button"
-            className="breadcrumb-link"
-            onClick={() => nav("/department")}
-          >
-            Masters Management
-          </button>
-          <span className="material-symbols-outlined breadcrumb-separator">
-            chevron_right
-          </span>
-          <span className="breadcrumb-current">Designation Tab</span>
-        </nav>
-
         {error && <div className="designation-error">{error}</div>}
 
         <div className="designation-header">
@@ -485,7 +479,7 @@ function Designation() {
                       </td>
                     </tr>
                   ) : (
-                    filteredDesignations.map((d, index) => (
+                    paginatedDesignations.map((d, index) => (
                       <tr key={d.id} className="designation-row">
                         <td>
                           <div className="role-cell">
@@ -621,94 +615,31 @@ function Designation() {
 
           <div className="table-pagination">
             <p>
-              Showing {designation.length ? 1 : 0} to {designation.length} of{" "}
-              {designation.length} designations
+              Showing {showingForm} to {showingTo} of{" "}
+              {filteredDesignations.length} designations
             </p>
+
             <div className="pagination-buttons">
-              <button type="button" disabled>
+              <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((page) => page - 1)}
+              >
                 <span className="material-symbols-outlined">chevron_left</span>
               </button>
+
               <button type="button" className="pagination-active">
-                1
+                {currentPage}
               </button>
-              <button type="button">
+
+              <button
+                type="button"
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage((page) => page + 1)}
+              >
                 <span className="material-symbols-outlined">chevron_right</span>
               </button>
             </div>
-          </div>
-        </section>
-
-        <section className="designation-insights">
-          <div className="insight-card">
-            <div>
-              <span className="insight-kicker">Master Insight</span>
-              <h3>Optimize Department Structure</h3>
-              <p>
-                Review your role distribution to ensure optimal hierarchical
-                balance across your engineering and product teams.
-              </p>
-              <button type="button">Analyze Structure</button>
-            </div>
-            <div
-              className="efficiency-ring"
-              aria-label={`${operationalPercent}% efficiency`}
-            >
-              <svg viewBox="0 0 192 192">
-                <circle cx="96" cy="96" r="80" />
-                <circle
-                  cx="96"
-                  cy="96"
-                  r="80"
-                  style={{
-                    strokeDashoffset: 502 - (502 * operationalPercent) / 100,
-                  }}
-                />
-              </svg>
-              <div>
-                <span>{operationalPercent}%</span>
-                <small>Efficiency</small>
-              </div>
-            </div>
-          </div>
-
-          <div className="quick-actions-card">
-            <h4>Quick Actions</h4>
-            <a href="#designation-directory">
-              <div className="quick-action-icon">
-                <span className="material-symbols-outlined">category</span>
-              </div>
-              <div className="quick-action-text">
-                <p>Manage Categories</p>
-                <span>Group your designations</span>
-              </div>
-              <span className="material-symbols-outlined">
-                arrow_forward_ios
-              </span>
-            </a>
-            <a href="#designation-directory">
-              <div className="quick-action-icon quick-action-icon-primary">
-                <span className="material-symbols-outlined">history_edu</span>
-              </div>
-              <div className="quick-action-text">
-                <p>Audit Logs</p>
-                <span>Track recent changes</span>
-              </div>
-              <span className="material-symbols-outlined">
-                arrow_forward_ios
-              </span>
-            </a>
-            <a href="#designation-directory">
-              <div className="quick-action-icon quick-action-icon-tertiary">
-                <span className="material-symbols-outlined">cloud_upload</span>
-              </div>
-              <div className="quick-action-text">
-                <p>Bulk Import</p>
-                <span>CSV or Excel files</span>
-              </div>
-              <span className="material-symbols-outlined">
-                arrow_forward_ios
-              </span>
-            </a>
           </div>
         </section>
 
