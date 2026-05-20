@@ -48,6 +48,7 @@ SELECT * FROM employee_master;
 
 ALTER  TABLE employee_master
 MODIFY employee_mobile_no VARCHAR(15);
+
 CREATE TABLE departments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     department_name VARCHAR(100) UNIQUE NOT NULL,
