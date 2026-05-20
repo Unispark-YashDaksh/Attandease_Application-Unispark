@@ -105,7 +105,8 @@ CREATE TABLE designations (
     id INT PRIMARY KEY AUTO_INCREMENT,
     designation_name VARCHAR(100) NOT NULL,
     department_id INT,
-    
+    status ENUM('Active', 'Inactive') DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (department_id)
     REFERENCES departments(id)
     ON DELETE SET NULL

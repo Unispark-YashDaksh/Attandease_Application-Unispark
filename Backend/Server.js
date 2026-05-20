@@ -11,9 +11,9 @@ app.use(express.json());
 // why used this because
 //Multiple Connections, Faste, Production Standard, Handles Many Requests
 const pool = mysql.createPool({
-  host: "127.0.0.1",
+  host: "localhost",
   user: "root",
-  password: "]v>GK68Gxyz8A3y",
+  password: "Unispark@2022",
   database: "attendease_database",
   waitForConnections: true,
   connectionLimit: 10,
