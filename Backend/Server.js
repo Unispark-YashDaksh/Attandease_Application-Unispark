@@ -354,6 +354,12 @@ app.post("/addNewEmployee", (req, res) => {
 });
 
 app.get("/fetch-employees", (req, res)=>{
+    //pagnition fuctioanlity logic
+
+    const page= Number(req.query.page) ||1;
+    const limit= Number(req.query.limit)||10;
+    const offset=(page-1)*limit;
+
     const sql= `SELECT employee_master.*,
     departments.department_name,
     designations.designation_name,
@@ -367,9 +373,11 @@ app.get("/fetch-employees", (req, res)=>{
     JOIN branches ON employee_master.branch_id= branches.id
     JOIN shift_master ON employee_master.shift_id= shift_master.id
     JOIN roles ON employee_master.role_id = roles.id
+
+    LIMIT ? OFFSET ?
     `;
 
-    pool.query(sql,(err, result)=>{
+    pool.query(sql,[limit, offset],(err, result)=>{
         if(err){
             console.log(err)
             return res.send({
@@ -385,6 +393,10 @@ app.get("/fetch-employees", (req, res)=>{
     })
 })
 
+
+app.post("/dailyAttendance", (req, res)=>{
+    console.log(req.body);
+})
 
 app.listen(port, ()=>{
     console.log(`Server Listening Port ${port}`)
