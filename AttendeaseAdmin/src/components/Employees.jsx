@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+ 
 import React from "react";
 import { useState } from "react";
 import AddNewEmployeeForm from "./AddNewEmployeeForm";
@@ -8,6 +10,7 @@ import { useEffect } from "react";
 function EmployeeMaster() {
   const [showModal, setshowModal] = useState(false);
   const [allEmployees, setAllEmployees] = useState([]);
+  const [totalEmployees, setTotalEmployees] = useState(0); // added state to store total employees count
   const [currentPage, setCurrentPage] = useState(1);
   // removed the redundent totalPages state
   const itemsPerPage = 3;
@@ -18,22 +21,22 @@ function EmployeeMaster() {
     );
     console.log(response.data.result);
     setAllEmployees(response.data.result);
+    console.log(response.data.totalEmployees);
+    setTotalEmployees(response.data.totalEmployees);
   };
 
   useEffect(() => {
     fetchEmployees();
   }, [currentPage]);
 
-  const totalPages = Math.ceil(allEmployees.length / itemsPerPage); // moved this inside the component and removed the state as it can be calculated directly from allEmployees length and itemsPerPage
+  const totalPages = Math.ceil(totalEmployees / itemsPerPage); // moved this inside the component and removed the state as it can be calculated directly from allEmployees length and itemsPerPage
 
   const startIndex = (currentPage - 1) * itemsPerPage; // calculating the start index for pagination based on current page and items per page page 1 => startIndex = 0, page 2 => startIndex = 3, page 3 => startIndex = 6 and so on
 
   const endIndex = startIndex + itemsPerPage; // calculating the end index for pagination which is start index + items per page page 1 => endIndex = 3, page 2 => endIndex = 6, page 3 => endIndex = 9 and so on
 
-  const paginationEmployee = allEmployees.slice(startIndex, endIndex); // slicing the allEmployees array to get only the employees for the current page based on start index and end index
-
-  const showingForm = allEmployees.length ? startIndex + 1 : 0;
-  const showingTo = Math.min(endIndex, allEmployees.length);
+  const showingForm = totalEmployees ? startIndex + 1 : 0;
+  const showingTo = Math.min(endIndex, totalEmployees);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -140,7 +143,7 @@ function EmployeeMaster() {
             </thead>
 
             <tbody>
-              {paginationEmployee.map((item) => {
+              {allEmployees.map((item) => {
                 return (
                   <tr key={item.id}>
                     <td>

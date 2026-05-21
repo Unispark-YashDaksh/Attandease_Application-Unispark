@@ -375,6 +375,8 @@ app.get("/fetch-employees", (req, res) => {
     LIMIT ? OFFSET ?
     `;
 
+  const countSql = `SELECT COUNT(*) AS totalEmployees FROM employee_master`;
+
   pool.query(sql, [limit, offset], (err, result) => {
     if (err) {
       console.log(err);
@@ -383,10 +385,22 @@ app.get("/fetch-employees", (req, res) => {
         message: err,
       });
     }
-    res.json({
-      success: true,
-      message: "Fetching Employees",
-      result,
+    pool.query(countSql, (err, countResult) => {
+      if (err) {
+        console.log(err);
+        return res.send({
+          success: false,
+          message: err,
+        });
+      }
+      const totalCount = countResult[0].totalEmployees;
+
+      res.json({
+        success: true,
+        message: "Fetching Employees",
+        totalEmployees: totalCount,
+        result,
+      });
     });
   });
 });
