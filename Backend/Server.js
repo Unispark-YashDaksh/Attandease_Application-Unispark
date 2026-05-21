@@ -375,7 +375,9 @@ app.get("/fetch-employees", (req, res) => {
     LIMIT ? OFFSET ?
     `;
 
-  const countSql = `SELECT COUNT(*) AS totalEmployees FROM employee_master`;
+  const countSql = `SELECT COUNT(*) AS totalEmployees FROM employee_master`; // added this to get the total count of employees for pagination
+
+  const activeEmpSql = `SELECT COUNT(*) AS activeEmployees FROM employee_master WHERE employeement_status = 'ACTIVE'`; // added this to get the total count of active employees for dashboard stats
 
   pool.query(sql, [limit, offset], (err, result) => {
     if (err) {
@@ -395,11 +397,24 @@ app.get("/fetch-employees", (req, res) => {
       }
       const totalCount = countResult[0].totalEmployees;
 
-      res.json({
-        success: true,
-        message: "Fetching Employees",
-        totalEmployees: totalCount,
-        result,
+      pool.query(activeEmpSql, (err, activeEmpResult) => {
+        if (err) {
+          console.log(err);
+          return res.json({
+            success: false,
+            message: err,
+          });
+        }
+
+        const activeEmpCount = activeEmpResult[0].activeEmployees;
+
+        res.json({
+          success: true,
+          message: "Fetching Employees",
+          totalEmployees: totalCount,
+          activeEmployees: activeEmpCount,
+          result,
+        });
       });
     });
   });

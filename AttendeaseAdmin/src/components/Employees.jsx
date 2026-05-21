@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
- 
+
 import React from "react";
 import { useState } from "react";
 import AddNewEmployeeForm from "./AddNewEmployeeForm";
@@ -11,6 +11,7 @@ function EmployeeMaster() {
   const [showModal, setshowModal] = useState(false);
   const [allEmployees, setAllEmployees] = useState([]);
   const [totalEmployees, setTotalEmployees] = useState(0); // added state to store total employees count
+  const [activeEmployees, setActiveEmployees] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   // removed the redundent totalPages state
   const itemsPerPage = 3;
@@ -23,6 +24,8 @@ function EmployeeMaster() {
     setAllEmployees(response.data.result);
     console.log(response.data.totalEmployees);
     setTotalEmployees(response.data.totalEmployees);
+    console.log(response.data.activeEmployees);
+    setActiveEmployees(response.data.activeEmployees);
   };
 
   useEffect(() => {
@@ -55,28 +58,14 @@ function EmployeeMaster() {
         <div className="col-md-3">
           <div className="card shadow-sm border-0 p-3">
             <h6>Total Employees</h6>
-            <h2>0</h2>
+            <h2>{totalEmployees}</h2>
           </div>
         </div>
 
         <div className="col-md-3">
           <div className="card shadow-sm border-0 p-3">
             <h6>Active</h6>
-            <h2>1,240</h2>
-          </div>
-        </div>
-
-        <div className="col-md-3">
-          <div className="card shadow-sm border-0 p-3">
-            <h6>Onboarding</h6>
-            <h2>24</h2>
-          </div>
-        </div>
-
-        <div className="col-md-3">
-          <div className="card shadow-sm border-0 p-3">
-            <h6>Terminated</h6>
-            <h2>20</h2>
+            <h2>{activeEmployees}</h2>
           </div>
         </div>
       </div>
