@@ -391,9 +391,6 @@ app.get("/fetch-employees", (req, res) => {
   });
 });
 
-app.post("/dailyAttendance", (req, res) => {
-  console.log(req.body);
-});
 
 app.listen(port, () => {
   console.log(`Server Listening Port ${port}`);

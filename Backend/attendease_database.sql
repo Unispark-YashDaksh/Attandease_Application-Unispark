@@ -47,7 +47,7 @@ REFERENCES employee_master(id)
 SELECT * FROM employee_master;
 
 ALTER  TABLE employee_master
-MODIFY employee_mobile_no VARCHAR(15);
+MODIFY employee_mobile_no INT;
 
 CREATE TABLE departments (
     id INT PRIMARY KEY AUTO_INCREMENT,
