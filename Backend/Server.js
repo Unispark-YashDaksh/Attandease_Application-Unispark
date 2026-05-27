@@ -39,9 +39,17 @@ app.post("/addDepartmentName", (req, res) => {
 });
 
 app.get("/fetch-departments", (req, res) => {
-  const sql = `SELECT * FROM departments`;
+  const status = req.query.status;
 
-  pool.query(sql, (err, result) => {
+  let sql = `SELECT * FROM departments`;
+  const params = [];
+
+  if (status === "Active" || status === "Inactive") {
+    sql = `SELECT * FROM departments WHERE status = ?`;
+    params.push(status);
+  }
+
+  pool.query(sql, params, (err, result) => {
     if (err) {
       return res.send({
         success: false,
@@ -55,15 +63,71 @@ app.get("/fetch-departments", (req, res) => {
     });
   });
 });
+
+app.put("/updateDepartment/:id", (req, res) => {
+  console.log(req.body);
+  const id = req.params.id;
+  const departmentName = req.body.departmentName;
+
+  const sql = `
+      UPDATE departments
+      SET department_name = ?
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [departmentName, id], (err, result) => {
+    if (err) {
+      return res.send({
+        success: false,
+        message: err,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Department Updated Successfully",
+    });
+  });
+});
+
+app.put("/updateDepartmentStatus/:id", (req, res) => {
+  const id = req.params.id;
+  const status = req.body.status;
+
+  const sql = `
+      UPDATE departments 
+      SET status = ? 
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.log("Update ERROR:", err);
+
+      return res.status(500).json({
+        success: false,
+        error: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Department Status Updated Successfully",
+      result,
+    });
+  });
+});
 // this api not connected with frontend
 app.post("/addDesignation", (req, res) => {
   console.log(req.body);
   const designationName = req.body.designation_name;
   const department_id = req.body.department_id;
+  const status = req.body.status || "Active";
 
-  const sql = `INSERT INTO designations(designation_name, department_id) VALUES(?,?)`;
+  const sql = `INSERT INTO designations(designation_name, department_id, status) VALUES(?, ?, ?)`;
 
-  pool.query(sql, [designationName, department_id], (err, result) => {
+  pool.query(sql, [designationName, department_id, status], (err, result) => {
     if (err) {
       return res.send({
         success: false,
@@ -77,28 +141,109 @@ app.post("/addDesignation", (req, res) => {
   });
 });
 
+app.put("/updateDesignation/:id", (req, res) => {
+  const id = req.params.id;
+  const designationName = req.body.designation_name;
+  const department_id = req.body.department_id;
+  const status = req.body.status;
+
+  const sql = `
+      UPDATE designations
+      SET designation_name = ?, department_id = ?, status = ?
+      WHERE id = ?
+    `;
+
+  pool.query(
+    sql,
+    [designationName, department_id, status, id],
+    (err, result) => {
+      if (err) {
+        console.log("Update Error: ", err);
+
+        return res.status(500).json({
+          success: false,
+          message: err.sqlMessage,
+          fullError: err,
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Updated Successfully",
+        result
+      });
+    },
+  );
+});
+
 // this api not conneted with frontend
 app.get("/fetch-designation", (req, res) => {
-  const sql = `
+  const status = req.query.status;
+
+  let sql = `
       SELECT designations.*, departments.department_name AS department
       FROM designations
       LEFT JOIN departments ON designations.department_id = departments.id
     `;
+  const params = [];
 
-  pool.query(sql, (err, result) => {
+  if (status === "Active" || status === "Inactive") {
+    sql = `SELECT designations.*,
+      departments.department_name AS department
+      FROM designations
+      LEFT JOIN departments ON designations.department_id = departments.id
+      WHERE designations.status = ?
+    `;
+    params.push(status);
+  }
+
+  pool.query(sql, params, (err, result) => {
     if (err) {
-      res.send({
+      console.log("Update ERROR:", err);
+
+      return res.status(500).json({
         success: false,
-        message: err,
+        error: err.sqlMessage,
+        fullError: err,
       });
     }
+
     res.json({
       success: true,
-      message: "Fetching Successfully",
+      message: "Fetching Successful",
       result,
     });
   });
 });
+
+app.get("/designationStatus", (req, res) => {
+  const sql = `SELECT designations.*, 
+    departments.department_name AS department
+    FROM designations
+    JOIN departments ON designations.department_id = departments.id
+    WHERE designations.status = 'Active'
+    AND departments.status = 'Active'
+  `;
+
+  pool.query(sql, (err, result) => {
+    if (err) {
+      console.log("Fetch Error: ", err);
+
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Fetching Successful",
+      result,
+    });
+  });
+});
+
 app.post("/addBranch", (req, res) => {
   console.log(req.body);
   const branchName = req.body.branchName;
@@ -162,10 +307,15 @@ app.post("/addShift", (req, res) => {
     (err, result) => {
       if (err) {
         return res.send({
-          success: true,
-          message: "Added Successfully",
+          success: false,
+          message: err,
         });
       }
+
+      res.json({
+        success: true,
+        message: "Added Successfully",
+      });
     },
   );
 });

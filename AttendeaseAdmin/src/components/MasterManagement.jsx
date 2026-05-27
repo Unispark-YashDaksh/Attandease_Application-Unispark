@@ -5,12 +5,15 @@ import Branches from "./master/Branches";
 import { useState } from "react";
 import Shifts from "./master/Shifts";
 import Roles from "./master/Roles";
+import "./css/masterManagement.css";
 
 function MasterManagement() {
   const [activeTab, setActiveTab] = useState("department");
+  const getTabClassName = (tabName) =>
+    `nav-link master-tab ${activeTab === tabName ? "active" : ""}`;
 
   return (
-    <div>
+    <div className="master-management">
       <h3>Master Management</h3>
       {/*Changend class to className*/}
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
@@ -30,8 +33,8 @@ function MasterManagement() {
             <ul className="navbar-nav">
               <li className="nav-item">
                 <a
-                  className="nav-link"
-                  aria-current="page"
+                  className={getTabClassName("department")}
+                  aria-current={activeTab === "department" ? "page" : undefined}
                   onClick={() => {
                     setActiveTab("department");
                   }}
@@ -41,7 +44,8 @@ function MasterManagement() {
               </li>
               <li className="nav-item">
                 <a
-                  className="nav-link"
+                  className={getTabClassName("designation")}
+                  aria-current={activeTab === "designation" ? "page" : undefined}
                   onClick={() => {
                     setActiveTab("designation");
                   }}
@@ -51,7 +55,8 @@ function MasterManagement() {
               </li>
               <li className="nav-item">
                 <a
-                  className="nav-link"
+                  className={getTabClassName("branches")}
+                  aria-current={activeTab === "branches" ? "page" : undefined}
                   onClick={() => {
                     setActiveTab("branches");
                   }}
@@ -61,7 +66,8 @@ function MasterManagement() {
               </li>
               <li className="nav-item">
                 <a
-                  className="nav-link"
+                  className={getTabClassName("shifts")}
+                  aria-current={activeTab === "shifts" ? "page" : undefined}
                   onClick={() => {
                     setActiveTab("shifts");
                   }}
@@ -71,7 +77,8 @@ function MasterManagement() {
               </li>
               <li className="nav-item">
                 <a
-                  className="nav-link"
+                  className={getTabClassName("roles")}
+                  aria-current={activeTab === "roles" ? "page" : undefined}
                   onClick={() => {
                     setActiveTab("roles");
                   }}

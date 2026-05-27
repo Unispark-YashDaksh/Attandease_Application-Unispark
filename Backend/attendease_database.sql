@@ -54,7 +54,8 @@ CREATE TABLE departments (
     department_name VARCHAR(100) UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+ALTER TABLE departments
+ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 
 
 CREATE TABLE attendance(
@@ -99,7 +100,7 @@ REFERENCES office_locations(id)
 DROP TABLE attendance;
 SELECT * FROM departments;
 
-
+SHOW CREATE TABLE designations;
 
 CREATE TABLE designations (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -124,7 +125,8 @@ CREATE TABLE roles (
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+ALTER TABLE roles
+ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 	
 
 CREATE TABLE branches (
@@ -136,6 +138,9 @@ CREATE TABLE branches (
     pincode VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE branches
+ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 
 SELECT * FROM branches;
 DELETE FROM branches where id = 2;
@@ -182,5 +187,9 @@ CREATE TABLE shift_master (
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE shift_master
+ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
+
 
 SELECT * FROM shift_master;

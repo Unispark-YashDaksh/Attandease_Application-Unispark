@@ -8,6 +8,7 @@ import "../css/designation.css";
 // to be moved to .env file in for better security and configurability
 const Fetch_API_URL = "http://localhost:8081/fetch-designation";
 const Post_API_URL = "http://localhost:8081/addDesignation";
+const PUT_API_URL = "http://localhost:8081/updateDesignation"; // added this
 const Fetch_Dept_ID = "http://localhost:8081/fetch-departments";
 
 const roleIcons = [
@@ -27,6 +28,8 @@ function Designation() {
   const [showModal, setShowModal] = useState(false); // created a state variable to control the visibility of the add/edit modal
 
   const [showFilter, setShowFilter] = useState(false); // created a state variable to control the visibility of the filter modal
+
+  const [statusFilter, setStatusFilter] = useState("Active"); // added this to manage the status filter for fetching designations based on their active.inactive status
 
   const [viewMode, setViewMode] = useState("all"); // created a state variable to control the current view mode (all roles or by department)
 
@@ -71,7 +74,7 @@ function Designation() {
   const fetchDepartments = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(Fetch_Dept_ID);
+      const response = await axios.get(`${Fetch_Dept_ID}?status=Active`); // fetching only active departments for the filter and add/edit dropdowns.
       const deptData = Array.isArray(response.data)
         ? response.data
         : response.data.departments ||
@@ -92,7 +95,9 @@ function Designation() {
   const fetchDesignations = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(Fetch_API_URL);
+      const response = await axios.get(
+        `${Fetch_API_URL}?status=${statusFilter}`, // added status filter to fetch designations based on their active/inactive status
+      );
       const data = Array.isArray(response.data)
         ? response.data
         : response.data.designations ||
@@ -112,6 +117,9 @@ function Designation() {
   // useEffect hook to call the fetchDesignations function when the component mounts.
   useEffect(() => {
     fetchDesignations();
+  }, [statusFilter]);
+
+  useEffect(() => {
     fetchDepartments();
   }, []);
 
@@ -167,7 +175,7 @@ function Designation() {
     e.preventDefault();
     try {
       if (editingId) {
-        await axios.put(`${Post_API_URL}/${editingId}`, formData);
+        await axios.put(`${PUT_API_URL}/${editingId}`, formData); // making a PUT request to uspdate an existing designation
       } else {
         await axios.post(Post_API_URL, formData);
       }
@@ -183,21 +191,23 @@ function Designation() {
     }
   };
 
-  // to handle the deletion of a designation.
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this designation?",
-    );
-
-    if (!confirmDelete) return;
+  // to handle the deactivation of a designation.
+  const handleDeactivate = async (designation) => {
+    const nextStatus = designation.status === "Active" ? "Inactive" : "Active";
 
     try {
-      await axios.delete(`${Fetch_API_URL}/${id}`);
+      await axios.put(`${PUT_API_URL}/${designation.id}`, {
+        designation_name: designation.designation_name,
+        department_id: designation.department_id,
+        status: nextStatus,
+      });
+
       fetchDesignations();
+      setError(null);
     } catch (error) {
       console.error("Error deleting designation:", error);
       setError(
-        "An error occurred while deleting the designation. Please try again.",
+        "An error occurred while deactivating the designation. Please try again.",
       );
     }
   };
@@ -448,6 +458,19 @@ function Designation() {
               </div>
             </div>
             <div className="table-toolbar-actions">
+              {/* the dropdown to show active/inactive/all designations */}
+              <select
+                className="form-select d-inline-block"
+                style={{ width: "180px", marginLeft: "2px" }}
+                value={statusFilter}
+                onClick={(event) => setStatusFilter(event.target.value)}
+              >
+                <option value="Active">Active Departments</option>
+                <option value="Inactive">Inactive Departments</option>
+                <option value="All">All Departments</option>
+              </select>
+            </div>
+            <div className="table-toolbar-actions">
               <button type="button" onClick={toggleFilter}>
                 <span className="material-symbols-outlined">filter_list</span>
                 Filter
@@ -518,14 +541,21 @@ function Designation() {
                                 edit
                               </span>
                             </button>
+                            {/*handle deactivation button */}
                             <button
                               type="button"
                               className="delete-btn"
-                              aria-label="Delete designation"
-                              onClick={() => handleDelete(d.id)}
+                              aria-label={
+                                d.status === "Active"
+                                  ? "Deactivate designation"
+                                  : "Activate designation"
+                              }
+                              onClick={() => handleDeactivate(d)}
                             >
                               <span className="material-symbols-outlined">
-                                delete
+                                {d.status === "Active"
+                                  ? "block"
+                                  : "check_circle"}
                               </span>
                             </button>
                           </div>
@@ -595,11 +625,17 @@ function Designation() {
                               <button
                                 type="button"
                                 className="delete-btn"
-                                aria-label="Delete designation"
-                                onClick={() => handleDelete(d.id)}
+                                aria-label={
+                                  d.status === "Active"
+                                    ? "Deactivate designation"
+                                    : "Activate designation"
+                                }
+                                onClick={() => handleDeactivate(d)}
                               >
                                 <span className="material-symbols-outlined">
-                                  delete
+                                  {d.status === "Active"
+                                    ? "block"
+                                    : "check_circle"}
                                 </span>
                               </button>
                             </div>
