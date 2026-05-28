@@ -170,7 +170,7 @@ app.put("/updateDesignation/:id", (req, res) => {
       res.json({
         success: true,
         message: "Updated Successfully",
-        result
+        result,
       });
     },
   );
@@ -501,14 +501,134 @@ app.post("/addNewEmployee", (req, res) => {
   );
 });
 
-app.get("/fetch-employees", (req, res) => {
-  //pagnition fuctioanlity logic
+app.put("/updateEmployee/:id", (req, res) => {
+  const id = req.params.id;
+  const employeeCode = req.body.employee_code;
+  const employeeName = req.body.employee_name;
+  const gender = req.body.gender;
+  const designationId = req.body.designation_id;
+  const departmentId = req.body.department_id;
+  const branchId = req.body.branch_id;
+  const shiftId = req.body.shift_id;
+  const role = req.body.role_id;
+  const reportingManagerId = req.body.reporting_manager_id || null;
+  const employeementStatus = req.body.employeement_status;
+  const employeeMobileNo = req.body.employee_mobile_no;
+  const employeeEmailId = req.body.employee_email_id;
+  const employeeJoiningDate = req.body.employee_joining_date || null;
+  const city = req.body.city;
+  const emergencyContactNo = req.body.emergency_contact_no;
+  const employeeAadharNo = req.body.employee_adhar_no;
+  const employeeBankAccNo = req.body.employee_bank_account_no;
+  const employeeBnakName = req.body.employee_bank_name;
+  const employeeIFSCCode = req.body.employee_bank_ifsc_code;
+  const employeeUANNo = req.body.employee_uan_no;
 
+  const sql = `
+      UPDATE employee_master
+      SET employee_code = ?,
+      employee_name = ?,
+      gender = ?,
+      designation_id = ?,
+      department_id = ?,
+      branch_id = ?,
+      shift_id = ?,
+      role_id = ?,
+      reporting_manager_id = ?,
+      employeement_status = ?,
+      employee_mobile_no = ?,
+      employee_email_id = ?,
+      employee_joining_date = ?,
+      city = ?,
+      emergency_contact_no = ?,
+      employee_adhar_no = ?,
+      employee_bank_account_no = ?,
+      employee_bank_name = ?,
+      employee_bank_ifsc_code = ?,
+      employee_uan_no = ?
+      WHERE id = ?
+    `;
+
+  pool.query(
+    sql,
+    [
+      employeeCode,
+      employeeName,
+      gender,
+      designationId,
+      departmentId,
+      branchId,
+      shiftId,
+      role,
+      reportingManagerId,
+      employeementStatus,
+      employeeMobileNo,
+      employeeEmailId,
+      employeeJoiningDate,
+      city,
+      emergencyContactNo,
+      employeeAadharNo,
+      employeeBankAccNo,
+      employeeBnakName,
+      employeeIFSCCode,
+      employeeUANNo,
+      id,
+    ],
+    (err, result) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({
+          success: false,
+          message: err.sqlMessage,
+          fullError: err,
+        });
+      }
+      res.json({
+        success: true,
+        message: "Data Updated Successfully",
+        result,
+      });
+    },
+  );
+});
+
+app.put("/updateEmployeeStatus/:id", (req, res) => {
+  const id = req.params.id;
+  const status = req.body.status;
+
+  const sql = `
+      UPDATE employee_master
+      SET employeement_status = ?
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Status Updated Successfully",
+      result,
+    });
+  });
+});
+
+app.get("/fetch-employees", (req, res) => {
+  const status = req.query.status;
+
+  //pagnition fuctioanlity logic
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const offset = (page - 1) * limit;
 
-  const sql = `SELECT employee_master.*,
+  let sql = `SELECT employee_master.*,
     departments.department_name,
     designations.designation_name,
     branches.branch_name,
@@ -521,15 +641,45 @@ app.get("/fetch-employees", (req, res) => {
     JOIN branches ON employee_master.branch_id= branches.id
     JOIN shift_master ON employee_master.shift_id= shift_master.id
     JOIN roles ON employee_master.role_id = roles.id
-
     LIMIT ? OFFSET ?
     `;
+  const params = [];
 
-  const countSql = `SELECT COUNT(*) AS totalEmployees FROM employee_master`; // added this to get the total count of employees for pagination
+  if (status === "ACTIVE" || status === "RESIGNED") {
+    sql = `SELECT employee_master.*,
+    departments.department_name,
+    designations.designation_name,
+    branches.branch_name,
+    shift_master.shift_name,
+    roles.role_name
+
+    FROM employee_master
+    JOIN departments ON employee_master.department_id= departments.id
+    JOIN designations ON employee_master.designation_id= designations.id
+    JOIN branches ON employee_master.branch_id= branches.id
+    JOIN shift_master ON employee_master.shift_id= shift_master.id
+    JOIN roles ON employee_master.role_id = roles.id
+    WHERE employee_master.employeement_status = ?
+    LIMIT ? OFFSET ?
+    `;
+    params.push(status);
+  }
+  params.push(limit, offset);
+
+  let countSql = `SELECT COUNT(*) AS totalEmployees FROM employee_master`; // added this to get the total count of employees for pagination
+  const countParams = [];
+
+  if (status === "ACTIVE" || status === "RESIGNED") {
+    countSql = `SELECT COUNT(*) AS totalEmployees
+      FROM employee_master
+      WHERE employeement_status = ?
+    `;
+    countParams.push(status);
+  }
 
   const activeEmpSql = `SELECT COUNT(*) AS activeEmployees FROM employee_master WHERE employeement_status = 'ACTIVE'`; // added this to get the total count of active employees for dashboard stats
 
-  pool.query(sql, [limit, offset], (err, result) => {
+  pool.query(sql, params, (err, result) => {
     if (err) {
       console.log(err);
       return res.send({
@@ -537,7 +687,7 @@ app.get("/fetch-employees", (req, res) => {
         message: err,
       });
     }
-    pool.query(countSql, (err, countResult) => {
+    pool.query(countSql, countParams, (err, countResult) => {
       if (err) {
         console.log(err);
         return res.send({
@@ -566,6 +716,67 @@ app.get("/fetch-employees", (req, res) => {
           result,
         });
       });
+    });
+  });
+});
+
+app.get("/fetchOneEmployee/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sql = `
+      SELECT employee_master.*,
+      departments.department_name,
+      designations.designation_name,
+      branches.branch_name,
+      shift_master.shift_name,
+      roles.role_name
+      FROM employee_master
+      JOIN departments ON employee_master.department_id = departments.id
+      JOIN designations ON employee_master.designation_id = designations.id
+      JOIN branches ON employee_master.branch_id = branches.id
+      JOIN shift_master ON employee_master.shift_id = shift_master.id
+      JOIN roles ON employee_master.role_id = roles.id
+      WHERE employee_master.id = ?
+    `;
+
+  pool.query(sql, [id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+    res.json({
+      success: true,
+      message: "One employee Fetched Successfully",
+      result,
+    });
+  });
+});
+
+app.get("/activeEmployee", (req, res) => {
+  const sql = `
+    SELECT id, employee_name, employee_code
+    FROM employee_master
+    WHERE employeement_status = 'ACTIVE'
+  `;
+
+  pool.query(sql, (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Status Fetched Successfully",
+      result,
     });
   });
 });
