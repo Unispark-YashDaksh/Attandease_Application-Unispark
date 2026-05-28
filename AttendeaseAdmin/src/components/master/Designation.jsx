@@ -713,17 +713,6 @@ function Designation() {
                       </option>
                     ))}
                   </select>
-
-                  <label htmlFor="status">Status</label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
                 </div>
 
                 <div className="modal-actions">

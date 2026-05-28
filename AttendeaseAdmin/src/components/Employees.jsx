@@ -12,13 +12,17 @@ function EmployeeMaster() {
   const [allEmployees, setAllEmployees] = useState([]);
   const [totalEmployees, setTotalEmployees] = useState(0); // added state to store total employees count
   const [activeEmployees, setActiveEmployees] = useState(0);
+  const [statusFilter, setStatusFilter] = useState("ACTIVE");
   const [currentPage, setCurrentPage] = useState(1);
+  const [openViewModal, setOpenViewModal] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [editingEmployee, setEditingEmployee] = useState(null);
   // removed the redundent totalPages state
   const itemsPerPage = 3;
 
   const fetchEmployees = async () => {
     const response = await axios.get(
-      `http://localhost:8081/fetch-employees?page=${currentPage}&limit=${itemsPerPage}`,
+      `http://localhost:8081/fetch-employees?page=${currentPage}&limit=${itemsPerPage}&status=${statusFilter}`,
     );
     console.log(response.data.result);
     setAllEmployees(response.data.result);
@@ -30,7 +34,30 @@ function EmployeeMaster() {
 
   useEffect(() => {
     fetchEmployees();
-  }, [currentPage]);
+  }, [currentPage, statusFilter]);
+
+  const openView = (employee) => {
+    setSelectedEmployee(employee);
+    setOpenViewModal(true);
+  };
+
+  const handleUpdateEmployeeStatus = async (employee) => {
+    const nextStatus =
+      employee.employeement_status === "ACTIVE" ? "RESIGNED" : "ACTIVE";
+
+    try {
+      await axios.put(
+        `http://localhost:8081/updateEmployeeStatus/${employee.id}`,
+        {
+          status: nextStatus,
+        },
+      );
+
+      fetchEmployees();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const totalPages = Math.ceil(totalEmployees / itemsPerPage); // moved this inside the component and removed the state as it can be calculated directly from allEmployees length and itemsPerPage
 
@@ -94,14 +121,24 @@ function EmployeeMaster() {
           </div>
 
           <div className="col-md-2 mb-2">
-            <select className="form-select">
-              <option>All Status</option>
+            <select
+              className="form-select"
+              value={statusFilter}
+              onChange={(event) => {
+                setStatusFilter(event.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="ACTIVE">Active Employees</option>
+              <option value="RESIGNED">Inactive Employees</option>
+              <option value="All">All Employees</option>
             </select>
           </div>
 
           <div className="col-md-2 mb-2">
             <button
               onClick={() => {
+                setEditingEmployee(null);
                 setshowModal(true);
               }}
               className="btn btn-primary w-100"
@@ -172,16 +209,34 @@ function EmployeeMaster() {
                     <td>{item.employee_joining_date}</td>
 
                     <td>
-                      <button className="btn btn-sm btn-outline-primary me-2">
+                      <button
+                        className="btn btn-sm btn-outline-primary me-2"
+                        onClick={() => openView(item)}
+                      >
                         View
                       </button>
 
-                      <button className="btn btn-sm btn-outline-warning me-2">
+                      <button
+                        className="btn btn-sm btn-outline-warning me-2"
+                        onClick={() => {
+                          setEditingEmployee(item);
+                          setshowModal(true);
+                        }}
+                      >
                         Edit
                       </button>
 
-                      <button className="btn btn-sm btn-outline-danger">
-                        Delete
+                      <button
+                        className={
+                          item.employeement_status === "ACTIVE"
+                            ? "btn btn-sm btn-outline-danger"
+                            : "btn btn-sm btn-outline-success"
+                        }
+                        onClick={() => handleUpdateEmployeeStatus(item)}
+                      >
+                        {item.employeement_status === "ACTIVE"
+                          ? "Resign"
+                          : "Reactivate"}
                       </button>
                     </td>
                   </tr>
@@ -194,12 +249,83 @@ function EmployeeMaster() {
         {showModal === true && (
           <div className="modal-overlay">
             <div className="modal-container">
-              <AddNewEmployeeForm setshowModal={setshowModal} />
+              <AddNewEmployeeForm
+                setshowModal={setshowModal}
+                selectedEmployee={editingEmployee}
+                setEditingEmployee={setEditingEmployee}
+                fetchEmployees={fetchEmployees}
+              />
 
               <button
                 className="btn btn-secondary me-3"
                 onClick={() => {
                   setshowModal(false);
+                  setEditingEmployee(null);
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
+        {openViewModal && selectedEmployee && (
+          <div className="modal-overlay">
+            <div className="modal-container">
+              <h3>Employee Details</h3>
+
+              <p>
+                <strong>Code:</strong> {selectedEmployee.employee_code}
+              </p>
+              <p>
+                <strong>Name:</strong> {selectedEmployee.employee_name}
+              </p>
+              <p>
+                <strong>Department:</strong> {selectedEmployee.department_name}
+              </p>
+              <p>
+                <strong>Designation:</strong>{" "}
+                {selectedEmployee.designation_name}
+              </p>
+              <p>
+                <strong>Branch:</strong> {selectedEmployee.branch_name}
+              </p>
+              <p>
+                <strong>Status:</strong> {selectedEmployee.employeement_status}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedEmployee.employee_email_id}
+              </p>
+              <p>
+                <strong>Mobile:</strong> {selectedEmployee.employee_mobile_no}
+              </p>
+              <p>
+                <strong>Joining Date:</strong>{" "}
+                {selectedEmployee.employee_joining_date}
+              </p>
+              <p>
+                <strong>City:</strong> {selectedEmployee.city}
+              </p>
+              <p>
+                <strong>Aadhar:</strong> {selectedEmployee.employee_adhar_no}
+              </p>
+              <p>
+                <strong>Bank:</strong> {selectedEmployee.employee_bank_name}
+              </p>
+              <p>
+                <strong>Account:</strong>{" "}
+                {selectedEmployee.employee_bank_account_no}
+              </p>
+              <p>
+                <strong>IFSC:</strong>{" "}
+                {selectedEmployee.employee_bank_ifsc_code}
+              </p>
+
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setOpenViewModal(false);
+                  setSelectedEmployee(null);
                 }}
               >
                 Close
@@ -211,8 +337,8 @@ function EmployeeMaster() {
         {/* Pagination */}
         <div className="d-flex justify-content-between align-items-center p-3 border-top">
           <p className="mb-0">
-            Showing {showingForm} to {showingTo} of {allEmployees.length}{" "}
-            designations
+            Showing {showingForm} to {showingTo} of {totalEmployees}{" "}
+            employees
           </p>
 
           <div>

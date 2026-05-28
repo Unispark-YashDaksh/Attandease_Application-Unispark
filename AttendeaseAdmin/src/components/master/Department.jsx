@@ -4,10 +4,10 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 function Department() {
-  const [showInputRow, setShowInputRow] = useState(false); // this state manage hide /unhide add department button
   const [departmentName, setDepartmentName] = useState(""); // this state update / store in Virtual Dom and store current value.
   const [departments, setDepartments] = useState([]); // this state stores all the departments
   const [statusFilter, setStatusFilter] = useState("Active"); // this state manages the status filter
+  const [showModal, setShowModal] = useState(false); // this state manages the show hide of the confirmation modal
   const [editingId, setEditingId] = useState(null); // this state manages the id of the department bieng edited.
 
   // fetch all data with statusFilter === Active/Inactive with get api
@@ -27,6 +27,43 @@ function Department() {
     fetchDepartments();
   }, [statusFilter]);
 
+  const openAddModal = () => {
+    try {
+      setEditingId(null);
+      setDepartmentName("");
+      setShowModal(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const openEditModal = (department) => {
+    try {
+      setEditingId(department.id);
+      setDepartmentName(department.department_name);
+      setShowModal(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      if (editingId) {
+        handleUpdateDepartment(editingId);
+      } else {
+        handleAddDepartment();
+      }
+      fetchDepartments();
+      setShowModal(false);
+      setDepartmentName("");
+      setEditingId(null);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleAddDepartment = async () => {
     try {
       await axios.post(`http://localhost:8081/addDepartmentName`, {
@@ -35,9 +72,6 @@ function Department() {
     } catch (err) {
       console.log(err);
     }
-    fetchDepartments();
-    setShowInputRow(false);
-    setDepartmentName("");
   };
 
   // to handle the update of a department name.
@@ -49,10 +83,6 @@ function Department() {
     } catch (error) {
       console.log(error);
     }
-    fetchDepartments();
-    setShowInputRow(false);
-    setEditingId(null);
-    setDepartmentName("");
   };
 
   // to handle the deactivation of a department.
@@ -77,9 +107,7 @@ function Department() {
         <button
           className="btn btn-primary"
           onClick={() => {
-            setEditingId(null);
-            setDepartmentName("");
-            setShowInputRow(true);
+            openAddModal();
           }}
         >
           + Add New Department
@@ -117,34 +145,52 @@ function Department() {
           </tr>
         </thead>
         <tbody>
-          {showInputRow === true && (
-            <tr key="new-department-input">
-              <td>
-                <div className="input-group mb-3">
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={departmentName}
-                    onChange={(event) => {
-                      setDepartmentName(event.target.value);
-                    }}
-                  />
-                  <button
-                    className="btn btn-outline-secondary"
-                    type="button"
-                    onClick={() => {
-                      if (editingId) {
-                        handleUpdateDepartment(editingId);
-                      } else {
-                        handleAddDepartment();
-                      }
-                    }}
-                  >
-                    {editingId ? "Update" : "Submit"}
-                  </button>
-                </div>
-              </td>
-            </tr>
+          {showModal && (
+            <div className="modal-overlay" role="presentation">
+              <div
+                className="designation-modal"
+                role="dialog"
+                aria-modal="true"
+              >
+                <h2>{editingId ? "Edit Department" : "Add New Department"}</h2>
+
+                <form onSubmit={handleSubmit}>
+                  <div className="form-group">
+                    <label htmlFor="department_name">Department Name</label>
+
+                    <input
+                      id="department_name"
+                      type="text"
+                      name="department_name"
+                      placeholder="Department Name"
+                      value={departmentName}
+                      onChange={(event) => {
+                        setDepartmentName(event.target.value);
+                      }}
+                      required
+                    />
+                  </div>
+
+                  <div className="modal-actions">
+                    <button type="submit" className="save-btn">
+                      Save
+                    </button>
+
+                    <button
+                      type="button"
+                      className="cancel-btn"
+                      onClick={() => {
+                        setShowModal(false);
+                        setEditingId(null);
+                        setDepartmentName("");
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           )}
 
           {departments.map((item) => {
@@ -158,9 +204,7 @@ function Department() {
                     className="btn btn-primary"
                     type="button"
                     onClick={() => {
-                      setEditingId(item.id);
-                      setDepartmentName(item.department_name);
-                      setShowInputRow(true);
+                      openEditModal(item);
                     }}
                   >
                     edit

@@ -1,0 +1,34 @@
+.master-management .navbar {
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.master-management .master-tab {
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-right: 6px;
+  padding: 8px 14px;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.master-management .master-tab:hover {
+  background-color: #e8f1ff;
+  color: #0d6efd;
+  transform: translateY(-1px);
+}
+
+.master-management .master-tab.active {
+  background-color: #0d6efd;
+  box-shadow: 0 6px 14px rgba(13, 110, 253, 0.24);
+  color: #ffffff;
+}
+
+.master-management .master-tab.active:hover {
+  background-color: #0b5ed7;
+  color: #ffffff;
+}
