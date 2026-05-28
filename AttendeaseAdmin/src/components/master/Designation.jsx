@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import React from "react";
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
 import "../css/designation.css";
@@ -71,7 +71,7 @@ function Designation() {
     .sort()
     .at(-1);
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     setLoading(true);
     try {
       const response = await axios.get(`${Fetch_Dept_ID}?status=Active`); // fetching only active departments for the filter and add/edit dropdowns.
@@ -89,10 +89,10 @@ function Designation() {
       setError("Failed to fetch departments. Please try again later.");
       setLoading(false);
     }
-  };
+  }, []);
 
   // to fetch the list of designations from the server when the component mounts, and to handle loading and error states during the fetch operation
-  const fetchDesignations = async () => {
+  const fetchDesignations = useCallback(async () => {
     setLoading(true);
     try {
       const response = await axios.get(
@@ -112,16 +112,16 @@ function Designation() {
       setError("Failed to fetch designations. Please try again later.");
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
 
   // useEffect hook to call the fetchDesignations function when the component mounts.
   useEffect(() => {
     fetchDesignations();
-  }, [statusFilter]);
+  }, [fetchDesignations]);
 
   useEffect(() => {
     fetchDepartments();
-  }, []);
+  }, [fetchDepartments]);
 
   // to handle changes to the form inputs for adding/editing a designation.
   const handleChange = (e) => {
@@ -463,11 +463,11 @@ function Designation() {
                 className="form-select d-inline-block"
                 style={{ width: "180px", marginLeft: "2px" }}
                 value={statusFilter}
-                onClick={(event) => setStatusFilter(event.target.value)}
+                onChange={(event) => setStatusFilter(event.target.value)}
               >
-                <option value="Active">Active Departments</option>
-                <option value="Inactive">Inactive Departments</option>
-                <option value="All">All Departments</option>
+                <option value="Active">Active Designations</option>
+                <option value="Inactive">Inactive Designations</option>
+                <option value="All">All Designations</option>
               </select>
             </div>
             <div className="table-toolbar-actions">

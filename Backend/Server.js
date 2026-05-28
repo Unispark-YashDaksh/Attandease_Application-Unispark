@@ -11,10 +11,10 @@ app.use(express.json());
 // why used this because
 //Multiple Connections, Faste, Production Standard, Handles Many Requests
 const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "Unispark@2022",
-  database: "attendease_database",
+  host: process.env.DB_HOST || "127.0.0.1",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "]v>GK68Gxyz8A3y",
+  database: process.env.DB_NAME || "attendease_database",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -255,7 +255,7 @@ app.post("/addBranch", (req, res) => {
   const sql = `INSERT INTO branches (branch_name, address, city, state, pincode) VALUES(?,?,?,?,?)`;
   pool.query(
     sql,
-    [branchName, address, state, city, pincode],
+    [branchName, address, city, state, pincode],
     (err, result) => {
       if (err) {
         return res.send({
@@ -386,9 +386,10 @@ app.post("/addRole", (req, res) => {
 
   pool.query(sql, [RoleName, Desc], (err, result) => {
     if (err) {
-      returnres.send({
+      return res.status(500).json({
         success: false,
-        message: err,
+        message: err.sqlMessage,
+        fullError: err,
       });
     }
 

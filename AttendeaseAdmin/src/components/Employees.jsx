@@ -21,15 +21,24 @@ function EmployeeMaster() {
   const itemsPerPage = 3;
 
   const fetchEmployees = async () => {
-    const response = await axios.get(
-      `http://localhost:8081/fetch-employees?page=${currentPage}&limit=${itemsPerPage}&status=${statusFilter}`,
-    );
-    console.log(response.data.result);
-    setAllEmployees(response.data.result);
-    console.log(response.data.totalEmployees);
-    setTotalEmployees(response.data.totalEmployees);
-    console.log(response.data.activeEmployees);
-    setActiveEmployees(response.data.activeEmployees);
+    try {
+      const response = await axios.get(
+        `http://localhost:8081/fetch-employees?page=${currentPage}&limit=${itemsPerPage}&status=${statusFilter}`,
+      );
+
+      const employees = Array.isArray(response.data.result)
+        ? response.data.result
+        : [];
+
+      setAllEmployees(employees);
+      setTotalEmployees(response.data.totalEmployees || 0);
+      setActiveEmployees(response.data.activeEmployees || 0);
+    } catch (error) {
+      console.error(error);
+      setAllEmployees([]);
+      setTotalEmployees(0);
+      setActiveEmployees(0);
+    }
   };
 
   useEffect(() => {

@@ -1,6 +1,5 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/set-state-in-effect */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 
 function Department() {
@@ -11,21 +10,26 @@ function Department() {
   const [editingId, setEditingId] = useState(null); // this state manages the id of the department bieng edited.
 
   // fetch all data with statusFilter === Active/Inactive with get api
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const response = await axios.get(
         `http://localhost:8081/fetch-departments?status=${statusFilter}`,
       );
 
-      setDepartments(response.data.result);
+      const departmentData = Array.isArray(response.data.result)
+        ? response.data.result
+        : [];
+
+      setDepartments(departmentData);
     } catch (error) {
       console.log(error);
+      setDepartments([]);
     }
-  };
+  }, [statusFilter]);
 
   useEffect(() => {
     fetchDepartments();
-  }, [statusFilter]);
+  }, [fetchDepartments]);
 
   const openAddModal = () => {
     try {
@@ -135,6 +139,50 @@ function Department() {
         </button>
       </div>
 
+      {showModal && (
+        <div className="modal-overlay" role="presentation">
+          <div className="designation-modal" role="dialog" aria-modal="true">
+            <h2>{editingId ? "Edit Department" : "Add New Department"}</h2>
+
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="department_name">Department Name</label>
+
+                <input
+                  id="department_name"
+                  type="text"
+                  name="department_name"
+                  placeholder="Department Name"
+                  value={departmentName}
+                  onChange={(event) => {
+                    setDepartmentName(event.target.value);
+                  }}
+                  required
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="submit" className="save-btn">
+                  Save
+                </button>
+
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingId(null);
+                    setDepartmentName("");
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <table className="table mt-5">
         <thead>
           <tr>
@@ -145,54 +193,6 @@ function Department() {
           </tr>
         </thead>
         <tbody>
-          {showModal && (
-            <div className="modal-overlay" role="presentation">
-              <div
-                className="designation-modal"
-                role="dialog"
-                aria-modal="true"
-              >
-                <h2>{editingId ? "Edit Department" : "Add New Department"}</h2>
-
-                <form onSubmit={handleSubmit}>
-                  <div className="form-group">
-                    <label htmlFor="department_name">Department Name</label>
-
-                    <input
-                      id="department_name"
-                      type="text"
-                      name="department_name"
-                      placeholder="Department Name"
-                      value={departmentName}
-                      onChange={(event) => {
-                        setDepartmentName(event.target.value);
-                      }}
-                      required
-                    />
-                  </div>
-
-                  <div className="modal-actions">
-                    <button type="submit" className="save-btn">
-                      Save
-                    </button>
-
-                    <button
-                      type="button"
-                      className="cancel-btn"
-                      onClick={() => {
-                        setShowModal(false);
-                        setEditingId(null);
-                        setDepartmentName("");
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
           {departments.map((item) => {
             return (
               <tr key={item.id}>
