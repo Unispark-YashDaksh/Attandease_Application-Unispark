@@ -54,7 +54,8 @@ CREATE TABLE departments (
     department_name VARCHAR(100) UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+ALTER TABLE departments
+ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 
 
 CREATE TABLE attendance(
@@ -118,7 +119,7 @@ DROP TABLE attendance;
 SELECT * FROM attendance;
 SELECT * FROM departments;
 
-
+SHOW CREATE TABLE designations;
 
 CREATE TABLE designations (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -144,8 +145,14 @@ CREATE TABLE roles (
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+<<<<<<< HEAD
 
 
+=======
+ALTER TABLE roles
+ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
+	
+>>>>>>> 58845a09b0e925d5e9509241a91c77981d465ae8
 
 CREATE TABLE branches (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -156,6 +163,9 @@ CREATE TABLE branches (
     pincode VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE branches
+ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 
 SELECT * FROM branches;
 DELETE FROM branches where id = 2;
@@ -210,6 +220,7 @@ CREATE TABLE shift_master (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+<<<<<<< HEAD
 SELECT * FROM shift_master;
 
 
@@ -246,3 +257,10 @@ approved_by) VALUES(10, "2026-05-28", "2026-05-28", "eid", "APPROVED", 11);
 
 
 SELECT * FROM work_from_home_requests;
+=======
+ALTER TABLE shift_master
+ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
+
+
+SELECT * FROM shift_master;
+>>>>>>> 58845a09b0e925d5e9509241a91c77981d465ae8

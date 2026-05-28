@@ -6,6 +6,7 @@ function Roles(){
     const [Desc, setAddDesc]= useState("");
     const [allRoles, setAllRoles]= useState([]);
 
+<<<<<<< HEAD
     const fetchRole= async()=>{
             const response = await axios.get(`http://localhost:7000/fetch-roles`)
 
@@ -13,8 +14,19 @@ function Roles(){
             
         }
 
+=======
+>>>>>>> 58845a09b0e925d5e9509241a91c77981d465ae8
     useEffect(()=>{
-        fetchRole();
+        axios.get(`http://localhost:8081/fetch-roles`).then((response) => {
+            const roles = Array.isArray(response.data.result)
+                ? response.data.result
+                : [];
+
+            setAllRoles(roles);
+        }).catch((error) => {
+            console.error(error);
+            setAllRoles([]);
+        });
     },[])
 
     const handleSubmit=async()=>{
