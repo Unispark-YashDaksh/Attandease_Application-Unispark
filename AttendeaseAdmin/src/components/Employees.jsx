@@ -14,7 +14,7 @@ function EmployeeMaster() {
 
   const fetchEmployees = async () => {
     const response = await axios.get(
-      `http://localhost:8081/fetch-employees?page=${currentPage}&limit=${itemsPerPage}`,
+      `http://localhost:7000/fetch-employees?page=${currentPage}&limit=${itemsPerPage}`,
     );
     console.log(response.data.result);
     setAllEmployees(response.data.result);

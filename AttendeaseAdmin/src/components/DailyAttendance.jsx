@@ -1,7 +1,21 @@
 import React from "react";
 import "./css/AttendanceDashboard.css"
-
+import { useState } from "react";
+import { useEffect } from "react";
+import axios from "axios";
+const api_URL= import.meta.env.VITE_API;
 function DailyAttendance(){
+    const [dailyAttendanceData, setdailyAttendanceData]= useState({});
+
+    useEffect(()=>{
+        fetchDailyAttendance()
+    },[]);
+
+    const fetchDailyAttendance= async()=>{
+        const response = await axios.get(`${api_URL}/fetchAttendance`);
+        setdailyAttendanceData(response.data.result)
+        console.log(api_URL)
+    }
     return(
         <div>
             <h5>Attendance Dashboard</h5>
@@ -55,7 +69,11 @@ function DailyAttendance(){
 
         <tbody>
 
-            <tr>
+            {
+                dailyAttendanceData.map((item)=>{
+                    return(
+                          
+            <tr key={item.id}>
 
                 {/* Employee */}
                 <td>
@@ -68,8 +86,8 @@ function DailyAttendance(){
                         />
 
                         <div>
-                            <h6>Employee Name</h6>
-                            <p>Designation</p>
+                            <h6>{item.employee_name}</h6>
+                            <p>{item.employee_designation_name}</p>
                         </div>
 
                     </div>
@@ -77,31 +95,31 @@ function DailyAttendance(){
 
                 {/* Employee Code */}
                 <td>
-                    EMP-0001
+                    {item.employee_code}
                 </td>
 
                 {/* Department */}
                 <td>
-                    Department
+                    {item.department_name}
                 </td>
 
                 {/* Punch In */}
                 <td>
                     <span className="punch-in">
-                        00:00 AM
+                        {item.punch_in}
                     </span>
                 </td>
 
                 {/* Punch Out */}
                 <td>
-                    --:--
+                    {item.punch_out}
                 </td>
 
                 {/* Working Hours / Late */}
                 <td>
 
                     <div>
-                        <h6>0h</h6>
+                        <h6>{item.late_minutes}</h6>
                         <p className="on-time">
                             On Time
                         </p>
@@ -113,7 +131,7 @@ function DailyAttendance(){
                 <td>
 
                     <span className="status present">
-                        Present
+                        {item.status}
                     </span>
 
                 </td>
@@ -122,14 +140,14 @@ function DailyAttendance(){
                 <td>
 
                     <span className="mode office">
-                        Office
+                        {item.attendance_mode}
                     </span>
 
                 </td>
 
                 {/* Location */}
                 <td>
-                
+                {item}
                 </td>
 
                 {/* Actions */}
@@ -142,6 +160,10 @@ function DailyAttendance(){
                 </td>
 
             </tr>
+                    )
+                })
+                
+            }
 
         </tbody>
 

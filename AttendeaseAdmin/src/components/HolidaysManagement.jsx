@@ -41,7 +41,7 @@ const fetchHolidays = async () => {
     try {
 
         const response = await axios.get(
-            `http://localhost:8081/fetch-holidays`
+            `http://localhost:7000/fetch-holidays`
         );
 
         const holidayObj = {};
@@ -129,7 +129,7 @@ useEffect(() => {
 
         // Save Holiday Into Database
         await axios.post(
-            `http://localhost:8081/addHolidays`,
+            `http://localhost:7000/addHolidays`,
             {
                 holidayDate: formattedDate,
                 holidayName: name

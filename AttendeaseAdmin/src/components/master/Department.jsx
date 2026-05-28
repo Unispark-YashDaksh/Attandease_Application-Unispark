@@ -9,7 +9,7 @@ function Department() {
 
   // fetch all data with get api
   const fetchDepartments = async () => {
-    const response = await axios.get(`http://localhost:8081/fetch-departments`);
+    const response = await axios.get(`http://localhost:7000/fetch-departments`);
 
     setAllDepartments(response.data.result);
   };
@@ -20,7 +20,7 @@ function Department() {
 
   const handleAddDepartment = async () => {
     try {
-      await axios.post(`http://localhost:8081/addDepartmentName`, {
+      await axios.post(`http://localhost:7000/addDepartmentName`, {
         departmentName,
       });
     } catch (err) {

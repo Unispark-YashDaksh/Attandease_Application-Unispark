@@ -13,7 +13,7 @@ shift_id INT,
 role_id INT,
 reporting_manager_id INT NULL,
 employeement_status ENUM('ACTIVE', 'RESIGNED') DEFAULT 'ACTIVE',
-employee_mobile_no ,
+employee_mobile_no VARCHAR(255),
 employee_email_id VARCHAR(100),
 employee_joining_date DATE,
 city VARCHAR(50),
@@ -47,7 +47,7 @@ REFERENCES employee_master(id)
 SELECT * FROM employee_master;
 
 ALTER  TABLE employee_master
-MODIFY employee_mobile_no INT;
+MODIFY employee_mobile_no varchar(255);
 
 CREATE TABLE departments (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -61,9 +61,18 @@ CREATE TABLE attendance(
 id INT PRIMARY KEY AUTO_INCREMENT,
 
 employee_id INT NOT NULL,
-attendance DATE,
+attendance_date DATE,
 punch_in TIME,
 punch_out TIME,
+punch_in_selfie VARCHAR(255),
+punch_out_selfie VARCHAR(255),
+punch_in_latitude DECIMAL(10,8),
+punch_in_longitude DECIMAL(11,8),
+punch_out_latitude DECIMAL (10,8),
+punch_out_longitude DECIMAL(11,8),
+
+
+
 
 status ENUM(
 'PRESENT',
@@ -96,7 +105,17 @@ REFERENCES office_locations(id)
 
 );
 
+ALTER TABLE attendance
+ADD COLUMN punch_in_selfie VARCHAR(255),
+ADD COLUMN punch_out_selfie VARCHAR(255),
+ADD COLUMN punch_in_latitude DECIMAL(10,8),
+ADD COLUMN punch_in_longitude DECIMAL(11,8),
+ADD COLUMN punch_out_latitude DECIMAL (10,8),
+ADD COLUMN punch_out_longitude DECIMAL(11,8);
+
 DROP TABLE attendance;
+
+SELECT * FROM attendance;
 SELECT * FROM departments;
 
 
@@ -126,7 +145,7 @@ CREATE TABLE roles (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-	
+
 
 CREATE TABLE branches (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -185,3 +204,33 @@ CREATE TABLE shift_master (
 );
 
 SELECT * FROM shift_master;
+
+
+CREATE TABLE work_from_home_requests (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    reason TEXT,
+    status ENUM(
+        'PENDING',
+        'APPROVED',
+        'REJECTED',
+        'CANCELLED'
+    ) DEFAULT 'PENDING',
+    approved_by INT NULL,
+    approved_at TIMESTAMP NULL,
+    rejection_reason VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (employee_id)
+    REFERENCES employee_master(id),
+
+    FOREIGN KEY (approved_by)
+    REFERENCES employee_master(id)
+
+);
+
+SELECT * FROM work_from_home_requests;

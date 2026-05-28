@@ -43,7 +43,7 @@ const handleSubmit= async(e)=>{
     e.preventDefault();
     try{
         console.log(addEmployeeForm)
-        await axios.post(`http://localhost:8081/addNewEmployee`,{
+        await axios.post(`http://localhost:7000/addNewEmployee`,{
           addEmployeeForm
         })
         setshowModal(false)
@@ -54,30 +54,30 @@ const handleSubmit= async(e)=>{
 
 
     const fetchDepartments= async()=>{
-            const response= await axios.get(`http://localhost:8081/fetch-departments`);
+            const response= await axios.get(`http://localhost:7000/fetch-departments`);
 
             setShowDepartments(response.data.result)
         }
 
     const fetchBranchs= async()=>{
-        const response = await axios.get(`http://localhost:8081/fetch-branches`);
+        const response = await axios.get(`http://localhost:7000/fetch-branches`);
 
         setShowBranchs(response.data.result)
     }
     const fetchShifts= async()=>{
-        const response= await axios.get(`http://localhost:8081/fetch-shifts`);
+        const response= await axios.get(`http://localhost:7000/fetch-shifts`);
 
         setShowShifts(response.data.result);
     }
 
     const fetchRoles= async()=>{
-        const response= await axios.get(`http://localhost:8081/fetch-roles`);
+        const response= await axios.get(`http://localhost:7000/fetch-roles`);
 
         setShowRoles(response.data.result);
     }
 
     const fetchDesignation= async()=>{
-        const response= await axios.get(`http://localhost:8081/fetch-designation`);
+        const response= await axios.get(`http://localhost:7000/fetch-designation`);
 
         setShowDesignation(response.data.result);
         

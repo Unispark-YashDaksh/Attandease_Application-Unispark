@@ -3,6 +3,7 @@ import "../css/Branches.css"
 import { useState } from "react";
 import axios from "axios";
 import { useEffect } from "react";
+const api_URL= import.meta.env.VITE_API;
 
 function Branches(){
     const [branchName, setBranchName]=useState("")
@@ -14,7 +15,7 @@ function Branches(){
     const [allBranchesData, setAllBranchesData]= useState([])
 
 const fetchBranches= async()=>{
-        const response = await axios.get(`http://localhost:8081/fetch-branches`)
+        const response = await axios.get(`${api_URL}/fetch-branches`)
 
         setAllBranchesData(response.data.result)
     }
@@ -25,7 +26,7 @@ useEffect(()=>{
 
     const handleBranchSubmit= async()=>{
         try{
-           await axios.post(`http://localhost:8081/addBranch`,{
+           await axios.post(`http://localhost:7000/addBranch`,{
                 branchName,
                 address,
                 city,

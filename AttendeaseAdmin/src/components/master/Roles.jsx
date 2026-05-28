@@ -7,7 +7,7 @@ function Roles(){
     const [allRoles, setAllRoles]= useState([]);
 
     const fetchRole= async()=>{
-            const response = await axios.get(`http://localhost:8081/fetch-roles`)
+            const response = await axios.get(`http://localhost:7000/fetch-roles`)
 
             setAllRoles(response.data.result)
             
@@ -18,7 +18,7 @@ function Roles(){
     },[])
 
     const handleSubmit=async()=>{
-        await axios.post(`http://localhost:8081/addRole`,{
+        await axios.post(`http://localhost:7000/addRole`,{
             RoleName,
             Desc
         })
