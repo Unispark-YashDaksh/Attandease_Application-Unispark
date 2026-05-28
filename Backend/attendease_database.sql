@@ -177,6 +177,13 @@ CREATE TABLE office_locations (
 );
 
 
+SELECT * FROM office_locations;
+
+UPDATE office_locations
+SET allowed_radius = 40000
+WHERE id=2;
+
+
 CREATE TABLE holidays(
 id INT PRIMARY KEY AUTO_INCREMENT,
 holiday_date DATE UNIQUE,
@@ -232,5 +239,10 @@ CREATE TABLE work_from_home_requests (
     REFERENCES employee_master(id)
 
 );
+
+
+INSERT INTO work_from_home_requests(employee_id, start_date, end_date, reason, status, 
+approved_by) VALUES(10, "2026-05-28", "2026-05-28", "eid", "APPROVED", 11);
+
 
 SELECT * FROM work_from_home_requests;

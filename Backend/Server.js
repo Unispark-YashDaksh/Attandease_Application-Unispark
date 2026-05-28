@@ -476,25 +476,24 @@ app.post("/punch-out", upload.single("selfie"), async (req, res) => {
   }
 });
 
-app.get("/fetchAttendance", (req, res) => {
-  const sql = `SELECT * FROM attendance`;
-
-  pool.query(sql, (err, result) => {
-    if (err) {
-      console.error("DB Error:", err);
-      return res.status(500).json({
-        success: false,
-        message: "Database error",
-        error: err.message
-      });
-    }
-
+app.get("/fetchAttendance", async (req, res) => {
+  try {
+    const [rows] = await promisePool.query(
+      `SELECT a.*, e.employee_name, e.employee_code, d.department_name, ds.designation_name
+       FROM attendance a
+       LEFT JOIN employee_master e ON a.employee_id = e.id
+       LEFT JOIN departments d ON e.department_id = d.id
+       LEFT JOIN designations ds ON e.designation_id = ds.id`
+    );
     return res.json({
       success: true,
       message: "Attendance Fetch Successfully",
-      result: result
+      result: rows,
     });
-  });
+  } catch (err) {
+    console.error("Fetch Attendance Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 app.listen(port, '0.0.0.0', () => {

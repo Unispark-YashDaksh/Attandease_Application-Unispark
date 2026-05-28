@@ -71,7 +71,7 @@ export default function AttendanceScreen() {
   // Source: .env (EMPLOYEE_ID) — TEMPORARY. In production, this MUST come from
   //         authentication context (login state / JWT token / AsyncStorage).
   // ---------------------------------------------------------------------------
-  const [loggedInEmployeeId, setLoggedInEmployeeId] = useState("14");
+  const [loggedInEmployeeId, setLoggedInEmployeeId] = useState("15");
 
   // ---- Attendance State ----
   const [canPunchIn, setCanPunchIn] = useState(false);
@@ -81,6 +81,7 @@ export default function AttendanceScreen() {
   // ---- Today's Record (for log display) ----
   // Source: Backend /attendance API returns full record including times.
   const [todayRecord, setTodayRecord] = useState(null);
+ 
 
   // ---- GPS & Location State ----
   const [gpsLocation, setGpsLocation] = useState(null);
@@ -619,66 +620,48 @@ export default function AttendanceScreen() {
 
           {todayRecord && todayRecord.punch_in ? (
             <>
-              {/* Punch In Entry — shows actual time from backend */}
-              <View style={styles.logCard}>
-                <View style={styles.logLeft}>
-                  <View style={styles.logIcon}>
-                    <MaterialIcons
-                      name="login"
-                      size={22}
-                      color="#0052cc"
-                    />
-                  </View>
-                  <View>
+              <View style={[styles.logCard, { flexDirection: "column" }]}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+                    <View style={styles.logIcon}>
+                      <MaterialIcons name="login" size={22} color="#0052cc" />
+                    </View>
                     <Text style={styles.logTitle}>Punch In</Text>
-                    <Text style={styles.logSub}>
-                      {todayRecord.readable_address || "Office"}
-                    </Text>
                   </View>
+                  <Text style={{ fontWeight: "700", color: "#0052cc", fontSize: 18 }}>
+                    {todayRecord.punch_in || "N/A"}
+                  </Text>
                 </View>
-                <Text style={styles.logTime}>
-                  {todayRecord.punch_in || "N/A"}
+                <Text style={{ color: "#666", marginTop: 4, marginLeft: 57, fontSize: 13 }} numberOfLines={2} ellipsizeMode="tail">
+                  {todayRecord.readable_address || "Office"}
                 </Text>
               </View>
 
-              {/* Punch Out Entry — shows actual time if available */}
               {todayRecord.punch_out ? (
-                <View style={[styles.logCard, { marginTop: 8 }]}>
-                  <View style={styles.logLeft}>
-                    <View style={styles.logIcon}>
-                      <MaterialIcons
-                        name="logout"
-                        size={22}
-                        color="#0052cc"
-                      />
-                    </View>
-                    <View>
+                <View style={[styles.logCard, { flexDirection: "column", marginTop: 8 }]}>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+                      <View style={styles.logIcon}>
+                        <MaterialIcons name="logout" size={22} color="#0052cc" />
+                      </View>
                       <Text style={styles.logTitle}>Punch Out</Text>
-                      <Text style={styles.logSub}>
-                        {todayRecord.readable_address || "Office"}
-                      </Text>
                     </View>
+                    <Text style={{ fontWeight: "700", color: "#0052cc", fontSize: 18 }}>
+                      {todayRecord.punch_out || "N/A"}
+                    </Text>
                   </View>
-                  <Text style={styles.logTime}>
-                    {todayRecord.punch_out || "N/A"}
+                  <Text style={{ color: "#666", marginTop: 4, marginLeft: 57, fontSize: 13 }} numberOfLines={2} ellipsizeMode="tail">
+                    {todayRecord.readable_address || "Office"}
                   </Text>
                 </View>
               ) : (
-                <Text
-                  style={{
-                    color: "#666",
-                    textAlign: "center",
-                    marginTop: 12,
-                  }}
-                >
+                <Text style={{ color: "#666", textAlign: "center", marginTop: 12 }}>
                   Not punched out yet
                 </Text>
               )}
             </>
           ) : (
-            <Text
-              style={{ color: "#666", textAlign: "center", marginTop: 16 }}
-            >
+            <Text style={{ color: "#666", textAlign: "center", marginTop: 16 }}>
               No activity yet today
             </Text>
           )}

@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import axios from "axios";
 const api_URL= import.meta.env.VITE_API;
 function DailyAttendance(){
-    const [dailyAttendanceData, setdailyAttendanceData]= useState({});
+    const [dailyAttendanceData, setdailyAttendanceData]= useState([]);
 
     useEffect(()=>{
         fetchDailyAttendance()
@@ -13,8 +13,8 @@ function DailyAttendance(){
 
     const fetchDailyAttendance= async()=>{
         const response = await axios.get(`${api_URL}/fetchAttendance`);
-        setdailyAttendanceData(response.data.result)
-        console.log(api_URL)
+        setdailyAttendanceData(response.data.result || [])
+        
     }
     return(
         <div>
@@ -147,7 +147,7 @@ function DailyAttendance(){
 
                 {/* Location */}
                 <td>
-                {item}
+                  {item.gps_location || "N/A"}
                 </td>
 
                 {/* Actions */}
