@@ -47,7 +47,7 @@ REFERENCES employee_master(id)
 SELECT * FROM employee_master;
 
 ALTER  TABLE employee_master
-MODIFY employee_mobile_no VARCHAR(15);
+MODIFY employee_mobile_no INT;
 
 CREATE TABLE departments (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -106,7 +106,8 @@ CREATE TABLE designations (
     id INT PRIMARY KEY AUTO_INCREMENT,
     designation_name VARCHAR(100) NOT NULL,
     department_id INT,
-    
+    status ENUM('Active', 'Inactive') DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (department_id)
     REFERENCES departments(id)
     ON DELETE SET NULL
