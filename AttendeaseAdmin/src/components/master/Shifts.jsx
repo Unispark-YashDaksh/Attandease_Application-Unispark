@@ -14,26 +14,11 @@ function Shifts() {
 
   const fetchShifts = async () => {
     try {
-      const response = await axios.get(`http://localhost:8081/fetch-shifts`);
+      const response = await axios.get(`http://localhost:7000/fetch-shifts`);
 
-<<<<<<< HEAD
-    useEffect(()=>{
-        fetchShifts()
-    },[])
-
-    const fetchShifts= async()=>{
-        try{
-            const response= await axios.get(`http://localhost:7000/fetch-shifts`)
-
-            setShowAllShifts(response.data.result)
-        }catch(err){    
-            console.log(err)
-        }
-=======
       setShowAllShifts(response.data.result);
     } catch (err) {
       console.log(err);
->>>>>>> 58845a09b0e925d5e9509241a91c77981d465ae8
     }
   };
 
@@ -41,25 +26,9 @@ function Shifts() {
     fetchShifts();
   }, []);
 
-<<<<<<< HEAD
-    const handleSubmitShift=async()=>{
-        try{
-           await axios.post(`http://localhost:7000/addShift`,{
-                shiftName,
-                startTime,
-                endTime,
-                lateafter,
-                halfdayAfter
-
-            })
-            setShowAddShiftInput(false)
-        }catch(err){
-            console.log(err)
-        }
-=======
   const handleSubmitShift = async () => {
     try {
-      await axios.post(`http://localhost:8081/addShift`, {
+      await axios.post(`http://localhost:7000/addShift`, {
         shiftName,
         startTime,
         endTime,
@@ -68,7 +37,6 @@ function Shifts() {
       });
     } catch (err) {
       console.log(err);
->>>>>>> 58845a09b0e925d5e9509241a91c77981d465ae8
     }
     setShowAddShiftInput(false);
   };

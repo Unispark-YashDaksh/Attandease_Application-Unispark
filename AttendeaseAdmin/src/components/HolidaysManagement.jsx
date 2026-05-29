@@ -38,15 +38,10 @@ function HolidaysManagement() {
   // Fetch Holidays From DB
   const fetchHolidays = async () => {
     try {
-      const response = await axios.get(`http://localhost:8081/fetch-holidays`);
 
-<<<<<<< HEAD
         const response = await axios.get(
             `http://localhost:7000/fetch-holidays`
         );
-=======
-      const holidayObj = {};
->>>>>>> 58845a09b0e925d5e9509241a91c77981d465ae8
 
       const holidayArr = [];
 
@@ -56,28 +51,18 @@ function HolidaysManagement() {
           .split("T")[0];
         holidayObj[formattedDate] = item.holiday_name;
 
+        // Formatted Date Value Pass in Database
         holidayArr.push({
           date: formattedDate,
           name: item.holiday_name,
         });
       });
 
-<<<<<<< HEAD
-        // Save Holiday Into Database
-        await axios.post(
-            `http://localhost:7000/addHolidays`,
-            {
-                holidayDate: formattedDate,
-                holidayName: name
-            }
-        );
-=======
       setHolidays(holidayObj);
 
       setHolidayList(holidayArr);
     } catch (err) {
       console.log(err);
->>>>>>> 58845a09b0e925d5e9509241a91c77981d465ae8
     }
   };
 
@@ -120,7 +105,7 @@ function HolidaysManagement() {
           });
 
           // Save Holiday Into Database
-          await axios.post(`http://localhost:8081/addHolidays`, {
+          await axios.post(`http://localhost:7000/addHolidays`, {
             holidayDate: formattedDate,
             holidayName: name,
           });

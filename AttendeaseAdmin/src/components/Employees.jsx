@@ -21,16 +21,9 @@ function EmployeeMaster() {
   const itemsPerPage = 3;
 
   const fetchEmployees = async () => {
-<<<<<<< HEAD
-    const response = await axios.get(
-      `http://localhost:7000/fetch-employees?page=${currentPage}&limit=${itemsPerPage}`,
-    );
-    console.log(response.data.result);
-    setAllEmployees(response.data.result);
-=======
     try {
       const response = await axios.get(
-        `http://localhost:8081/fetch-employees?page=${currentPage}&limit=${itemsPerPage}&status=${statusFilter}`,
+        `http://localhost:7000/fetch-employees?page=${currentPage}&limit=${itemsPerPage}&status=${statusFilter}`,
       );
 
       const employees = Array.isArray(response.data.result)
@@ -46,7 +39,6 @@ function EmployeeMaster() {
       setTotalEmployees(0);
       setActiveEmployees(0);
     }
->>>>>>> 58845a09b0e925d5e9509241a91c77981d465ae8
   };
 
   useEffect(() => {
@@ -64,7 +56,7 @@ function EmployeeMaster() {
 
     try {
       await axios.put(
-        `http://localhost:8081/updateEmployeeStatus/${employee.id}`,
+        `http://localhost:7000/updateEmployeeStatus/${employee.id}`,
         {
           status: nextStatus,
         },

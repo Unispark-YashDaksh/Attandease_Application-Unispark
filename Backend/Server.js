@@ -498,6 +498,26 @@ app.get("/fetchAttendance", (req, res) => {
   });
 });
 
+app.put("/updateDepartment/:id", (req, res) => {
+  const { id } = req.params;
+  const { departmentName } = req.body;
+  const sql = `UPDATE departments SET department_name = ? WHERE id = ?`;
+  pool.query(sql, [departmentName, id], (err, result) => {
+    if (err) return res.send({ success: false, message: err });
+    res.json({ success: true, message: "Department Updated Successfully" });
+  });
+});
+
+app.put("/updateDepartmentStatus/:id", (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const sql = `UPDATE departments SET status = ? WHERE id = ?`;
+  pool.query(sql, [status, id], (err, result) => {
+    if (err) return res.send({ success: false, message: err });
+    res.json({ success: true, message: "Department Status Updated Successfully" });
+  });
+});
+
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server Listening Port ${port}`);
 });

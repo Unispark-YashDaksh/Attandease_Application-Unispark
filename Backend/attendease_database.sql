@@ -145,14 +145,9 @@ CREATE TABLE roles (
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-<<<<<<< HEAD
-
-
-=======
 ALTER TABLE roles
 ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 	
->>>>>>> 58845a09b0e925d5e9509241a91c77981d465ae8
 
 CREATE TABLE branches (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -220,47 +215,8 @@ CREATE TABLE shift_master (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-<<<<<<< HEAD
-SELECT * FROM shift_master;
-
-
-CREATE TABLE work_from_home_requests (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    employee_id INT NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    reason TEXT,
-    status ENUM(
-        'PENDING',
-        'APPROVED',
-        'REJECTED',
-        'CANCELLED'
-    ) DEFAULT 'PENDING',
-    approved_by INT NULL,
-    approved_at TIMESTAMP NULL,
-    rejection_reason VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ON UPDATE CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (employee_id)
-    REFERENCES employee_master(id),
-
-    FOREIGN KEY (approved_by)
-    REFERENCES employee_master(id)
-
-);
-
-
-INSERT INTO work_from_home_requests(employee_id, start_date, end_date, reason, status, 
-approved_by) VALUES(10, "2026-05-28", "2026-05-28", "eid", "APPROVED", 11);
-
-
-SELECT * FROM work_from_home_requests;
-=======
 ALTER TABLE shift_master
 ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 
 
 SELECT * FROM shift_master;
->>>>>>> 58845a09b0e925d5e9509241a91c77981d465ae8

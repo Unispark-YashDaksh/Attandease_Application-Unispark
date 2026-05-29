@@ -9,18 +9,12 @@ function Department() {
   const [showModal, setShowModal] = useState(false); // this state manages the show hide of the confirmation modal
   const [editingId, setEditingId] = useState(null); // this state manages the id of the department bieng edited.
 
-<<<<<<< HEAD
-  // fetch all data with get api
-  const fetchDepartments = async () => {
-    const response = await axios.get(`http://localhost:7000/fetch-departments`);
-=======
   // fetch all data with statusFilter === Active/Inactive with get api
   const fetchDepartments = useCallback(async () => {
     try {
       const response = await axios.get(
-        `http://localhost:8081/fetch-departments?status=${statusFilter}`,
+        `http://localhost:7000/fetch-departments?status=${statusFilter}`,
       );
->>>>>>> 58845a09b0e925d5e9509241a91c77981d465ae8
 
       const departmentData = Array.isArray(response.data.result)
         ? response.data.result
@@ -87,7 +81,7 @@ function Department() {
   // to handle the update of a department name.
   const handleUpdateDepartment = async (id) => {
     try {
-      await axios.put(`http://localhost:8081/updateDepartment/${id}`, {
+      await axios.put(`http://localhost:7000/updateDepartment/${id}`, {
         departmentName,
       });
     } catch (error) {
@@ -98,7 +92,7 @@ function Department() {
   // to handle the deactivation of a department.
   const handleDeactivateDepartment = async (id, status) => {
     try {
-      await axios.put(`http://localhost:8081/updateDepartmentStatus/${id}`, {
+      await axios.put(`http://localhost:7000/updateDepartmentStatus/${id}`, {
         status,
       });
     } catch (error) {
