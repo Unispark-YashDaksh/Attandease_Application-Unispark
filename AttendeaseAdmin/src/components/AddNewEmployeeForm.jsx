@@ -51,11 +51,11 @@ function AddNewEmployeeForm({
     try {
       if (selectedEmployee) {
         await axios.put(
-          `http://localhost:8081/updateEmployee/${selectedEmployee.id}`,
+          `http://localhost:7000/updateEmployee/${selectedEmployee.id}`,
           addEmployeeForm,
         );
       } else {
-        await axios.post(`http://localhost:8081/addNewEmployee`, {
+        await axios.post(`http://localhost:7000/addNewEmployee`, {
           addEmployeeForm,
         });
       }
@@ -69,7 +69,7 @@ function AddNewEmployeeForm({
   };
   const fetchDepartments = async () => {
     const response = await axios.get(
-      `http://localhost:8081/fetch-departments?status=Active`,
+      `http://localhost:7000/fetch-departments?status=Active`,
     );
 
     setShowDepartments(response.data.result);
@@ -89,24 +89,24 @@ function AddNewEmployeeForm({
       : showDepartments;
 
   const fetchBranchs = async () => {
-    const response = await axios.get(`http://localhost:8081/fetch-branches`);
+    const response = await axios.get(`http://localhost:7000/fetch-branches`);
 
     setShowBranchs(response.data.result);
   };
   const fetchShifts = async () => {
-    const response = await axios.get(`http://localhost:8081/fetch-shifts`);
+    const response = await axios.get(`http://localhost:7000/fetch-shifts`);
 
     setShowShifts(response.data.result);
   };
 
   const fetchRoles = async () => {
-    const response = await axios.get(`http://localhost:8081/fetch-roles`);
+    const response = await axios.get(`http://localhost:7000/fetch-roles`);
 
     setShowRoles(response.data.result);
   };
 
   const fetchDesignation = async () => {
-    const response = await axios.get(`http://localhost:8081/designationStatus`);
+    const response = await axios.get(`http://localhost:7000/designationStatus`);
 
     setShowDesignation(response.data.result);
   };
@@ -125,7 +125,7 @@ function AddNewEmployeeForm({
       : showDesignation;
 
   const fetchReportingManagers = async () => {
-    const response = await axios.get(`http://localhost:8081/activeEmployee`);
+    const response = await axios.get(`http://localhost:7000/activeEmployee`);
     setReportingManagers(response.data.result);
   };
 

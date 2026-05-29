@@ -15,7 +15,7 @@ function Branches() {
   const [allBranchesData, setAllBranchesData] = useState([]);
 
   const fetchBranches = async () => {
-    const response = await axios.get(`http://localhost:8081/fetch-branches`);
+    const response = await axios.get(`http://localhost:7000/fetch-branches`);
 
     setAllBranchesData(response.data.result);
   };
@@ -26,7 +26,7 @@ function Branches() {
 
   const handleBranchSubmit = async () => {
     try {
-      await axios.post(`http://localhost:8081/addBranch`, {
+      await axios.post(`http://localhost:7000/addBranch`, {
         branchName,
         address,
         city,

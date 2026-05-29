@@ -38,7 +38,7 @@ function HolidaysManagement() {
   // Fetch Holidays From DB
   const fetchHolidays = async () => {
     try {
-      const response = await axios.get(`http://localhost:8081/fetch-holidays`);
+      const response = await axios.get(`http://localhost:7000/fetch-holidays`);
 
       const holidayObj = {};
 
@@ -103,7 +103,7 @@ function HolidaysManagement() {
           });
 
           // Save Holiday Into Database
-          await axios.post(`http://localhost:8081/addHolidays`, {
+          await axios.post(`http://localhost:7000/addHolidays`, {
             holidayDate: formattedDate,
             holidayName: name,
           });

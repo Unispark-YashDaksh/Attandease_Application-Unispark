@@ -6,10 +6,10 @@ import { Loader2 } from "lucide-react";
 import "../css/designation.css";
 
 // to be moved to .env file in for better security and configurability
-const Fetch_API_URL = "http://localhost:8081/fetch-designation";
-const Post_API_URL = "http://localhost:8081/addDesignation";
-const PUT_API_URL = "http://localhost:8081/updateDesignation"; // added this
-const Fetch_Dept_ID = "http://localhost:8081/fetch-departments";
+const Fetch_API_URL = "http://localhost:7000/fetch-designation";
+const Post_API_URL = "http://localhost:7000/addDesignation";
+const PUT_API_URL = "http://localhost:7000/updateDesignation"; // added this
+const Fetch_Dept_ID = "http://localhost:7000/fetch-departments";
 
 const roleIcons = [
   "engineering",

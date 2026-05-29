@@ -14,7 +14,7 @@ function Shifts() {
 
   const fetchShifts = async () => {
     try {
-      const response = await axios.get(`http://localhost:8081/fetch-shifts`);
+      const response = await axios.get(`http://localhost:7000/fetch-shifts`);
 
       setShowAllShifts(response.data.result);
     } catch (err) {
@@ -28,7 +28,7 @@ function Shifts() {
 
   const handleSubmitShift = async () => {
     try {
-      await axios.post(`http://localhost:8081/addShift`, {
+      await axios.post(`http://localhost:7000/addShift`, {
         shiftName,
         startTime,
         endTime,

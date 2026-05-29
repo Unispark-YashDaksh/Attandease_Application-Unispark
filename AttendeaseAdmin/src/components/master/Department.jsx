@@ -13,7 +13,7 @@ function Department() {
   const fetchDepartments = useCallback(async () => {
     try {
       const response = await axios.get(
-        `http://localhost:8081/fetch-departments?status=${statusFilter}`,
+        `http://localhost:7000/fetch-departments?status=${statusFilter}`,
       );
 
       const departmentData = Array.isArray(response.data.result)
@@ -70,7 +70,7 @@ function Department() {
 
   const handleAddDepartment = async () => {
     try {
-      await axios.post(`http://localhost:8081/addDepartmentName`, {
+      await axios.post(`http://localhost:7000/addDepartmentName`, {
         departmentName,
       });
     } catch (err) {
@@ -81,7 +81,7 @@ function Department() {
   // to handle the update of a department name.
   const handleUpdateDepartment = async (id) => {
     try {
-      await axios.put(`http://localhost:8081/updateDepartment/${id}`, {
+      await axios.put(`http://localhost:7000/updateDepartment/${id}`, {
         departmentName,
       });
     } catch (error) {
@@ -92,7 +92,7 @@ function Department() {
   // to handle the deactivation of a department.
   const handleDeactivateDepartment = async (id, status) => {
     try {
-      await axios.put(`http://localhost:8081/updateDepartmentStatus/${id}`, {
+      await axios.put(`http://localhost:7000/updateDepartmentStatus/${id}`, {
         status,
       });
     } catch (error) {

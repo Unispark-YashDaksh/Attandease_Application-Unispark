@@ -23,7 +23,7 @@ function EmployeeMaster() {
   const fetchEmployees = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:8081/fetch-employees?page=${currentPage}&limit=${itemsPerPage}&status=${statusFilter}`,
+        `http://localhost:7000/fetch-employees?page=${currentPage}&limit=${itemsPerPage}&status=${statusFilter}`,
       );
 
       const employees = Array.isArray(response.data.result)
@@ -56,7 +56,7 @@ function EmployeeMaster() {
 
     try {
       await axios.put(
-        `http://localhost:8081/updateEmployeeStatus/${employee.id}`,
+        `http://localhost:7000/updateEmployeeStatus/${employee.id}`,
         {
           status: nextStatus,
         },
@@ -346,8 +346,7 @@ function EmployeeMaster() {
         {/* Pagination */}
         <div className="d-flex justify-content-between align-items-center p-3 border-top">
           <p className="mb-0">
-            Showing {showingForm} to {showingTo} of {totalEmployees}{" "}
-            employees
+            Showing {showingForm} to {showingTo} of {totalEmployees} employees
           </p>
 
           <div>
