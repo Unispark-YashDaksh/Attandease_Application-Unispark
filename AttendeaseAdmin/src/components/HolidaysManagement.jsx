@@ -41,7 +41,6 @@ function HolidaysManagement() {
       const response = await axios.get(`http://localhost:7000/fetch-holidays`);
 
       const holidayObj = {};
-
       const holidayArr = [];
 
       response.data.result.forEach((item) => {
@@ -50,6 +49,7 @@ function HolidaysManagement() {
           .split("T")[0];
         holidayObj[formattedDate] = item.holiday_name;
 
+        // Formatted Date Value Pass in Database
         holidayArr.push({
           date: formattedDate,
           name: item.holiday_name,

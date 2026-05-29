@@ -1,9 +1,9 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React from "react";
 import "../css/Branches.css";
 import { useState } from "react";
 import axios from "axios";
 import { useEffect } from "react";
+// const api_URL = import.meta.env.VITE_API;
 
 function Branches() {
   const [branchName, setBranchName] = useState("");
