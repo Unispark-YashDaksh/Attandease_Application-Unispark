@@ -29,7 +29,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "127.0.0.1",
   user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "]v>GK68Gxyz8A3y",
+  password: process.env.DB_PASSWORD || "Unispark@2022",
   database: process.env.DB_NAME || "attendease_database",
   waitForConnections: true,
   connectionLimit: 10,
@@ -1127,26 +1127,23 @@ app.post("/punch-out", upload.single("selfie"), async (req, res) => {
   }
 });
 
-app.get("/fetchAttendance", (req, res) => {
-  const sql = `SELECT * FROM attendance`;
+app.get("/fetchAttendance", async(req, res) => {
 
-  pool.query(sql, (err, result) => {
-    if (err) {
-      console.error("DB Error:", err);
-      return res.status(500).json({
-        success: false,
-        message: "Database error",
-        error: err.message,
-      });
-    }
-
-    // 🔥 Sahi jagah: Yeh hamesha IF block ke BAHAR hona chahiye
+  try{
+      const [rows] = await promisePool.query(`SELECT a.*, e.employee_name, e.employee_code, ds.designation_name, d.department_name FROM attendance a
+  LEFT JOIN employee_master e ON a.employee_id= e.id
+  LEFT JOIN designations ds ON e.designation_id= ds.id
+  LEFT JOIN departments d ON e.department_id= d.id
+  `)
     return res.json({
       success: true,
       message: "Attendance Fetch Successfully",
-      result: result,
+      result: rows,
     });
-  });
+  }catch(err){
+    console.log("Ftech Attendance API Error:---->", err)
+  }
+
 });
 
 app.put("/updateDepartment/:id", (req, res) => {
