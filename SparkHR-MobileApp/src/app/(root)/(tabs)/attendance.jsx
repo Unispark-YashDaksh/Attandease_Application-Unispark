@@ -71,7 +71,7 @@ export default function AttendanceScreen() {
   // Source: .env (EMPLOYEE_ID) — TEMPORARY. In production, this MUST come from
   //         authentication context (login state / JWT token / AsyncStorage).
   // ---------------------------------------------------------------------------
-  const [loggedInEmployeeId, setLoggedInEmployeeId] = useState("15");
+  const [loggedInEmployeeId, setLoggedInEmployeeId] = useState("13");
 
   // ---- Attendance State ----
   const [canPunchIn, setCanPunchIn] = useState(false);

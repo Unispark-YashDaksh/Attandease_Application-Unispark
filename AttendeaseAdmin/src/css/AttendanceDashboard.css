@@ -1,0 +1,556 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
+
+:root {
+  --background: #faf8ff;
+  --surface: #ffffff;
+  --surface-page: #faf8ff;
+  --surface-low: #f3f3fc;
+  --surface-high: #e7e7f1;
+  --surface-container: #ededf6;
+  --outline: #737784;
+  --outline-variant: #c3c6d5;
+  --text: #191b22;
+  --text-muted: #434653;
+  --primary: #003c90;
+  --primary-strong: #0f52ba;
+  --primary-light: #d9e2ff;
+  --success: #059669;
+  --success-dark: #047857;
+  --success-bg: #ecfdf5;
+  --warning: #d97706;
+  --warning-dark: #b45309;
+  --warning-bg: #fffbeb;
+  --danger: #ba1a1a;
+  --danger-bg: #ffdad6;
+  --secondary: #515f74;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: "Inter", Arial, sans-serif;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.attendance-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--surface-page);
+  color: var(--text);
+}
+
+.attendance-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.attendance-header h2 {
+  margin: 0;
+  font-size: 30px;
+  line-height: 38px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.export-btn:hover {
+  opacity: 0.9;
+}
+
+.export-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.attendance-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.metric-card {
+  min-height: 132px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.metric-card.success-border {
+  border-left: 4px solid #10b981;
+}
+
+.metric-card.danger-border {
+  border-left: 4px solid var(--danger);
+}
+
+.metric-card.warning-border {
+  border-left: 4px solid #f59e0b;
+}
+
+.metric-card.primary-border {
+  border-left: 4px solid var(--primary-strong);
+}
+
+.metric-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.metric-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 24px;
+}
+
+.metric-icon.primary {
+  color: var(--primary-strong);
+  background: var(--primary-light);
+}
+
+.metric-icon.success {
+  color: var(--success);
+  background: var(--success-bg);
+}
+
+.metric-icon.danger {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.metric-icon.warning {
+  color: var(--warning);
+  background: var(--warning-bg);
+}
+
+.metric-label {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: var(--outline);
+}
+
+.metric-card h3 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.metric-card p {
+  margin: 0;
+  color: var(--outline);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.success-text {
+  color: var(--success-dark);
+}
+
+.danger-text {
+  color: var(--danger);
+}
+
+.warning-text {
+  color: var(--warning-dark);
+}
+
+.primary-text {
+  color: var(--primary-strong);
+}
+
+.filters-section {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  align-items: end;
+  width: 100%;
+  min-height: auto;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-field label {
+  font-size: 10px;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: var(--outline);
+}
+
+.filter-field input,
+.filter-field select {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+}
+
+.filter-field input:focus,
+.filter-field select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--surface-high);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filter-btn:hover {
+  background: var(--outline-variant);
+}
+
+.filter-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.attendance-table-container {
+  width: 100%;
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.attendance-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.attendance-table {
+  width: 100%;
+  min-width: 1100px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.attendance-table thead {
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.attendance-table th {
+  padding: 16px 24px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.attendance-table td {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(195, 198, 213, 0.35);
+  color: var(--text);
+  font-size: 13px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.attendance-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.attendance-table tbody tr:hover {
+  background: var(--surface-low);
+}
+
+.attendance-table tbody tr.present-row {
+  background: rgba(236, 253, 245, 0.2);
+}
+
+.attendance-table tbody tr.present-row:hover {
+  background: var(--success-bg);
+}
+
+.attendance-table tbody tr.late-row {
+  background: rgba(255, 218, 214, 0.05);
+}
+
+.attendance-table tbody tr.late-row:hover {
+  background: rgba(255, 218, 214, 0.12);
+}
+
+.attendance-table tbody tr.absent-row {
+  opacity: 0.72;
+}
+
+.employee-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.employee-avatar,
+.employee-image {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+  background: var(--surface-container);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  object-fit: cover;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.employee-cell h6 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.employee-cell p {
+  margin: 0;
+  color: var(--outline);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.employee-code {
+  font-family: "Courier New", monospace;
+  color: var(--text-muted);
+}
+
+.muted-text,
+.location-text {
+  color: var(--outline);
+}
+
+.punch-in {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.late-punch {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.on-time {
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.late-text {
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.status,
+.mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 700;
+}
+
+.status.present {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status.late {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status.absent {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.mode.office {
+  background: var(--surface-high);
+  color: var(--text-muted);
+}
+
+.mode.wfh {
+  background: var(--primary-light);
+  color: var(--primary-strong);
+}
+
+.mode.client,
+.mode.field {
+  background: #d5e3fc;
+  color: var(--secondary);
+}
+
+.correct-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--primary);
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.correct-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--surface-low);
+  border-top: 1px solid var(--outline-variant);
+}
+
+.table-footer span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.pagination {
+  display: flex;
+  gap: 8px;
+}
+
+.pagination button {
+  min-width: 36px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pagination button:hover {
+  background: var(--surface-high);
+}
+
+.pagination button.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+@media (max-width: 1200px) {
+  .attendance-metrics-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .filters-section {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .attendance-page {
+    padding: 16px;
+  }
+
+  .attendance-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .attendance-header h2 {
+    font-size: 24px;
+    line-height: 32px;
+  }
+
+  .attendance-metrics-grid,
+  .filters-section {
+    grid-template-columns: 1fr;
+  }
+
+  .export-btn,
+  .filter-btn {
+    width: 100%;
+  }
+
+  .table-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

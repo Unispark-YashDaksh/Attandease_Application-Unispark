@@ -2,8 +2,8 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import "./css/calendar.css";
-import "./css/HolidayManagement.css";
+import "../css/calendar.css";
+import "../css/HolidayManagement.css";
 import * as XLSX from "xlsx";
 import { useEffect } from "react";
 import axios from "axios";
@@ -167,6 +167,8 @@ function HolidaysManagement() {
               </li>
             ))}
           </ul>
+
+          
         </div>
       </div>
     </div>

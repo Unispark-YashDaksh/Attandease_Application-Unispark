@@ -5,7 +5,7 @@ import Branches from "./master/Branches";
 import { useState } from "react";
 import Shifts from "./master/Shifts";
 import Roles from "./master/Roles";
-import "./css/masterManagement.css";
+import "../css/masterManagement.css";
 
 function MasterManagement() {
   const [activeTab, setActiveTab] = useState("department");

@@ -3,7 +3,7 @@ import React from "react";
 import { useCallback, useState, useEffect } from "react";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
-import "../css/designation.css";
+import "../../css/designation.css";
 
 // to be moved to .env file in for better security and configurability
 const Fetch_API_URL = "http://localhost:7000/fetch-designation";

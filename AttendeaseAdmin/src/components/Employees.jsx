@@ -3,7 +3,7 @@
 import React from "react";
 import { useState } from "react";
 import AddNewEmployeeForm from "./AddNewEmployeeForm";
-import "./css/Employees.css";
+import "../css/Employees.css";
 import axios from "axios";
 import { useEffect } from "react";
 
