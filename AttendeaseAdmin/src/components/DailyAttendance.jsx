@@ -1,7 +1,20 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./css/AttendanceDashboard.css";
+import axios from "axios"
 
 function DailyAttendance() {
+
+    const [dailyAttendance, setDailyAttendance]= useState([]);
+
+    useEffect(()=>{
+      handleFetchDailyAttendance()
+    },[])
+
+    const handleFetchDailyAttendance=async()=>{
+        const response= await axios.get(`http://localhost:7000/fetchAttendance`)
+        setDailyAttendance(response.data.result);
+        console.log(response.data.result);
+    }
   return (
     <div>
       <h5>Attendance Dashboard</h5>
@@ -56,59 +69,66 @@ function DailyAttendance() {
           </thead>
 
           <tbody>
-            <tr>
+            {
+              dailyAttendance.map((item)=>{
+                return(
+              <tr key={item.id}>
               {/* Employee */}
               <td>
                 <div className="employee-cell">
                   <img src="" alt="" className="employee-image" />
 
                   <div>
-                    <h6>Employee Name</h6>
-                    <p>Designation</p>
+                    <h6>{item.employee_name}</h6>
+                    <p>{item.designation_name}</p>
                   </div>
                 </div>
               </td>
 
               {/* Employee Code */}
-              <td>EMP-0001</td>
+              <td>{item.employee_code}</td>
 
               {/* Department */}
-              <td>Department</td>
+              <td>{item.department_name}</td>
 
               {/* Punch In */}
               <td>
-                <span className="punch-in">00:00 AM</span>
+                <span className="punch-in">{item.punch_in}</span>
               </td>
 
               {/* Punch Out */}
-              <td>--:--</td>
+              <td>{item.punch_out || "--:--"}</td>
 
               {/* Working Hours / Late */}
               <td>
                 <div>
-                  <h6>0h</h6>
-                  <p className="on-time">On Time</p>
+                  {item.late_minutes===0 ?(
+                    <p className="on-time">On Time</p>
+                  ):(<h6>{item.late_minutes} Mins Late</h6>)}
                 </div>
               </td>
 
               {/* Status */}
               <td>
-                <span className="status present">Present</span>
+                <span className="status present">{item.status}</span>
               </td>
 
               {/* Mode */}
               <td>
-                <span className="mode office">Office</span>
+                <span className="mode office">{item.attendance_mode}</span>
               </td>
 
               {/* Location */}
-              <td></td>
+              <td>{item.gps_location}</td>
 
               {/* Actions */}
               <td>
                 <button className="correct-btn">ACTION</button>
               </td>
             </tr>
+                )
+              })
+            }
           </tbody>
         </table>
       </div>
