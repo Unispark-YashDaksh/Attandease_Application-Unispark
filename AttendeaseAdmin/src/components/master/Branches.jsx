@@ -15,7 +15,7 @@ function Branches() {
   const [allBranchesData, setAllBranchesData] = useState([]);
 
   const fetchBranches = async () => {
-    const response = await axios.get(`http://localhost:7000/fetch-branches`);
+    const response = await axios.get(`http://192.168.10.29:7000/fetch-branches`);
 
     setAllBranchesData(response.data.result);
   };

@@ -167,8 +167,6 @@ function HolidaysManagement() {
               </li>
             ))}
           </ul>
-
-          
         </div>
       </div>
     </div>

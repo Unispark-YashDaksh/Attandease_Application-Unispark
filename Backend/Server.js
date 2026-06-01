@@ -855,7 +855,7 @@ app.post("/attendance", async (req, res) => {
     // BUG FIXED: column name is `attendance` not `attendance_date`
     // Also use promisePool.query for async/await
     const [rows] = await promisePool.query(
-      `SELECT * FROM attendance WHERE employee_id = ? AND attendance_date = CURDATE()`,
+      `SELECT * FROM attendance WHERE employee_id = ? AND DATE(attendance_date) = CURDATE() ORDER BY id DESC LIMIT 1`,
       [employeeId],
     );
 
@@ -1034,6 +1034,31 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
         .status(400)
         .json({ success: false, message: "Already punched in today" });
     }
+    // const shiftSQL=  `SELECT s.late_after, s.half_day_after FROM employee_master e JOIN shift_master s ON e.shift_id= s.id WHERE e.id=?`
+    // const [shiftData]= await promisePool.query(shiftSQL, [employee_id]);
+    // if(shiftData.length===0){
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Shift not assigned to employee"
+    //   })
+    // }
+
+    // const punchInTime= new Date();
+    // const shift= shiftData[0];
+    // let status= "PRESENT";
+    // let is_late= false;
+    // let late_minutes=0;
+
+    
+    // const [lateHour, lateMinute]= shift.late_after.split(":");
+    // const [halfHour, halfMinute]= shift.half_day_after.split(":");
+
+    // // took current date and current date to convert string to int after that 
+    // const lateAfterDate= new Date();
+    // lateAfterDate.setHours(parseInt(lateHour),parseInt(lateMinute), 0,0);
+
+  
+
 
     const selfiePath = `/uploads/${req.file.filename}`;
 
@@ -1051,6 +1076,8 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
         office_location_id || null,
       ],
     );
+
+    
 
     return res.json({
       success: true,
@@ -1135,11 +1162,21 @@ app.get("/fetchAttendance", async(req, res) => {
   LEFT JOIN designations ds ON e.designation_id= ds.id
   LEFT JOIN departments d ON e.department_id= d.id
   `)
+
+  const formattedRows = rows.map((row) => ({
+  ...row,
+  attendance_date: row.attendance_date
+    ? row.attendance_date.toLocaleDateString("en-CA")
+    : null,
+}));
+  // only for debugging purpose-- rows are coming or not and correct data coming from db. 
+  console.log(formattedRows)
     return res.json({
       success: true,
       message: "Attendance Fetch Successfully",
-      result: rows,
+      result: formattedRows,
     });
+    
   }catch(err){
     console.log("Ftech Attendance API Error:---->", err)
   }

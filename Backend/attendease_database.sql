@@ -74,11 +74,11 @@ punch_out_longitude DECIMAL(11,8),
 status ENUM(
 'PRESENT',
 'ABSENT',
-'LATE',
 'HALF DAY',
 'LEAVE'
 ),
 late_minutes INT DEFAULT 0,
+is_late BOOLEAN DEFAULT false,
 attendance_mode ENUM(
 'OFFICE',
 'WFH',
@@ -103,12 +103,9 @@ REFERENCES office_locations(id)
 );
 
 ALTER TABLE attendance
-ADD COLUMN punch_in_selfie VARCHAR(255),
-ADD COLUMN punch_out_selfie VARCHAR(255),
-ADD COLUMN punch_in_latitude DECIMAL(10,8),
-ADD COLUMN punch_in_longitude DECIMAL(11,8),
-ADD COLUMN punch_out_latitude DECIMAL (10,8),
-ADD COLUMN punch_out_longitude DECIMAL(11,8);
+ADD COLUMN is_late BOOLEAN DEFAULT false;
+
+ 
 
 DROP TABLE attendance;
 
@@ -118,7 +115,7 @@ SELECT * FROM departments;
 SHOW CREATE TABLE designations;
 
 CREATE TABLE designations (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT PRIMARY KEY AUTO_INCREMENT,	
     designation_name VARCHAR(100) NOT NULL,
     department_id INT,
     status ENUM('Active', 'Inactive') DEFAULT 'Active',
@@ -181,7 +178,7 @@ CREATE TABLE office_locations (
 SELECT * FROM office_locations;
 
 UPDATE office_locations
-SET allowed_radius = 40000
+SET longitude = 77.090738
 WHERE id=2;
 
 

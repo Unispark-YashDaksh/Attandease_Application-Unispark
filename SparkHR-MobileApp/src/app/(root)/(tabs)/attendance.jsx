@@ -121,6 +121,7 @@ export default function AttendanceScreen() {
   // =========================================================================
   useEffect(() => {
     initializeScreen();
+   
   }, []);
 
   const initializeScreen = async () => {
@@ -134,6 +135,9 @@ export default function AttendanceScreen() {
     }
   };
 
+  useEffect(()=>{
+     console.log("todayRecord= ", todayRecord)
+  },[todayRecord])
   // =========================================================================
   // ATTENDANCE STATUS CHECK
   // Why: Calls backend to determine today's attendance state.
@@ -374,6 +378,8 @@ export default function AttendanceScreen() {
         name: `selfie_${Date.now()}.jpg`,
       });
 
+
+      //Send Form Data to post api for db store
       const punchResponse = await axios.post(
         `${API_BASE}/punch-in`,
         formData,
