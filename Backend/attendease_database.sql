@@ -1,5 +1,18 @@
 CREATE DATABASE attendease_database;
 USE attendease_database;
+
+
+CREATE TABLE users(
+id INT PRIMARY KEY AUTO_INCREMENT,
+employee_id INT NOT NULL UNIQUE,
+employee_email VARCHAR(50),
+password VARCHAR(255),
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+FOREIGN KEY (employee_id)
+REFERENCES employee_master(id)
+
+);
 -- --------------------------------------Employee Master Table --------------------------------------------------------------------------------
 CREATE TABLE employee_master(
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -178,8 +191,8 @@ CREATE TABLE office_locations (
 SELECT * FROM office_locations;
 
 UPDATE office_locations
-SET longitude = 77.090738
-WHERE id=2;
+SET latitude = 28.4997222
+WHERE id=1;
 
 
 CREATE TABLE holidays(
@@ -213,3 +226,19 @@ ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 
 
 SELECT * FROM shift_master;
+
+
+SELECT attendance_date,
+       DATE(attendance_date),
+       CURDATE()
+FROM attendance
+WHERE employee_id = 11;
+
+SHOW COLUMNS FROM attendance;
+
+
+SELECT attendance_date
+FROM attendance
+WHERE id = 7;
+
+DELETE FROM attendance WHERE id= 7;
