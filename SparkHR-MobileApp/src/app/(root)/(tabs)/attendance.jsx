@@ -22,6 +22,7 @@ import {
 import axios from "axios";
 
 import styles from "../../.././styles/attendanceStyles";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ---------------------------------------------------------------------------
 // API_BASE — Backend server URL
@@ -71,7 +72,21 @@ export default function AttendanceScreen() {
   // Source: .env (EMPLOYEE_ID) — TEMPORARY. In production, this MUST come from
   //         authentication context (login state / JWT token / AsyncStorage).
   // ---------------------------------------------------------------------------
-  const [loggedInEmployeeId, setLoggedInEmployeeId] = useState("13");
+  const [loggedInEmployeeId, setLoggedInEmployeeId] = useState(null);
+
+  useEffect(()=>{
+    const loadandInit= async()=>{
+      const id= await AsyncStorage.getItem("employee_id");
+      setLoggedInEmployeeId(id);
+
+      if(id){
+        await initializeScreen(id) //id pass here
+      }else{
+        setIsCheckingStatus(false)
+      }
+    };
+    loadandInit();
+  }, [])
 
   // ---- Attendance State ----
   const [canPunchIn, setCanPunchIn] = useState(false);
@@ -81,7 +96,7 @@ export default function AttendanceScreen() {
   // ---- Today's Record (for log display) ----
   // Source: Backend /attendance API returns full record including times.
   const [todayRecord, setTodayRecord] = useState(null);
- 
+
 
   // ---- GPS & Location State ----
   const [gpsLocation, setGpsLocation] = useState(null);
@@ -119,15 +134,12 @@ export default function AttendanceScreen() {
   // SCREEN INITIALIZATION
   // Why: On mount, check attendance status + get location + office data.
   // =========================================================================
-  useEffect(() => {
-    initializeScreen();
-   
-  }, []);
+  
 
-  const initializeScreen = async () => {
+  const initializeScreen = async (employeeId) => {  // added parameter
     setIsCheckingStatus(true);
     try {
-      await Promise.all([checkAttendanceStatus(), fetchLocationAndOffice()]);
+      await Promise.all([checkAttendanceStatus(employeeId), fetchLocationAndOffice(employeeId)]);
     } catch (err) {
       console.log("Initialize Error:", err);
     } finally {
@@ -143,10 +155,10 @@ export default function AttendanceScreen() {
   // Why: Calls backend to determine today's attendance state.
   // Backend returns: canPunchIn, canPunchOut, message, record (with times)
   // =========================================================================
-  const checkAttendanceStatus = async () => {
+  const checkAttendanceStatus = async (employeeId) => {
     try {
       const response = await axios.post(`${API_BASE}/attendance`, {
-        employee_id: loggedInEmployeeId,
+        employee_id: employeeId,
       });
 
       console.log("Attendance Status:", JSON.stringify(response.data, null, 2));
@@ -165,7 +177,7 @@ export default function AttendanceScreen() {
   // Why: Gets employee's GPS location, reverse geocodes it to readable address,
   //      and fetches office coordinates/WFH status from backend.
   // =========================================================================
-  const fetchLocationAndOffice = async () => {
+  const fetchLocationAndOffice = async (employeeId) => {
     try {
       const hasPermission = await askAllPermissions();
       if (!hasPermission) return;
@@ -198,7 +210,7 @@ export default function AttendanceScreen() {
 
       // Fetch office location from backend (for distance display)
       const officeRes = await axios.get(
-        `${API_BASE}/office-location/${loggedInEmployeeId}`
+        `${API_BASE}/office-location/${employeeId}`
       );
       if (officeRes.data.success) {
         setOfficeLocation(officeRes.data.officeLocation);
@@ -213,7 +225,7 @@ export default function AttendanceScreen() {
 
       // Check WFH status
       const wfhRes = await axios.get(
-        `${API_BASE}/wfh-status/${loggedInEmployeeId}`
+        `${API_BASE}/wfh-status/${employeeId}`
       );
       if (wfhRes.data.success) {
         setIsWFH(wfhRes.data.isWFH);
@@ -392,7 +404,7 @@ export default function AttendanceScreen() {
 
       if (punchResponse.data.success) {
         Alert.alert("Success", "Punch In Successful!");
-        await checkAttendanceStatus();
+        await checkAttendanceStatus(loggedInEmployeeId);// call with argument passed
       } else {
         Alert.alert("Error", punchResponse.data.message || "Punch In failed");
       }
@@ -456,7 +468,7 @@ export default function AttendanceScreen() {
 
       if (response.data.success) {
         Alert.alert("Success", "Punch Out Successful!");
-        await checkAttendanceStatus();
+        await checkAttendanceStatus(loggedInEmployeeId);
       }
     } catch (err) {
       console.log("Punch Out Error:", err);
