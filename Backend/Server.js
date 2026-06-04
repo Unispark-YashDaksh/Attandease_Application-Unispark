@@ -1307,6 +1307,50 @@ app.post("/login", async (req, res) => {
   }
 });
 
+app.get("/profile/:employeeId", async(req, res)=>{
+  try{
+    const {employeeId}= req.params;
+
+  const [profileData]= await promisePool.query(`SELECT
+    employee_master.employee_name,
+    employee_master.employee_code,
+    employee_master.employee_joining_date,
+    employee_master.employee_email_id,
+    employee_master.employee_mobile_no,
+    employee_master.city,
+
+    designations.designation_name AS employee_designation,
+
+    departments.department_name AS employee_department
+
+FROM employee_master
+
+LEFT JOIN designations
+ON employee_master.designation_id = designations.id
+
+LEFT JOIN departments
+ON employee_master.department_id = departments.id
+
+WHERE employee_master.id = ?;`, [employeeId]);
+  if(profileData.length===0){
+    return res.send({
+      success: false,
+      message: "DB Error"
+    })
+  }
+  res.json({
+    success: true,
+    data: profileData[0]
+  })
+  }catch(err){
+    console.log(err);
+    return res.send({
+      success: false,
+      message: err
+    })
+  }
+})
+
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server Listening Port ${port}`);
 });

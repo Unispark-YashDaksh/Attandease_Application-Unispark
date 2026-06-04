@@ -155,6 +155,9 @@ export default StyleSheet.create({
     marginTop: 4,
   },
 
+  logout: {
+    color: "#003D9B",
+  },
   activeNav: {
     color: "#003D9B",
     fontWeight: "700",

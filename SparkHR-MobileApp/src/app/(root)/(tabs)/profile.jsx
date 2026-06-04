@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -11,16 +11,40 @@ import {
 import styles from "../../../styles/ProfileScreenStyles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import axios from "axios";
+import {
+  VITE_API
+} from "@env";
 
 export default function Profile() {
+  const [loggedInEmployee, setLoggedInEmployee]= useState(null);
+  const [profileData, setProfileData]= useState(null)
+
+  useEffect(()=>{
+   const getEmployeeId= async()=>{
+     const Id=  await AsyncStorage.getItem("employee_id");
+     console.log("Stored Employee Id:-->", Id );
+
+     setLoggedInEmployee(Id)
+
+     if(Id){
+      handleFetchProfile(Id)
+     }
+   }
+   getEmployeeId()
+  },[])
+
+  const handleFetchProfile= async(employeeId)=>{
+    const response= await axios.get(`${VITE_API}/profile/${employeeId}`)
+
+    setProfileData(response.data.data);
+  }
   const handleLogout=  async()=>{
     console.log("Clicked Handle Logout Function")
    try{
-     await AsyncStorage.removeItem("employee-id");
+     await AsyncStorage.removeItem("employee_id");
 
-     router.push("/auth/login")
-
-  router.push("/auth/login")
+     router.replace("/auth/login")
    }catch(err){
     console.log("Logout Error:---> ", err)
    }
@@ -41,11 +65,11 @@ export default function Profile() {
           />
 
           <Text style={styles.employeeName}>
-            Yash Kumar Daksh
+            {profileData?.employee_name}
           </Text>
 
           <Text style={styles.designation}>
-            Senior HR Specialist
+            {profileData?.employee_designation}
           </Text>
 
           <View style={styles.actionContainer}>
@@ -76,17 +100,17 @@ export default function Profile() {
         <View style={styles.card}>
           <InfoRow
             label="Employee ID"
-            value="EMP-82910"
+            value={profileData?.employee_code}
           />
 
           <InfoRow
             label="Department"
-            value="Human Resources"
+            value= {profileData?.employee_department}
           />
 
           <InfoRow
             label="Joining Date"
-            value="12 March 2021"
+            value={profileData?.employee_joining_date}
           />
         </View>
 
@@ -99,17 +123,17 @@ export default function Profile() {
         <View style={styles.card}>
           <InfoRow
             label="Email"
-            value="yash@sparkhr.com"
+            value={profileData?.employee_email_id}
           />
 
           <InfoRow
             label="Phone"
-            value="+91 9876543210"
+            value={profileData?.employee_mobile_no}
           />
 
           <InfoRow
             label="Location"
-            value="Bangalore, India"
+            value={profileData?.city}
           />
         </View>
 
@@ -123,7 +147,7 @@ export default function Profile() {
           <SettingRow title="Privacy & Security" />
           <SettingRow title="Notifications" />
           <SettingRow title="Language" />
-          <SettingRow title="Logout"  onPress={handleLogout}/>
+          <SettingRow style={styles.logout} title="Logout" onPress={handleLogout}/>
         </View>
 
         <View style={{ height: 100 }} />
@@ -155,8 +179,6 @@ function SettingRow({ title, onPress }) {
       <Text style={styles.settingText}>
         {title}
       </Text>
-
-      <Text>{">"}</Text>
     </TouchableOpacity>
   );
 }
