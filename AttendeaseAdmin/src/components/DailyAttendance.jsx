@@ -77,7 +77,7 @@ function DailyAttendance() {
           <div className="metric-top">
             <span className="material-symbols-outlined metric-icon warning">
               schedule
-            </span>
+            </span> 
             <span className="metric-label">LATE</span>
           </div>
           <h3 className="warning-text">{lateCount}</h3>

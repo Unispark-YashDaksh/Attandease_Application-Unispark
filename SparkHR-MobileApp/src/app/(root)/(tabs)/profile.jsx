@@ -57,12 +57,12 @@ export default function Profile() {
         {/* Profile */}
 
         <View style={styles.profileSection}>
-          <Image
+          {/* <Image
             source={{
               uri: "https://i.pravatar.cc/500",
             }}
             style={styles.profileImage}
-          />
+          /> */}
 
           <Text style={styles.employeeName}>
             {profileData?.employee_name}
@@ -72,7 +72,7 @@ export default function Profile() {
             {profileData?.employee_designation}
           </Text>
 
-          <View style={styles.actionContainer}>
+          {/* <View style={styles.actionContainer}>
             <TouchableOpacity
               style={styles.messageBtn}
             >
@@ -88,7 +88,7 @@ export default function Profile() {
                 Edit Profile
               </Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
 
         {/* Professional Info */}

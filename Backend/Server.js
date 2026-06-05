@@ -1346,7 +1346,7 @@ WHERE employee_master.id = ?;`, [employeeId]);
     console.log(err);
     return res.send({
       success: false,
-      message: err
+      message: err.message
     })
   }
 })

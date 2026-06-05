@@ -30,7 +30,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // Why: Mobile app needs to know where to send API requests.
 // ---------------------------------------------------------------------------
 const API_BASE = VITE_API;
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
 
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+console.log("api-base-url-->", API_BASE)
 // ---------------------------------------------------------------------------
 // GPS_ACCURACY_MAP — Maps string values from .env to expo-location Accuracy enum
 // Source: .env variable GPS_ACCURACY (values: Balanced, High, Low)
@@ -73,6 +79,22 @@ export default function AttendanceScreen() {
   //         authentication context (login state / JWT token / AsyncStorage).
   // ---------------------------------------------------------------------------
   const [loggedInEmployeeId, setLoggedInEmployeeId] = useState(null);
+    const [selectedType, setSelectedType] = useState("Sick Leave");
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+  
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const todayDate = today.getDate();
+  
+    const calendarDays = [];
+    for (let i = 0; i < firstDay; i++) {
+      calendarDays.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      calendarDays.push(i);
+    }
 
   useEffect(()=>{
     const loadandInit= async()=>{
@@ -519,7 +541,7 @@ export default function AttendanceScreen() {
         </View>
 
         {/* ========== STATUS CARD ========== */}
-        <View style={styles.statusCard}>
+        {/* <View style={styles.statusCard}>
           <View style={styles.statusTop}>
             <View>
               <Text style={styles.checkInBadge}>
@@ -536,7 +558,7 @@ export default function AttendanceScreen() {
               </Text>
             </View>
           </View>
-        </View>
+        </View> */}
 
         {/* ========== PUNCH BUTTONS ========== */}
         <View style={styles.buttonGrid}>
@@ -631,7 +653,48 @@ export default function AttendanceScreen() {
             </View>
           </View>
         </View>
+                   {/* Calendar Section */}
+        <View style={styles.calendarCard}>
+          <View style={styles.calendarHeader}>
+            <Text style={styles.calendarTitle}>
+              {MONTHS[currentMonth]} {currentYear}
+            </Text>
+            <View style={styles.calendarNav}>
+              <TouchableOpacity>
+                <MaterialIcons name="chevron-left" size={24} color="#333" />
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <MaterialIcons name="chevron-right" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+          </View>
 
+          <View style={styles.weekRow}>
+            {DAYS.map((day) => (
+              <Text key={day} style={styles.weekDay}>{day}</Text>
+            ))}
+          </View>
+
+          <View style={styles.daysGrid}>
+            {calendarDays.map((day, index) => (
+              <View key={index} style={styles.dayCell}>
+                {day !== null && (
+                  <View style={[
+                    styles.dayBox,
+                    day === todayDate && styles.todayBox,
+                  ]}>
+                    <Text style={[
+                      styles.dayText,
+                      day === todayDate && styles.todayText,
+                    ]}>
+                      {day}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        </View>
         {/* ========== TODAY'S LOG ========== */}
         <View className="mt-6 mb-10">
           <Text style={styles.sectionTitle}>Today's Log</Text>
