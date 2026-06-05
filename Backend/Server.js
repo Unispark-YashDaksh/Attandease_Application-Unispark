@@ -24,9 +24,9 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // why used this because
 //Multiple Connections, Faste, Production Standard, Handles Many Requests
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "127.0.0.1",
+  host: process.env.DB_HOST,
   user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "Unispark@2022",
+  password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME || "attendease_database",
   waitForConnections: true,
   connectionLimit: 10,
