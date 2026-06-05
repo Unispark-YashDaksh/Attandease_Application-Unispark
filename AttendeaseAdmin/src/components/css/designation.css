@@ -4,14 +4,23 @@
 .designation-page,
 .designation-page * {
   box-sizing: border-box;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 .material-symbols-outlined {
   direction: ltr;
   display: inline-block;
   font-family: "Material Symbols Outlined";
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
   font-style: normal;
   font-weight: normal;
   letter-spacing: normal;
@@ -119,7 +128,9 @@
   gap: 8px;
   min-height: 40px;
   padding: 10px 24px;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
   white-space: nowrap;
 }
 
@@ -313,7 +324,9 @@
   font-size: 13px;
   line-height: 18px;
   padding: 4px 12px;
-  transition: color 0.2s ease, background-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
   white-space: nowrap;
 }
 
@@ -496,7 +509,9 @@
   height: 32px;
   justify-content: center;
   padding: 0;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
   width: 32px;
 }
 
@@ -845,7 +860,9 @@
   line-height: 20px;
   min-height: 42px;
   padding: 10px 12px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .form-group select {
@@ -856,7 +873,9 @@
     calc(100% - 18px) 50%,
     calc(100% - 12px) 50%;
   background-repeat: no-repeat;
-  background-size: 6px 6px, 6px 6px;
+  background-size:
+    6px 6px,
+    6px 6px;
   padding-right: 36px;
 }
 

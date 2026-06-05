@@ -138,11 +138,14 @@ SELECT * FROM designations;
 CREATE TABLE roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
     role_name VARCHAR(50) UNIQUE NOT NULL,
-    description TEXT,
+    description VARCHAR,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ALTER TABLE roles
 ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
+
+ALTER TABLE roles
+MODIFY description VARCHAR
 	
 
 CREATE TABLE branches (

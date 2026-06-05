@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 
@@ -55,9 +54,9 @@ function Department() {
     event.preventDefault();
     try {
       if (editingId) {
-        handleUpdateDepartment(editingId);
+        await handleUpdateDepartment(editingId);
       } else {
-        handleAddDepartment();
+        await handleAddDepartment();
       }
       fetchDepartments();
       setShowModal(false);
@@ -99,6 +98,24 @@ function Department() {
       console.log(error);
     }
     fetchDepartments();
+  };
+
+  const formatDate = (dateValue) => {
+    if (!dateValue) {
+      return "-";
+    }
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) {
+      return "-";
+    }
+
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   return (
@@ -197,7 +214,7 @@ function Department() {
             return (
               <tr key={item.id}>
                 <td>{item.department_name}</td>
-                <td>{item.created_at}</td>
+                <td>{formatDate(item.created_at)}</td>
                 <td>{item.status}</td>
                 <td>
                   <button

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useEffect, useState } from "react";
 import "./css/AttendanceDashboard.css";
 import axios from "axios"
@@ -6,15 +7,16 @@ function DailyAttendance() {
 
     const [dailyAttendance, setDailyAttendance]= useState([]);
 
-    useEffect(()=>{
-      handleFetchDailyAttendance()
-    },[])
-
     const handleFetchDailyAttendance=async()=>{
         const response= await axios.get(`http://localhost:7000/fetchAttendance`)
         setDailyAttendance(response.data.result);
         console.log(response.data.result);
     }
+    
+    useEffect(()=>{
+      handleFetchDailyAttendance()
+    },[])
+
   return (
     <div>
       <h5>Attendance Dashboard</h5>

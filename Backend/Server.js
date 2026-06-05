@@ -8,9 +8,6 @@ require("dotenv").config();
 const app = express();
 const port = 7000;
 
-app.use(cors());
-app.use(express.json());
-
 app.use(
   cors({
     origin: "*",
@@ -221,7 +218,6 @@ app.put("/updateDesignation/:id", (req, res) => {
   );
 });
 
-// this api not conneted with frontend
 app.get("/fetch-designation", (req, res) => {
   const status = req.query.status;
 
@@ -303,12 +299,12 @@ app.post("/addBranch", (req, res) => {
     [branchName, address, city, state, pincode],
     (err, result) => {
       if (err) {
+        console.log(err);
         return res.status(500).json({
           success: false,
           message: err.sqlMessage,
           fullError: err,
         });
-        console.log(err);
       }
       res.status(200).json({
         success: true,
@@ -319,20 +315,97 @@ app.post("/addBranch", (req, res) => {
 });
 
 app.get("/fetch-branches", (req, res) => {
-  const sql = `SELECT * FROM branches;`;
+  const status = req.query.status;
+  let sql = `SELECT * FROM branches;`;
 
-  pool.query(sql, (err, result) => {
+  const params = [];
+
+  if (status === "Active" || status === "Inactive") {
+    sql = `
+        SELECT * FROM branches
+        WHERE status = ?
+      `;
+    params.push(status);
+  }
+
+  pool.query(sql, params, (err, result) => {
     if (err) {
+      console.log(err);
       return res.status(500).json({
         success: false,
         message: err.sqlMessage,
         fullError: err,
       });
-      console.log(err);
     }
     res.status(200).json({
       success: true,
       message: "Fetch Successfully",
+      result,
+    });
+  });
+});
+
+app.put("/updateBranch/:id", (req, res) => {
+  const id = req.params.id;
+  const branchName = req.body.branchName;
+  const address = req.body.address;
+  const city = req.body.city;
+  const state = req.body.state;
+  const pincode = req.body.pincode;
+
+  const sql = `
+      UPDATE branches
+      SET branch_name = ?,
+        address = ?,
+        city = ?,
+        state = ?,
+        pincode = ?
+      WHERE id = ?
+    `;
+
+  const params = [branchName, address, city, state, pincode, id];
+
+  pool.query(sql, params, (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Branch Updated Successfully",
+      result,
+    });
+  });
+});
+
+app.put("/updateBranchStatus/:id", (req, res) => {
+  const id = req.params.id;
+  const status = req.body.status;
+
+  const sql = `
+      UPDATE branches
+      SET status = ?
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Status Updated Successfully",
       result,
     });
   });
@@ -343,16 +416,17 @@ app.post("/addShift", (req, res) => {
   const shiftName = req.body.shiftName;
   const startTime = req.body.startTime;
   const endTime = req.body.endTime;
-  const lateafter = req.body.lateafter;
+  const lateAfter = req.body.lateAfter;
   const halfdayAfter = req.body.halfdayAfter;
 
   const sql = `INSERT INTO shift_master (shift_name, start_time, end_time, late_after, half_day_after) VALUES (?, ?, ?, ?, ?)`;
 
   pool.query(
     sql,
-    [shiftName, startTime, endTime, lateafter, halfdayAfter],
+    [shiftName, startTime, endTime, lateAfter, halfdayAfter],
     (err, result) => {
       if (err) {
+        console.error(err);
         return res.status(500).json({
           success: false,
           message: err.sqlMessage,
@@ -369,9 +443,20 @@ app.post("/addShift", (req, res) => {
 });
 
 app.get("/fetch-shifts", (req, res) => {
-  const sql = `SELECT * FROM shift_master`;
+  const status = req.query.status;
 
-  pool.query(sql, (err, result) => {
+  let sql = `SELECT * FROM shift_master`;
+  const params = [];
+
+  if (status === "Active" || status === "Inactive") {
+    sql = `
+        SELECT * FROM shift_master
+        WHERE status = ?
+      `;
+    params.push(status);
+  }
+
+  pool.query(sql, params, (err, result) => {
     if (err) {
       return res.status(500).json({
         success: false,
@@ -383,6 +468,70 @@ app.get("/fetch-shifts", (req, res) => {
       success: true,
       message: "Fetch Successfully",
       result,
+    });
+  });
+});
+
+app.put("/updateShift/:id", (req, res) => {
+  const id = req.params.id;
+  const shiftName = req.body.shiftName;
+  const startTime = req.body.startTime;
+  const endTime = req.body.endTime;
+  const lateAfter = req.body.lateAfter;
+  const halfdayAfter = req.body.halfdayAfter;
+
+  const sql = `
+      UPDATE shift_master
+      SET shift_name = ?,
+          start_time = ?,
+          end_time = ?,
+          late_after = ?,
+          half_day_after = ?
+      WHERE id = ?
+    `;
+
+  const params = [shiftName, startTime, endTime, lateAfter, halfdayAfter, id];
+
+  pool.query(sql, params, (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Shift Updated Successfully",
+    });
+  });
+});
+
+app.put("/updateShiftStatus/:id", (req, res) => {
+  const id = req.params.id;
+  const status = req.body.status;
+
+  const sql = `
+      UPDATE shift_master
+      SET status = ?
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Status Updated Successfully",
     });
   });
 });
@@ -452,9 +601,21 @@ app.post("/addRole", (req, res) => {
 });
 
 app.get("/fetch-roles", (req, res) => {
-  const sql = `SELECT * FROM roles`;
+  const status = req.query.status;
 
-  pool.query(sql, (err, result) => {
+  let sql = `SELECT * FROM roles`;
+  const params = [];
+
+  if (status === "Active" || status === "Inactive") {
+    sql = `
+        SELECT * FROM roles
+        WHERE status = ?
+      `;
+
+    params.push(status);
+  }
+
+  pool.query(sql, params, (err, result) => {
     if (err) {
       return res.status(500).json({
         success: false,
@@ -466,6 +627,61 @@ app.get("/fetch-roles", (req, res) => {
       success: true,
       message: "Data Fetch Successfully",
       result,
+    });
+  });
+});
+
+app.put("/updateRole/:id", (req, res) => {
+  const id = req.params.id;
+  const RoleName = req.body.RoleName;
+  const Desc = req.body.Desc;
+
+  const sql = `
+      UPDATE roles
+      SET role_name = ?,
+      description = ?
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [RoleName, Desc, id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Role Updated Successfully",
+    });
+  });
+});
+
+app.put("/updateRoleStatus/:id", (req, res) => {
+  const id = req.params.id;
+  const status = req.body.status;
+
+  const sql = `
+      UPDATE roles
+      SET status = ?
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Status Updated Successfully",
     });
   });
 });
@@ -1127,46 +1343,22 @@ app.post("/punch-out", upload.single("selfie"), async (req, res) => {
   }
 });
 
-app.get("/fetchAttendance", async(req, res) => {
-
-  try{
-      const [rows] = await promisePool.query(`SELECT a.*, e.employee_name, e.employee_code, ds.designation_name, d.department_name FROM attendance a
+app.get("/fetchAttendance", async (req, res) => {
+  try {
+    const [rows] =
+      await promisePool.query(`SELECT a.*, e.employee_name, e.employee_code, ds.designation_name, d.department_name FROM attendance a
   LEFT JOIN employee_master e ON a.employee_id= e.id
   LEFT JOIN designations ds ON e.designation_id= ds.id
   LEFT JOIN departments d ON e.department_id= d.id
-  `)
+  `);
     return res.json({
       success: true,
       message: "Attendance Fetch Successfully",
       result: rows,
     });
-  }catch(err){
-    console.log("Ftech Attendance API Error:---->", err)
+  } catch (err) {
+    console.log("Ftech Attendance API Error:---->", err);
   }
-
-});
-
-app.put("/updateDepartment/:id", (req, res) => {
-  const { id } = req.params;
-  const { departmentName } = req.body;
-  const sql = `UPDATE departments SET department_name = ? WHERE id = ?`;
-  pool.query(sql, [departmentName, id], (err, result) => {
-    if (err) return res.send({ success: false, message: err });
-    res.json({ success: true, message: "Department Updated Successfully" });
-  });
-});
-
-app.put("/updateDepartmentStatus/:id", (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-  const sql = `UPDATE departments SET status = ? WHERE id = ?`;
-  pool.query(sql, [status, id], (err, result) => {
-    if (err) return res.send({ success: false, message: err });
-    res.json({
-      success: true,
-      message: "Department Status Updated Successfully",
-    });
-  });
 });
 
 app.listen(port, () => {
