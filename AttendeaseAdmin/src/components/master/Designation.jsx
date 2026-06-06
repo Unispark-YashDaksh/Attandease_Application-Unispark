@@ -2,7 +2,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
-import "../css/designation.css";
+import "../../css/designation.css";
 
 // to be moved to .env file in for better security and configurability
 const Fetch_API_URL = "http://localhost:7000/fetch-designation";
@@ -518,8 +518,7 @@ function Designation() {
             <div className="table-toolbar-actions">
               {/* the dropdown to show active/inactive/all designations */}
               <select
-                className="form-select d-inline-block"
-                style={{ width: "180px", marginLeft: "2px" }}
+                className="designation-filter-select form-select d-inline-block"
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
               >
@@ -740,6 +739,22 @@ function Designation() {
         {showModal && (
           <div className="modal-overlay" role="presentation">
             <div className="designation-modal" role="dialog" aria-modal="true">
+              <button
+                type="button"
+                className="modal-close-btn"
+                aria-label="Close designation modal"
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingId(null);
+                  setFormData({
+                    designation_name: "",
+                    department_id: "",
+                    status: "Active",
+                  });
+                }}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
               <h2>{editingId ? "Edit Designation" : "Add New Designation"}</h2>
 
               <form onSubmit={handleSubmit}>
@@ -777,21 +792,6 @@ function Designation() {
                   <button type="submit" className="save-btn">
                     Save
                   </button>
-                  <button
-                    type="button"
-                    className="cancel-btn"
-                    onClick={() => {
-                      setShowModal(false);
-                      setEditingId(null);
-                      setFormData({
-                        designation_name: "",
-                        department_id: "",
-                        status: "Active",
-                      });
-                    }}
-                  >
-                    Cancel
-                  </button>
                 </div>
               </form>
             </div>
@@ -805,6 +805,14 @@ function Designation() {
               role="dialog"
               aria-modal="true"
             >
+              <button
+                type="button"
+                className="modal-close-btn"
+                aria-label="Close designation filters"
+                onClick={() => setShowFilter(false)}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
               <h2>Filter Designations</h2>
               <form
                 onSubmit={(e) => {
@@ -863,13 +871,6 @@ function Designation() {
                     onClick={clearFilters}
                   >
                     Clear All
-                  </button>
-                  <button
-                    type="button"
-                    className="cancel-btn"
-                    onClick={() => setShowFilter(false)}
-                  >
-                    Close
                   </button>
                 </div>
               </form>

@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import "../css/Employees.css";
 
 function AddNewEmployeeForm({
   setshowModal,
@@ -37,6 +38,17 @@ function AddNewEmployeeForm({
     employee_uan_no: "",
   };
   const [addEmployeeForm, setAddEmployeeForm] = useState(employeeForm);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState("");
+
+  const handlePhotoChange = (event) => {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
 
   const handleChange = (event) => {
     setAddEmployeeForm({
@@ -45,19 +57,32 @@ function AddNewEmployeeForm({
     });
   };
 
+  const handleClose = () => {
+    setshowModal(false);
+    setEditingEmployee(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const formData = new FormData();
+
+    Object.entries(addEmployeeForm).forEach(([key, value]) => {
+      formData.append(key, value ?? "");
+    });
+
+    if (photoFile) {
+      formData.append("photo", photoFile);
+    }
 
     try {
       if (selectedEmployee) {
         await axios.put(
           `http://localhost:7000/updateEmployee/${selectedEmployee.id}`,
-          addEmployeeForm,
+          formData,
         );
       } else {
-        await axios.post(`http://localhost:7000/addNewEmployee`, {
-          addEmployeeForm,
-        });
+        await axios.post(`http://localhost:7000/addNewEmployee`, formData);
       }
 
       fetchEmployees();
@@ -83,7 +108,7 @@ function AddNewEmployeeForm({
           ...showDepartments,
           {
             id: selectedEmployee.department_id,
-            designation_name: selectedEmployee.department_name,
+            department_name: selectedEmployee.department_name,
           },
         ]
       : showDepartments;
@@ -161,237 +186,246 @@ function AddNewEmployeeForm({
         employee_bank_name: selectedEmployee.employee_bank_name || "",
         employee_bank_ifsc_code: selectedEmployee.employee_bank_ifsc_code || "",
         employee_uan_no: selectedEmployee.employee_uan_no || "",
+        photo_url: selectedEmployee.photo_url || "",
       });
     }
   }, [selectedEmployee]);
 
   return (
-    <div className="container mt-4">
-      {/* Header */}
-      <div className="mb-4">
-        <h2>{selectedEmployee ? "Edit Employee" : "Add New Employee"}</h2>
-        <p>Enter employee details</p>
+    <form className="employee-entry-form" onSubmit={handleSubmit}>
+      <button
+        type="button"
+        className="modal-close-btn"
+        aria-label="Close employee form"
+        onClick={handleClose}
+      >
+        <span className="material-symbols-outlined">close</span>
+      </button>
+
+      <div className="employee-form-header">
+        <div className="summary-icon summary-icon-primary">
+          <span className="material-symbols-outlined">badge</span>
+        </div>
+        <div>
+          <h2>{selectedEmployee ? "Edit Employee" : "Add New Employee"}</h2>
+          <p>Capture profile, organization, identity, and payroll details.</p>
+        </div>
       </div>
 
-      {/* Basic Information */}
-      <div className="card p-4 mb-4">
-        <h4 className="mb-4">Basic Information</h4>
+      <section className="employee-form-section">
+        <div className="employee-section-heading">
+          <span className="material-symbols-outlined">person</span>
+          <div>
+            <h3>Basic Information</h3>
+            <p>Primary employee identity and contact details.</p>
+          </div>
+        </div>
 
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <label>Employee Code</label>
+        <div className="employee-form-grid">
+          <label>
+            <span>Employee Code</span>
             <input
               type="text"
-              className="form-control"
               placeholder="Enter Employee Code"
               name="employee_code"
               value={addEmployeeForm.employee_code}
               onChange={handleChange}
             />
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>Employee Name</label>
+          <label>
+            <span>Employee Name</span>
             <input
               type="text"
-              className="form-control"
               placeholder="Enter Employee Name"
               name="employee_name"
               value={addEmployeeForm.employee_name}
               onChange={handleChange}
             />
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>Gender</label>
-
+          <label>
+            <span>Gender</span>
             <select
               onChange={handleChange}
               name="gender"
-              className="form-control"
               value={addEmployeeForm.gender}
             >
               <option value="">Select Gender</option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
             </select>
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>Mobile Number</label>
+          <label>
+            <span>Mobile Number</span>
             <input
               name="employee_mobile_no"
               type="text"
-              className="form-control"
               placeholder="Enter Mobile Number"
               value={addEmployeeForm.employee_mobile_no}
               onChange={handleChange}
             />
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>Email ID</label>
+          <label>
+            <span>Email ID</span>
             <input
               name="employee_email_id"
               type="email"
-              className="form-control"
               placeholder="Enter Email"
               value={addEmployeeForm.employee_email_id}
               onChange={handleChange}
             />
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>Joining Date</label>
+          <label>
+            <span>Joining Date</span>
             <input
               name="employee_joining_date"
               type="date"
-              className="form-control"
               value={addEmployeeForm.employee_joining_date}
               onChange={handleChange}
             />
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>City</label>
+          <label>
+            <span>City</span>
             <input
               name="city"
               type="text"
-              className="form-control"
               placeholder="Enter City"
               value={addEmployeeForm.city}
               onChange={handleChange}
             />
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>Emergency Contact Number</label>
+          <label>
+            <span>Emergency Contact Number</span>
             <input
               name="emergency_contact_no"
               type="text"
-              className="form-control"
               placeholder="Emergency Contact"
               value={addEmployeeForm.emergency_contact_no}
               onChange={handleChange}
             />
+          </label>
+          <label>
+            <span>Employee Photo (limit 5MB)</span>
+            <input type="file" accept="image/*" onChange={handlePhotoChange} />
+          </label>
+          {(photoPreview || addEmployeeForm.photo_url) && (
+            <img
+              className="employee-photo-preview"
+              src={
+                photoPreview ||
+                `http://localhost:7000${addEmployeeForm.photo_url}`
+              }
+              alt="Employee preview"
+            />
+          )}
+        </div>
+      </section>
+
+      <section className="employee-form-section">
+        <div className="employee-section-heading">
+          <span className="material-symbols-outlined">account_tree</span>
+          <div>
+            <h3>Organization Details</h3>
+            <p>Map this employee to teams, access, and reporting lines.</p>
           </div>
         </div>
-      </div>
 
-      {/* Organization Details */}
-      <div className="card p-4 mb-4">
-        <h4 className="mb-4">Organization Details</h4>
-
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <label>Department</label>
-
+        <div className="employee-form-grid">
+          <label>
+            <span>Department</span>
             <select
               onChange={handleChange}
               name="department_id"
               onClick={fetchDepartments}
-              className="form-control"
               value={addEmployeeForm.department_id}
             >
               <option value="">Select Department</option>
-              {departmentsForDropdown.map((item) => {
-                return (
-                  <option key={item.id} value={item.id}>
-                    {item.department_name}
-                  </option>
-                );
-              })}
+              {departmentsForDropdown.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.department_name}
+                </option>
+              ))}
             </select>
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>Designation</label>
+          <label>
+            <span>Designation</span>
             <select
               onChange={handleChange}
-              className="form-control"
               onClick={fetchDesignation}
               name="designation_id"
-              id=""
               value={addEmployeeForm.designation_id}
             >
               <option value="">Select Designation</option>
-              {designationsForDropdown.map((item) => {
-                return (
-                  <option key={item.id} value={item.id}>
-                    {item.designation_name}
-                  </option>
-                );
-              })}
+              {designationsForDropdown.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.designation_name}
+                </option>
+              ))}
             </select>
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>Branch</label>
-
+          <label>
+            <span>Branch</span>
             <select
               onChange={handleChange}
               name="branch_id"
               onClick={fetchBranchs}
-              className="form-control"
               value={addEmployeeForm.branch_id}
             >
               <option value="">Select Branch</option>
-              {showBranchs.map((item) => {
-                return (
-                  <option key={item.id} value={item.id}>
-                    {item.branch_name}
-                  </option>
-                );
-              })}
+              {showBranchs.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.branch_name}
+                </option>
+              ))}
             </select>
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>Shift</label>
-
+          <label>
+            <span>Shift</span>
             <select
               onChange={handleChange}
               name="shift_id"
               onClick={fetchShifts}
-              className="form-control"
               value={addEmployeeForm.shift_id}
             >
               <option value="">Select Shift</option>
-              {showShifts.map((item) => {
-                return (
-                  <option key={item.id} value={item.id}>
-                    {item.shift_name}
-                  </option>
-                );
-              })}
+              {showShifts.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.shift_name}
+                </option>
+              ))}
             </select>
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>Role</label>
+          <label>
+            <span>Role</span>
             <select
               onChange={handleChange}
               name="role_id"
               onClick={fetchRoles}
-              className="form-control"
               value={addEmployeeForm.role_id}
             >
               <option value="">Select Role</option>
-              {showRoles.map((item) => {
-                return (
-                  <option key={item.id} value={item.id}>
-                    {item.role_name}
-                  </option>
-                );
-              })}
+              {showRoles.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.role_name}
+                </option>
+              ))}
             </select>
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>Reporting Manager</label>
+          <label>
+            <span>Reporting Manager</span>
             <select
               onChange={handleChange}
-              className="form-control"
               name="reporting_manager_id"
               value={addEmployeeForm.reporting_manager_id}
             >
@@ -404,114 +438,95 @@ function AddNewEmployeeForm({
                   </option>
                 ))}
             </select>
-          </div>
+          </label>
+        </div>
+      </section>
 
-          <div className="col-md-6 mb-3">
-            <label>Employment Status</label>
-
-            <select
-              onChange={handleChange}
-              name="employeement_status"
-              className="form-control"
-              value={addEmployeeForm.employeement_status}
-            >
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="RESIGNED">RESIGNED</option>
-            </select>
+      <section className="employee-form-section">
+        <div className="employee-section-heading">
+          <span className="material-symbols-outlined">id_card</span>
+          <div>
+            <h3>Identity Details</h3>
+            <p>Statutory identifiers used for employee records.</p>
           </div>
         </div>
-      </div>
 
-      {/* Identity Details */}
-      <div className="card p-4 mb-4">
-        <h4 className="mb-4">Identity Details</h4>
-
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <label>Aadhar Number</label>
-
+        <div className="employee-form-grid">
+          <label>
+            <span>Aadhar Number</span>
             <input
               name="employee_adhar_no"
               type="text"
-              className="form-control"
               placeholder="Enter Aadhar Number"
               value={addEmployeeForm.employee_adhar_no}
               onChange={handleChange}
             />
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>UAN Number</label>
-
+          <label>
+            <span>UAN Number</span>
             <input
               name="employee_uan_no"
               type="text"
-              className="form-control"
               placeholder="Enter UAN Number"
               value={addEmployeeForm.employee_uan_no}
               onChange={handleChange}
             />
+          </label>
+        </div>
+      </section>
+
+      <section className="employee-form-section">
+        <div className="employee-section-heading">
+          <span className="material-symbols-outlined">account_balance</span>
+          <div>
+            <h3>Bank Details</h3>
+            <p>Payroll account information for salary processing.</p>
           </div>
         </div>
-      </div>
 
-      {/* Bank Details */}
-      <div className="card p-4 mb-4">
-        <h4 className="mb-4">Bank Details</h4>
-
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <label>Bank Account Number</label>
-
+        <div className="employee-form-grid">
+          <label>
+            <span>Bank Account Number</span>
             <input
               name="employee_bank_account_no"
               type="text"
-              className="form-control"
               placeholder="Enter Account Number"
               value={addEmployeeForm.employee_bank_account_no}
               onChange={handleChange}
             />
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>Bank Name</label>
-
+          <label>
+            <span>Bank Name</span>
             <input
               name="employee_bank_name"
               type="text"
-              className="form-control"
               placeholder="Enter Bank Name"
               value={addEmployeeForm.employee_bank_name}
               onChange={handleChange}
             />
-          </div>
+          </label>
 
-          <div className="col-md-6 mb-3">
-            <label>IFSC Code</label>
-
+          <label>
+            <span>IFSC Code</span>
             <input
               name="employee_bank_ifsc_code"
               type="text"
-              className="form-control"
               placeholder="Enter IFSC Code"
               value={addEmployeeForm.employee_bank_ifsc_code}
               onChange={handleChange}
             />
-          </div>
+          </label>
         </div>
-      </div>
+      </section>
 
-      {/* Buttons */}
-      <div className="mb-5">
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="btn btn-primary"
-        >
+      <div className="employee-form-actions">
+        <button type="submit" className="save-btn">
           {selectedEmployee ? "Update Employee" : "Save Employee"}
         </button>
       </div>
-    </div>
+    </form>
   );
 }
 
