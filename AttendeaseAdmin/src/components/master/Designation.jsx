@@ -1,6 +1,5 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React from "react";
-import { useCallback, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
 import "../../css/designation.css";
@@ -39,7 +38,9 @@ function Designation() {
 
   const [editingId, setEditingId] = useState(null); // created a state variable to hold the ID of the designation being edited (null when adding a new designation)
 
-  const [loading, setLoading] = useState(true); // created a state variable to indicate whether the designations are currently being loaded from the server
+  // created a state variable to indicate whether the designations are currently being loaded from the server
+  const [departmentsLoading, setDepartmentsLoading] = useState(false);
+  const [designationsLoading, setDesignationsLoading] = useState(false);
 
   const [error, setError] = useState(null); // created a state variable to hold any error messages that occur during API calls or other operations
 
@@ -71,57 +72,114 @@ function Designation() {
     .sort()
     .at(-1);
 
-  const fetchDepartments = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${Fetch_Dept_ID}?status=Active`); // fetching only active departments for the filter and add/edit dropdowns.
-      const deptData = Array.isArray(response.data)
-        ? response.data
-        : response.data.departments ||
-          response.data.data ||
-          response.data.result ||
-          [];
-      setDepartmentsID(deptData);
-      setError(null);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching departments:", error);
-      setError("Failed to fetch departments. Please try again later.");
-      setLoading(false);
-    }
+  async function getDepartments() {
+    const response = await axios.get(`${Fetch_Dept_ID}?status=Active`);
+
+    const deptData = Array.isArray(response.data)
+      ? response.data
+      : response.data.departments ||
+        response.data.data ||
+        response.data.result ||
+        [];
+
+    return deptData;
+  }
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadDepartments = async () => {
+      try {
+        setDepartmentsLoading(true);
+
+        const deptData = await getDepartments();
+
+        if (!ignore) {
+          setDepartmentsID(deptData);
+          setError(null);
+        }
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+
+        if (!ignore) {
+          setError("Failed to fetch departments. Please try again later.");
+        }
+      } finally {
+        if (!ignore) {
+          setDepartmentsLoading(false);
+        }
+      }
+    };
+
+    loadDepartments();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   // to fetch the list of designations from the server when the component mounts, and to handle loading and error states during the fetch operation
-  const fetchDesignations = useCallback(async () => {
-    setLoading(true);
+  async function getDesignations(filter) {
+    const response = await axios.get(`${Fetch_API_URL}?status=${filter}`);
+
+    const data = Array.isArray(response.data)
+      ? response.data
+      : response.data.designations ||
+        response.data.data ||
+        response.data.result ||
+        [];
+
+    return data;
+  }
+
+  async function refreshDesignations() {
     try {
-      const response = await axios.get(
-        `${Fetch_API_URL}?status=${statusFilter}`, // added status filter to fetch designations based on their active/inactive status
-      );
-      const data = Array.isArray(response.data)
-        ? response.data
-        : response.data.designations ||
-          response.data.data ||
-          response.data.result ||
-          [];
+      setDesignationsLoading(true);
+
+      const data = await getDesignations(statusFilter);
+
       setDesignation(data);
       setError(null);
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching designations:", error);
       setError("Failed to fetch designations. Please try again later.");
-      setLoading(false);
+    } finally {
+      setDesignationsLoading(false);
     }
+  }
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadDesignations = async () => {
+      try {
+        setDesignationsLoading(true);
+
+        const data = await getDesignations(statusFilter);
+
+        if (!ignore) {
+          setDesignation(data);
+          setError(null);
+        }
+      } catch (error) {
+        console.error("Error fetching designations:", error);
+
+        if (!ignore) {
+          setError("Failed to fetch designations. Please try again later.");
+        }
+      } finally {
+        if (!ignore) {
+          setDesignationsLoading(false);
+        }
+      }
+    };
+
+    loadDesignations();
+
+    return () => {
+      ignore = true;
+    };
   }, [statusFilter]);
-
-  // useEffect hook to call the fetchDesignations function when the component mounts.
-  useEffect(() => {
-    fetchDesignations();
-  }, [fetchDesignations]);
-
-  useEffect(() => {
-    fetchDepartments();
-  }, [fetchDepartments]);
 
   // to handle changes to the form inputs for adding/editing a designation.
   const handleChange = (e) => {
@@ -180,7 +238,7 @@ function Designation() {
         await axios.post(Post_API_URL, formData);
       }
 
-      fetchDesignations(); // Refresh the list of designations after sucessfull adding/editing
+      refreshDesignations(); // Refresh the list of designations after sucessfull adding/editing
       setShowModal(false); // Close the modal after successful submission
       setError(null); // Clear any previous error messages on successful submission
     } catch (error) {
@@ -202,7 +260,7 @@ function Designation() {
         status: nextStatus,
       });
 
-      fetchDesignations();
+      refreshDesignations();
       setError(null);
     } catch (error) {
       console.error("Error deleting designation:", error);
@@ -336,7 +394,7 @@ function Designation() {
     return dept ? dept.department_name : "Not assigned";
   };
 
-  if (loading) {
+  if (departmentsLoading || designationsLoading) {
     return (
       <div className="loader-container">
         <Loader2
@@ -460,8 +518,7 @@ function Designation() {
             <div className="table-toolbar-actions">
               {/* the dropdown to show active/inactive/all designations */}
               <select
-                className="form-select d-inline-block"
-                style={{ width: "180px", marginLeft: "2px" }}
+                className="designation-filter-select form-select d-inline-block"
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
               >
@@ -682,6 +739,22 @@ function Designation() {
         {showModal && (
           <div className="modal-overlay" role="presentation">
             <div className="designation-modal" role="dialog" aria-modal="true">
+              <button
+                type="button"
+                className="modal-close-btn"
+                aria-label="Close designation modal"
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingId(null);
+                  setFormData({
+                    designation_name: "",
+                    department_id: "",
+                    status: "Active",
+                  });
+                }}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
               <h2>{editingId ? "Edit Designation" : "Add New Designation"}</h2>
 
               <form onSubmit={handleSubmit}>
@@ -719,13 +792,6 @@ function Designation() {
                   <button type="submit" className="save-btn">
                     Save
                   </button>
-                  <button
-                    type="button"
-                    className="cancel-btn"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Cancel
-                  </button>
                 </div>
               </form>
             </div>
@@ -739,6 +805,14 @@ function Designation() {
               role="dialog"
               aria-modal="true"
             >
+              <button
+                type="button"
+                className="modal-close-btn"
+                aria-label="Close designation filters"
+                onClick={() => setShowFilter(false)}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
               <h2>Filter Designations</h2>
               <form
                 onSubmit={(e) => {
@@ -797,13 +871,6 @@ function Designation() {
                     onClick={clearFilters}
                   >
                     Clear All
-                  </button>
-                  <button
-                    type="button"
-                    className="cancel-btn"
-                    onClick={() => setShowFilter(false)}
-                  >
-                    Close
                   </button>
                 </div>
               </form>

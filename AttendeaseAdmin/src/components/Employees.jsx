@@ -1,38 +1,47 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-
-import React from "react";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AddNewEmployeeForm from "./AddNewEmployeeForm";
-import "../css/Employees.css";
 import axios from "axios";
-import { useEffect } from "react";
+import "../css/designation.css";
+import "../css/Employees.css";
 
 function EmployeeMaster() {
   const [showModal, setshowModal] = useState(false);
   const [allEmployees, setAllEmployees] = useState([]);
-  const [totalEmployees, setTotalEmployees] = useState(0); // added state to store total employees count
+  const [totalEmployees, setTotalEmployees] = useState(0);
   const [activeEmployees, setActiveEmployees] = useState(0);
   const [statusFilter, setStatusFilter] = useState("ACTIVE");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [branchFilter, setBranchFilter] = useState("");
+  const [showFilter, setShowFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [openViewModal, setOpenViewModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [editingEmployee, setEditingEmployee] = useState(null);
-  // removed the redundent totalPages state
-  const itemsPerPage = 3;
+
+  const itemsPerPage = 10;
+
+  const getEmployees = async (page, status) => {
+    const response = await axios.get(
+      `http://localhost:7000/fetch-employees?page=${page}&limit=${itemsPerPage}&status=${status}`,
+    );
+
+    return {
+      employees: Array.isArray(response.data.result)
+        ? response.data.result
+        : [],
+      total: response.data.totalEmployees || 0,
+      active: response.data.activeEmployees || 0,
+    };
+  };
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get(
-        `http://localhost:7000/fetch-employees?page=${currentPage}&limit=${itemsPerPage}&status=${statusFilter}`,
-      );
+      const employeeData = await getEmployees(currentPage, statusFilter);
 
-      const employees = Array.isArray(response.data.result)
-        ? response.data.result
-        : [];
-
-      setAllEmployees(employees);
-      setTotalEmployees(response.data.totalEmployees || 0);
-      setActiveEmployees(response.data.activeEmployees || 0);
+      setAllEmployees(employeeData.employees);
+      setTotalEmployees(employeeData.total);
+      setActiveEmployees(employeeData.active);
     } catch (error) {
       console.error(error);
       setAllEmployees([]);
@@ -42,12 +51,48 @@ function EmployeeMaster() {
   };
 
   useEffect(() => {
-    fetchEmployees();
+    let ignore = false;
+
+    async function loadEmployees() {
+      try {
+        const employeeData = await getEmployees(currentPage, statusFilter);
+
+        if (!ignore) {
+          setAllEmployees(employeeData.employees);
+          setTotalEmployees(employeeData.total);
+          setActiveEmployees(employeeData.active);
+        }
+      } catch (error) {
+        console.error(error);
+
+        if (!ignore) {
+          setAllEmployees([]);
+          setTotalEmployees(0);
+          setActiveEmployees(0);
+        }
+      }
+    }
+
+    loadEmployees();
+
+    return () => {
+      ignore = true;
+    };
   }, [currentPage, statusFilter]);
 
   const openView = (employee) => {
     setSelectedEmployee(employee);
     setOpenViewModal(true);
+  };
+
+  const openAddModal = () => {
+    setEditingEmployee(null);
+    setshowModal(true);
+  };
+
+  const closeViewModal = () => {
+    setOpenViewModal(false);
+    setSelectedEmployee(null);
   };
 
   const handleUpdateEmployeeStatus = async (employee) => {
@@ -68,310 +113,529 @@ function EmployeeMaster() {
     }
   };
 
-  const totalPages = Math.ceil(totalEmployees / itemsPerPage); // moved this inside the component and removed the state as it can be calculated directly from allEmployees length and itemsPerPage
+  const formatDate = (dateValue) => {
+    if (!dateValue) {
+      return "-";
+    }
 
-  const startIndex = (currentPage - 1) * itemsPerPage; // calculating the start index for pagination based on current page and items per page page 1 => startIndex = 0, page 2 => startIndex = 3, page 3 => startIndex = 6 and so on
+    const date = new Date(dateValue);
 
-  const endIndex = startIndex + itemsPerPage; // calculating the end index for pagination which is start index + items per page page 1 => endIndex = 3, page 2 => endIndex = 6, page 3 => endIndex = 9 and so on
+    if (Number.isNaN(date.getTime())) {
+      return dateValue;
+    }
 
-  const showingForm = totalEmployees ? startIndex + 1 : 0;
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const departmentOptions = [
+    ...new Set(
+      allEmployees.map((employee) => employee.department_name).filter(Boolean),
+    ),
+  ];
+  const branchOptions = [
+    ...new Set(
+      allEmployees.map((employee) => employee.branch_name).filter(Boolean),
+    ),
+  ];
+  const filteredEmployees = allEmployees.filter((employee) => {
+    const searchableValue = [
+      employee.employee_code,
+      employee.employee_name,
+      employee.employee_email_id,
+      employee.employee_mobile_no,
+      employee.department_name,
+      employee.designation_name,
+      employee.branch_name,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    if (searchTerm && !searchableValue.includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+
+    if (departmentFilter && employee.department_name !== departmentFilter) {
+      return false;
+    }
+
+    if (branchFilter && employee.branch_name !== branchFilter) {
+      return false;
+    }
+
+    return true;
+  });
+  const resignedEmployees = Math.max(totalEmployees - activeEmployees, 0);
+  const activePercent = totalEmployees
+    ? Math.round((activeEmployees / totalEmployees) * 100)
+    : 0;
+  const latestJoiningDate = allEmployees
+    .map((employee) => employee.employee_joining_date)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+  const totalPages = Math.ceil(totalEmployees / itemsPerPage);
+  const safeCurrentPage = Math.min(currentPage, totalPages || 1);
+  const startIndex = (safeCurrentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const showingFrom = totalEmployees ? startIndex + 1 : 0;
   const showingTo = Math.min(endIndex, totalEmployees);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, []);
-
   return (
-    <div className="container-fluid p-4">
-      {/* Heading */}
-      <div className="mb-4">
-        <h2 className="fw-bold">Employee Master</h2>
-        <p className="text-muted">Manage all employees</p>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="row mb-4">
-        <div className="col-md-3">
-          <div className="card shadow-sm border-0 p-3">
-            <h6>Total Employees</h6>
-            <h2>{totalEmployees}</h2>
+    <div className="designation-page">
+      <main className="designation-main">
+        <div className="designation-header">
+          <div>
+            <h2 className="designation-title">Employee Master</h2>
+            <p className="designation-subtitle">
+              Manage employee records, assignments, and employment status.
+            </p>
           </div>
+
+          <button
+            type="button"
+            className="designation-add-btn"
+            onClick={openAddModal}
+          >
+            <span className="material-symbols-outlined">person_add</span>
+            Add Employee
+          </button>
         </div>
 
-        <div className="col-md-3">
-          <div className="card shadow-sm border-0 p-3">
-            <h6>Active</h6>
-            <h2>{activeEmployees}</h2>
+        <section className="designation-summary-grid">
+          <article className="summary-card">
+            <div className="summary-card-top">
+              <div className="summary-icon summary-icon-primary">
+                <span className="material-symbols-outlined">groups</span>
+              </div>
+              <span className="summary-label">Total Employees</span>
+            </div>
+            <p className="summary-value">{totalEmployees}</p>
+            <div className="summary-note summary-note-success">
+              <span className="material-symbols-outlined">trending_up</span>
+              <span>Live from database</span>
+            </div>
+          </article>
+
+          <article className="summary-card">
+            <div className="summary-card-top">
+              <div className="summary-icon summary-icon-secondary">
+                <span className="material-symbols-outlined">verified</span>
+              </div>
+              <span className="summary-label">Active</span>
+            </div>
+            <p className="summary-value">{activeEmployees}</p>
+            <div className="summary-note">Currently employed</div>
+          </article>
+
+          <article className="summary-card">
+            <div className="summary-card-top">
+              <div className="summary-icon summary-icon-tertiary">
+                <span className="material-symbols-outlined">person_off</span>
+              </div>
+              <span className="summary-label">Resigned</span>
+            </div>
+            <p className="summary-value">{resignedEmployees}</p>
+            <div className="summary-note summary-note-primary">
+              <span className="material-symbols-outlined">check_circle</span>
+              <span>{activePercent}% Active</span>
+            </div>
+          </article>
+
+          <article className="summary-card summary-card-sync">
+            <div className="summary-card-content">
+              <div className="summary-card-top">
+                <div className="summary-icon summary-icon-dark">
+                  <span className="material-symbols-outlined">
+                    event_available
+                  </span>
+                </div>
+                <span className="summary-label">Latest Joining</span>
+              </div>
+              <p className="summary-value summary-value-small">
+                {formatDate(latestJoiningDate)}
+              </p>
+              <div className="summary-note">
+                Based on loaded employee records
+              </div>
+            </div>
+            <span className="material-symbols-outlined summary-watermark">
+              badge
+            </span>
+          </article>
+        </section>
+
+        <section className="designation-table-card">
+          <div className="table-toolbar">
+            <div className="table-toolbar-left">
+              <h3>Employee Directory</h3>
+              <input
+                className="designation-filter-select employee-search-input"
+                type="search"
+                placeholder="Search employees"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+            </div>
+
+            <div className="table-toolbar-actions">
+              <button type="button" onClick={() => setShowFilter(true)}>
+                <span className="material-symbols-outlined">filter_list</span>
+                Filter
+              </button>
+
+              <button type="button" onClick={fetchEmployees}>
+                <span className="material-symbols-outlined">refresh</span>
+                Refresh
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Filter Section */}
-      <div className="card shadow-sm border-0 p-3 mb-4">
-        <div className="row">
-          <div className="col-md-4 mb-2">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Quick Search..."
-            />
-          </div>
+          <div className="table-scroll">
+            <table className="designation-table employee-table">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Employee Code</th>
+                  <th>Department</th>
+                  <th>Designation</th>
+                  <th>Branch</th>
+                  <th>Status</th>
+                  <th>Joining Date</th>
+                  <th className="actions-heading">Actions</th>
+                </tr>
+              </thead>
 
-          <div className="col-md-2 mb-2">
-            <select className="form-select">
-              <option>All Departments</option>
-            </select>
-          </div>
-
-          <div className="col-md-2 mb-2">
-            <select className="form-select">
-              <option>All Branches</option>
-            </select>
-          </div>
-
-          <div className="col-md-2 mb-2">
-            <select
-              className="form-select"
-              value={statusFilter}
-              onChange={(event) => {
-                setStatusFilter(event.target.value);
-                setCurrentPage(1);
-              }}
-            >
-              <option value="ACTIVE">Active Employees</option>
-              <option value="RESIGNED">Inactive Employees</option>
-              <option value="All">All Employees</option>
-            </select>
-          </div>
-
-          <div className="col-md-2 mb-2">
-            <button
-              onClick={() => {
-                setEditingEmployee(null);
-                setshowModal(true);
-              }}
-              className="btn btn-primary w-100"
-            >
-              + Add Employee
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="card shadow-sm border-0">
-        <div className="table-responsive">
-          <table className="table align-middle mb-0">
-            <thead className="table-light">
-              <tr>
-                <th>Photo</th>
-                <th>Employee Code</th>
-                <th>Employee Name</th>
-                <th>Department</th>
-                <th>Designation</th>
-                <th>Branch Name</th>
-                <th>Reporting Manager</th>
-                <th>Status</th>
-                <th>Joining Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {allEmployees.map((item) => {
-                return (
-                  <tr key={item.id}>
-                    <td>
-                      <img
-                        src="https://i.pravatar.cc/40?img=1"
-                        alt=""
-                        className="rounded-circle"
-                      />
-                    </td>
-
-                    <td className="fw-bold text-primary">
-                      {item.employee_code}
-                    </td>
-
-                    <td>
-                      <div>
-                        <h6 className="mb-0">{item.employee_name}</h6>
-
-                        <small className="text-muted"></small>
-                      </div>
-                    </td>
-
-                    <td>{item.department_name}</td>
-
-                    <td>{item.designation_name}</td>
-
-                    <td>{item.branch_name}</td>
-
-                    <td></td>
-
-                    <td>
-                      <span className="badge bg-success">
-                        {item.employeement_status}
-                      </span>
-                    </td>
-
-                    <td>{item.employee_joining_date}</td>
-
-                    <td>
-                      <button
-                        className="btn btn-sm btn-outline-primary me-2"
-                        onClick={() => openView(item)}
-                      >
-                        View
-                      </button>
-
-                      <button
-                        className="btn btn-sm btn-outline-warning me-2"
-                        onClick={() => {
-                          setEditingEmployee(item);
-                          setshowModal(true);
-                        }}
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        className={
-                          item.employeement_status === "ACTIVE"
-                            ? "btn btn-sm btn-outline-danger"
-                            : "btn btn-sm btn-outline-success"
-                        }
-                        onClick={() => handleUpdateEmployeeStatus(item)}
-                      >
-                        {item.employeement_status === "ACTIVE"
-                          ? "Resign"
-                          : "Reactivate"}
-                      </button>
+              <tbody>
+                {filteredEmployees.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" className="empty-state">
+                      No employees match your filter
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                ) : (
+                  filteredEmployees.map((item) => (
+                    <tr className="designation-row" key={item.id}>
+                      <td>
+                        <div className="role-cell">
+                          {item.photo_url ? (
+                            <img
+                              className="employee-photo"
+                              src={`http://localhost:7000${item.photo_url}`}
+                              alt={item.employee_name}
+                            />
+                          ) : (
+                            <span className="material-symbols-outlined">
+                              person
+                            </span>
+                          )}
+                          <div>
+                            <span>{item.employee_name}</span>
+                            <p className="employee-subtext">
+                              {item.employee_email_id || "No email assigned"}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{item.employee_code}</td>
+                      <td>{item.department_name || "-"}</td>
+                      <td>{item.designation_name || "-"}</td>
+                      <td>{item.branch_name || "-"}</td>
+                      <td>
+                        <span
+                          className={
+                            item.employeement_status === "ACTIVE"
+                              ? "status-active"
+                              : "status-inactive"
+                          }
+                        >
+                          {item.employeement_status}
+                        </span>
+                      </td>
+                      <td>{formatDate(item.employee_joining_date)}</td>
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            className="edit-btn"
+                            type="button"
+                            aria-label={`View ${item.employee_name}`}
+                            onClick={() => openView(item)}
+                          >
+                            <span className="material-symbols-outlined">
+                              visibility
+                            </span>
+                          </button>
 
-        {showModal === true && (
-          <div className="modal-overlay">
-            <div className="modal-container">
+                          <button
+                            className="edit-btn"
+                            type="button"
+                            aria-label={`Edit ${item.employee_name}`}
+                            onClick={() => {
+                              setEditingEmployee(item);
+                              setshowModal(true);
+                            }}
+                          >
+                            <span className="material-symbols-outlined">
+                              edit
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className="delete-btn"
+                            aria-label={
+                              item.employeement_status === "ACTIVE"
+                                ? "Mark employee resigned"
+                                : "Reactivate employee"
+                            }
+                            onClick={() => handleUpdateEmployeeStatus(item)}
+                          >
+                            <span className="material-symbols-outlined">
+                              {item.employeement_status === "ACTIVE"
+                                ? "block"
+                                : "check_circle"}
+                            </span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="table-pagination">
+            <p>
+              Showing {showingFrom} to {showingTo} of {totalEmployees} employees
+            </p>
+
+            <div className="pagination-buttons">
+              <button
+                type="button"
+                disabled={safeCurrentPage === 1}
+                onClick={() => setCurrentPage((page) => page - 1)}
+              >
+                <span className="material-symbols-outlined">chevron_left</span>
+              </button>
+
+              <button type="button" className="pagination-active">
+                {safeCurrentPage}
+              </button>
+
+              <button
+                type="button"
+                disabled={safeCurrentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage((page) => page + 1)}
+              >
+                <span className="material-symbols-outlined">chevron_right</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {showFilter && (
+          <div className="modal-overlay" role="presentation">
+            <div
+              className="designation-modal filter-modal"
+              role="dialog"
+              aria-modal="true"
+            >
+              <button
+                type="button"
+                className="modal-close-btn"
+                aria-label="Close employee filters"
+                onClick={() => setShowFilter(false)}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+
+              <h2>Filter Employees</h2>
+
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  setShowFilter(false);
+                }}
+              >
+                <div className="form-group">
+                  <label htmlFor="employee_department_filter">
+                    Department
+                  </label>
+                  <select
+                    id="employee_department_filter"
+                    value={departmentFilter}
+                    onChange={(event) => {
+                      setDepartmentFilter(event.target.value);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value="">All Departments</option>
+                    {departmentOptions.map((department) => (
+                      <option key={department} value={department}>
+                        {department}
+                      </option>
+                    ))}
+                  </select>
+
+                  <label htmlFor="employee_branch_filter">Branch</label>
+                  <select
+                    id="employee_branch_filter"
+                    value={branchFilter}
+                    onChange={(event) => {
+                      setBranchFilter(event.target.value);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value="">All Branches</option>
+                    {branchOptions.map((branch) => (
+                      <option key={branch} value={branch}>
+                        {branch}
+                      </option>
+                    ))}
+                  </select>
+
+                  <label htmlFor="employee_status_filter">Status</label>
+                  <select
+                    id="employee_status_filter"
+                    value={statusFilter}
+                    onChange={(event) => {
+                      setStatusFilter(event.target.value);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value="ACTIVE">Active Employees</option>
+                    <option value="RESIGNED">Resigned Employees</option>
+                    <option value="All">All Employees</option>
+                  </select>
+                </div>
+
+                <div className="modal-actions">
+                  <button type="submit" className="save-btn">
+                    Apply Filters
+                  </button>
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={() => {
+                      setDepartmentFilter("");
+                      setBranchFilter("");
+                      setStatusFilter("ACTIVE");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showModal && (
+          <div className="modal-overlay" role="presentation">
+            <div
+              className="designation-modal employee-form-modal"
+              role="dialog"
+              aria-modal="true"
+            >
               <AddNewEmployeeForm
                 setshowModal={setshowModal}
                 selectedEmployee={editingEmployee}
                 setEditingEmployee={setEditingEmployee}
                 fetchEmployees={fetchEmployees}
               />
-
-              <button
-                className="btn btn-secondary me-3"
-                onClick={() => {
-                  setshowModal(false);
-                  setEditingEmployee(null);
-                }}
-              >
-                Close
-              </button>
             </div>
           </div>
         )}
 
         {openViewModal && selectedEmployee && (
-          <div className="modal-overlay">
-            <div className="modal-container">
-              <h3>Employee Details</h3>
-
-              <p>
-                <strong>Code:</strong> {selectedEmployee.employee_code}
-              </p>
-              <p>
-                <strong>Name:</strong> {selectedEmployee.employee_name}
-              </p>
-              <p>
-                <strong>Department:</strong> {selectedEmployee.department_name}
-              </p>
-              <p>
-                <strong>Designation:</strong>{" "}
-                {selectedEmployee.designation_name}
-              </p>
-              <p>
-                <strong>Branch:</strong> {selectedEmployee.branch_name}
-              </p>
-              <p>
-                <strong>Status:</strong> {selectedEmployee.employeement_status}
-              </p>
-              <p>
-                <strong>Email:</strong> {selectedEmployee.employee_email_id}
-              </p>
-              <p>
-                <strong>Mobile:</strong> {selectedEmployee.employee_mobile_no}
-              </p>
-              <p>
-                <strong>Joining Date:</strong>{" "}
-                {selectedEmployee.employee_joining_date}
-              </p>
-              <p>
-                <strong>City:</strong> {selectedEmployee.city}
-              </p>
-              <p>
-                <strong>Aadhar:</strong> {selectedEmployee.employee_adhar_no}
-              </p>
-              <p>
-                <strong>Bank:</strong> {selectedEmployee.employee_bank_name}
-              </p>
-              <p>
-                <strong>Account:</strong>{" "}
-                {selectedEmployee.employee_bank_account_no}
-              </p>
-              <p>
-                <strong>IFSC:</strong>{" "}
-                {selectedEmployee.employee_bank_ifsc_code}
-              </p>
-
+          <div className="modal-overlay" role="presentation">
+            <div
+              className="designation-modal employee-details-modal"
+              role="dialog"
+              aria-modal="true"
+            >
               <button
-                className="btn btn-secondary"
-                onClick={() => {
-                  setOpenViewModal(false);
-                  setSelectedEmployee(null);
-                }}
+                type="button"
+                className="modal-close-btn"
+                aria-label="Close employee details"
+                onClick={closeViewModal}
               >
-                Close
+                <span className="material-symbols-outlined">close</span>
               </button>
+              <h2>Employee Details</h2>
+
+              <div className="employee-detail-grid">
+                <p>
+                  <strong>Code</strong>
+                  <span>{selectedEmployee.employee_code || "-"}</span>
+                </p>
+                <p>
+                  <strong>Name</strong>
+                  <span>{selectedEmployee.employee_name || "-"}</span>
+                </p>
+                <p>
+                  <strong>Department</strong>
+                  <span>{selectedEmployee.department_name || "-"}</span>
+                </p>
+                <p>
+                  <strong>Designation</strong>
+                  <span>{selectedEmployee.designation_name || "-"}</span>
+                </p>
+                <p>
+                  <strong>Branch</strong>
+                  <span>{selectedEmployee.branch_name || "-"}</span>
+                </p>
+                <p>
+                  <strong>Status</strong>
+                  <span>{selectedEmployee.employeement_status || "-"}</span>
+                </p>
+                <p>
+                  <strong>Email</strong>
+                  <span>{selectedEmployee.employee_email_id || "-"}</span>
+                </p>
+                <p>
+                  <strong>Mobile</strong>
+                  <span>{selectedEmployee.employee_mobile_no || "-"}</span>
+                </p>
+                <p>
+                  <strong>Joining Date</strong>
+                  <span>
+                    {formatDate(selectedEmployee.employee_joining_date)}
+                  </span>
+                </p>
+                <p>
+                  <strong>City</strong>
+                  <span>{selectedEmployee.city || "-"}</span>
+                </p>
+                <p>
+                  <strong>Aadhar</strong>
+                  <span>{selectedEmployee.employee_adhar_no || "-"}</span>
+                </p>
+                <p>
+                  <strong>Bank</strong>
+                  <span>{selectedEmployee.employee_bank_name || "-"}</span>
+                </p>
+                <p>
+                  <strong>Account</strong>
+                  <span>
+                    {selectedEmployee.employee_bank_account_no || "-"}
+                  </span>
+                </p>
+                <p>
+                  <strong>IFSC</strong>
+                  <span>{selectedEmployee.employee_bank_ifsc_code || "-"}</span>
+                </p>
+              </div>
             </div>
           </div>
         )}
-
-        {/* Pagination */}
-        <div className="d-flex justify-content-between align-items-center p-3 border-top">
-          <p className="mb-0">
-            Showing {showingForm} to {showingTo} of {totalEmployees} employees
-          </p>
-
-          <div>
-            <button
-              className="btn btn-light me-2"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((page) => page - 1)}
-            >
-              Prev
-            </button>
-
-            <button type="button" className="pagination-active">
-              {currentPage}
-            </button>
-
-            <button
-              type="button"
-              disabled={currentPage === totalPages || totalPages === 0}
-              onClick={() => setCurrentPage((page) => page + 1)}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

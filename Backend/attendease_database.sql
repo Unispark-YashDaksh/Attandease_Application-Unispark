@@ -57,6 +57,9 @@ FOREIGN KEY (reporting_manager_id)
 REFERENCES employee_master(id)
 );
 
+ALTER TABLE employee_master
+ADD COLUMN photo_url VARCHAR(255);
+
 SELECT * FROM employee_master;
 
 ALTER  TABLE employee_master
@@ -148,11 +151,14 @@ SELECT * FROM designations;
 CREATE TABLE roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
     role_name VARCHAR(50) UNIQUE NOT NULL,
-    description TEXT,
+    description VARCHAR,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ALTER TABLE roles
 ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
+
+ALTER TABLE roles
+MODIFY description VARCHAR
 	
 
 CREATE TABLE branches (
