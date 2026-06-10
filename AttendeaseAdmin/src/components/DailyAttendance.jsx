@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../css/AttendanceDashboard.css";
 import axios from "axios";
+const apiUrl= import.meta.env.VITE_API;
 
 function DailyAttendance() {
   const [dailyAttendance, setDailyAttendance] = useState([]);
@@ -10,7 +11,7 @@ function DailyAttendance() {
   }, []);
 
   const handleFetchDailyAttendance = async () => {
-    const response = await axios.get("http://localhost:7000/fetchAttendance");
+    const response = await axios.get(`${apiUrl}/fetchAttendance`);
     setDailyAttendance(response.data.result);
   };
 

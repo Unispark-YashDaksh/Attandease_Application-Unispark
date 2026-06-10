@@ -1,9 +1,12 @@
 import axios from "axios";
+import {
+  VITE_API
+} from "@env";
 
 const fetchHolidays = async () => {
   try {
     const response = await axios.get(
-      "http://localhost:7000/fetch-holidays"
+      `${VITE_API}/fetch-holidays`
     );
 
     const holidayArr = [];
