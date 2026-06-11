@@ -70,6 +70,23 @@ const employeePhotoStorage = multer.diskStorage({
   },
 });
 
+app.get("/health",(req ,res)=>{
+  const sql= `SELECT * FROM employee_master`;
+
+  pool.query(sql, (err, result) => {
+    if(err){
+      return res.send({
+        success: false,
+        message: "DB Connection Failed",
+      })
+    }
+    res.json({
+      success: true,
+      RESULT: result,
+    })
+  })
+})
+
 const employeePhotoUpload = multer({
   storage: employeePhotoStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
