@@ -80,10 +80,18 @@
 }
 
 .employee-photo {
+  aspect-ratio: 1;
   border-radius: 9999px;
-  height: 100%;
+  display: block;
+  flex: 0 0 32px;
+  height: 32px;
   object-fit: cover;
-  width: 100%;
+  object-position: center;
+  max-height: 32px;
+  max-width: 32px;
+  min-height: 32px;
+  min-width: 32px;
+  width: 32px;
 }
 
 .employee-section-heading h3 {
