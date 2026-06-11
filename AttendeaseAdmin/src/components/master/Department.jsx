@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../../css/designation.css";
+const apiUrl = import.meta.env.VITE_API
 
 function Department() {
   const [departmentName, setDepartmentName] = useState("");
@@ -15,7 +16,7 @@ function Department() {
 
   const getDepartments = async (filter) => {
     const response = await axios.get(
-      `http://localhost:7000/fetch-departments?status=${filter}`,
+      `${apiUrl}/fetch-departments?status=${filter}`,
     );
 
     return Array.isArray(response.data.result) ? response.data.result : [];

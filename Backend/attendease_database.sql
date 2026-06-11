@@ -193,7 +193,7 @@ CREATE TABLE office_locations (
 
 
 SELECT * FROM office_locations;
-
+INSERT INTO office_locations(branch_id, office_name, latitude, longitude, allowed_radius  ) VALUES(1,"Noida Office", 28.499718, 77.414824, 500);
 UPDATE office_locations
 SET latitude = 28.4997222
 WHERE id=1;
