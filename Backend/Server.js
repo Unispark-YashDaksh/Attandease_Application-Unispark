@@ -1,23 +1,106 @@
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
+const multer = require("multer");
+const path = require("path");
+const { error } = require("console");
+require("dotenv").config();
 
 const app = express();
-const port = 8081;
+const port = process.env.PORT || 7000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization", "employee-id"],
+  }),
+);
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded selfies as static files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // why used this because
 //Multiple Connections, Faste, Production Standard, Handles Many Requests
 const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "Unispark@2022",
-  database: "attendease_database",
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD,
+  database: process.env.DATABASE || process.env.DB_NAME || "attendease_database",
+  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+});
+
+// Convert pool to promise-based (was missing - caused async/await crash)
+const promisePool = pool.promise();
+
+// Multer config for selfie uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `selfie_${Date.now()}_${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|gif|webp/;
+    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+    const mime = allowed.test(file.mimetype);
+    if (ext && mime) return cb(null, true);
+    cb(new Error("Only image files allowed"));
+  },
+});
+
+const employeePhotoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/employee_photos/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `employee_${Date.now()}_${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  },
+});
+
+app.get("/health",(req ,res)=>{
+  const sql= `SELECT * FROM employee_master`;
+
+  pool.query(sql, (err, result) => {
+    if(err){
+      return res.send({
+        success: false,
+        message: "DB Connection Failed",
+      })
+    }
+    res.json({
+      success: true,
+      RESULT: result,
+    })
+  })
+})
+
+const employeePhotoUpload = multer({
+  storage: employeePhotoStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|gif|webp/;
+    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+    const mime = allowed.test(file.mimetype);
+    if (ext && mime) {
+      return cb(null, true);
+    }
+    cb(new Error("Only image files allowed"));
+  },
 });
 
 app.post("/addDepartmentName", (req, res) => {
@@ -28,10 +111,13 @@ app.post("/addDepartmentName", (req, res) => {
   pool.query(sql, [departmentName], (err, result) => {
     if (err) {
       console.log(err);
-      return res.send({ success: false, message: err });
+      return res.status(500).json({
+        success: false,
+        message: err,
+      });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Department Added Successfully",
     });
@@ -39,66 +125,210 @@ app.post("/addDepartmentName", (req, res) => {
 });
 
 app.get("/fetch-departments", (req, res) => {
-  const sql = `SELECT * FROM departments`;
+  const status = req.query.status;
 
-  pool.query(sql, (err, result) => {
+  let sql = `SELECT * FROM departments`;
+  const params = [];
+
+  if (status === "Active" || status === "Inactive") {
+    sql = `SELECT * FROM departments WHERE status = ?`;
+    params.push(status);
+  }
+
+  pool.query(sql, params, (err, result) => {
     if (err) {
-      return res.send({
+      return res.status(500).json({
         success: false,
         message: err,
       });
     }
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Fetched Successfully",
       result,
     });
   });
 });
-// this api not connected with frontend
-app.post("/addDesignation", (req, res) => {
+
+app.put("/updateDepartment/:id", (req, res) => {
   console.log(req.body);
-  const designationName = req.body.designation_name;
-  const department_id = req.body.department_id;
+  const id = req.params.id;
+  const departmentName = req.body.departmentName;
 
-  const sql = `INSERT INTO designations(designation_name, department_id) VALUES(?,?)`;
+  const sql = `
+      UPDATE departments
+      SET department_name = ?
+      WHERE id = ?
+    `;
 
-  pool.query(sql, [designationName, department_id], (err, result) => {
+  pool.query(sql, [departmentName, id], (err, result) => {
     if (err) {
-      return res.send({
+      return res.status(500).json({
         success: false,
         message: err,
       });
     }
-    res.json({
+
+    res.status(200).json({
+      success: true,
+      message: "Department Updated Successfully",
+    });
+  });
+});
+
+app.put("/updateDepartmentStatus/:id", (req, res) => {
+  const id = req.params.id;
+  const status = req.body.status;
+
+  const sql = `
+      UPDATE departments 
+      SET status = ? 
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.log("Update ERROR:", err);
+
+      return res.status(500).json({
+        success: false,
+        error: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Department Status Updated Successfully",
+      result,
+    });
+  });
+});
+
+app.post("/addDesignation", (req, res) => {
+  console.log(req.body);
+  const designationName = req.body.designation_name;
+  const department_id = req.body.department_id;
+  const status = req.body.status || "Active";
+
+  const sql = `INSERT INTO designations(designation_name, department_id, status) VALUES(?, ?, ?)`;
+
+  pool.query(sql, [designationName, department_id, status], (err, result) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: err,
+      });
+    }
+    res.status(200).json({
       success: true,
       message: "Data Saved Successfully",
     });
   });
 });
 
-// this api not conneted with frontend
-app.get("/fetch-designation", (req, res) => {
+app.put("/updateDesignation/:id", (req, res) => {
+  const id = req.params.id;
+  const designationName = req.body.designation_name;
+  const department_id = req.body.department_id;
+  const status = req.body.status;
+
   const sql = `
+      UPDATE designations
+      SET designation_name = ?, department_id = ?, status = ?
+      WHERE id = ?
+    `;
+
+  pool.query(
+    sql,
+    [designationName, department_id, status, id],
+    (err, result) => {
+      if (err) {
+        console.log("Update Error: ", err);
+
+        return res.status(500).json({
+          success: false,
+          message: err.sqlMessage,
+          fullError: err,
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Updated Successfully",
+        result,
+      });
+    },
+  );
+});
+
+app.get("/fetch-designation", (req, res) => {
+  const status = req.query.status;
+
+  let sql = `
       SELECT designations.*, departments.department_name AS department
       FROM designations
       LEFT JOIN departments ON designations.department_id = departments.id
     `;
+  const params = [];
 
-  pool.query(sql, (err, result) => {
+  if (status === "Active" || status === "Inactive") {
+    sql = `SELECT designations.*,
+      departments.department_name AS department
+      FROM designations
+      LEFT JOIN departments ON designations.department_id = departments.id
+      WHERE designations.status = ?
+    `;
+    params.push(status);
+  }
+
+  pool.query(sql, params, (err, result) => {
     if (err) {
-      res.send({
+      console.log("Update ERROR:", err);
+
+      return res.status(500).json({
         success: false,
-        message: err,
+        error: err.sqlMessage,
+        fullError: err,
       });
     }
-    res.json({
+
+    res.status(200).json({
       success: true,
-      message: "Fetching Successfully",
+      message: "Fetching Successful",
       result,
     });
   });
 });
+
+app.get("/designationStatus", (req, res) => {
+  const sql = `SELECT designations.*, 
+    departments.department_name AS department
+    FROM designations
+    JOIN departments ON designations.department_id = departments.id
+    WHERE designations.status = 'Active'
+    AND departments.status = 'Active'
+  `;
+
+  pool.query(sql, (err, result) => {
+    if (err) {
+      console.log("Fetch Error: ", err);
+
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Fetching Successful",
+      result,
+    });
+  });
+});
+
 app.post("/addBranch", (req, res) => {
   console.log(req.body);
   const branchName = req.body.branchName;
@@ -110,16 +340,17 @@ app.post("/addBranch", (req, res) => {
   const sql = `INSERT INTO branches (branch_name, address, city, state, pincode) VALUES(?,?,?,?,?)`;
   pool.query(
     sql,
-    [branchName, address, state, city, pincode],
+    [branchName, address, city, state, pincode],
     (err, result) => {
       if (err) {
-        return res.send({
-          success: false,
-          message: err,
-        });
         console.log(err);
+        return res.status(500).json({
+          success: false,
+          message: err.sqlMessage,
+          fullError: err,
+        });
       }
-      res.json({
+      res.status(200).json({
         success: true,
         message: "Data Added Successfully",
       });
@@ -128,19 +359,97 @@ app.post("/addBranch", (req, res) => {
 });
 
 app.get("/fetch-branches", (req, res) => {
-  const sql = `SELECT * FROM branches;`;
+  const status = req.query.status;
+  let sql = `SELECT * FROM branches;`;
 
-  pool.query(sql, (err, result) => {
+  const params = [];
+
+  if (status === "Active" || status === "Inactive") {
+    sql = `
+        SELECT * FROM branches
+        WHERE status = ?
+      `;
+    params.push(status);
+  }
+
+  pool.query(sql, params, (err, result) => {
     if (err) {
-      return res.send({
-        success: false,
-        message: err,
-      });
       console.log(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
     }
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Fetch Successfully",
+      result,
+    });
+  });
+});
+
+app.put("/updateBranch/:id", (req, res) => {
+  const id = req.params.id;
+  const branchName = req.body.branchName;
+  const address = req.body.address;
+  const city = req.body.city;
+  const state = req.body.state;
+  const pincode = req.body.pincode;
+
+  const sql = `
+      UPDATE branches
+      SET branch_name = ?,
+        address = ?,
+        city = ?,
+        state = ?,
+        pincode = ?
+      WHERE id = ?
+    `;
+
+  const params = [branchName, address, city, state, pincode, id];
+
+  pool.query(sql, params, (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Branch Updated Successfully",
+      result,
+    });
+  });
+});
+
+app.put("/updateBranchStatus/:id", (req, res) => {
+  const id = req.params.id;
+  const status = req.body.status;
+
+  const sql = `
+      UPDATE branches
+      SET status = ?
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Status Updated Successfully",
       result,
     });
   });
@@ -151,39 +460,122 @@ app.post("/addShift", (req, res) => {
   const shiftName = req.body.shiftName;
   const startTime = req.body.startTime;
   const endTime = req.body.endTime;
-  const lateafter = req.body.lateafter;
+  const lateAfter = req.body.lateAfter;
   const halfdayAfter = req.body.halfdayAfter;
 
   const sql = `INSERT INTO shift_master (shift_name, start_time, end_time, late_after, half_day_after) VALUES (?, ?, ?, ?, ?)`;
 
   pool.query(
     sql,
-    [shiftName, startTime, endTime, lateafter, halfdayAfter],
+    [shiftName, startTime, endTime, lateAfter, halfdayAfter],
     (err, result) => {
       if (err) {
-        return res.send({
-          success: true,
-          message: "Added Successfully",
+        console.error(err);
+        return res.status(500).json({
+          success: false,
+          message: err.sqlMessage,
+          fullError: err,
         });
       }
+
+      res.status(200).json({
+        success: true,
+        message: "Added Successfully",
+      });
     },
   );
 });
 
 app.get("/fetch-shifts", (req, res) => {
-  const sql = `SELECT * FROM shift_master`;
+  const status = req.query.status;
 
-  pool.query(sql, (err, result) => {
+  let sql = `SELECT * FROM shift_master`;
+  const params = [];
+
+  if (status === "Active" || status === "Inactive") {
+    sql = `
+        SELECT * FROM shift_master
+        WHERE status = ?
+      `;
+    params.push(status);
+  }
+
+  pool.query(sql, params, (err, result) => {
     if (err) {
-      return res.send({
+      return res.status(500).json({
         success: false,
-        message: err,
+        message: err.sqlMessage,
+        fullError: err,
       });
     }
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Fetch Successfully",
       result,
+    });
+  });
+});
+
+app.put("/updateShift/:id", (req, res) => {
+  const id = req.params.id;
+  const shiftName = req.body.shiftName;
+  const startTime = req.body.startTime;
+  const endTime = req.body.endTime;
+  const lateAfter = req.body.lateAfter;
+  const halfdayAfter = req.body.halfdayAfter;
+
+  const sql = `
+      UPDATE shift_master
+      SET shift_name = ?,
+          start_time = ?,
+          end_time = ?,
+          late_after = ?,
+          half_day_after = ?
+      WHERE id = ?
+    `;
+
+  const params = [shiftName, startTime, endTime, lateAfter, halfdayAfter, id];
+
+  pool.query(sql, params, (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Shift Updated Successfully",
+    });
+  });
+});
+
+app.put("/updateShiftStatus/:id", (req, res) => {
+  const id = req.params.id;
+  const status = req.body.status;
+
+  const sql = `
+      UPDATE shift_master
+      SET status = ?
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Status Updated Successfully",
     });
   });
 });
@@ -197,12 +589,13 @@ app.post("/addHolidays", (req, res) => {
 
   pool.query(sql, [holidayDate, holidayName], (err, result) => {
     if (err) {
-      return res.send({
+      return res.status(500).json({
         success: false,
-        message: err,
+        message: err.sqlMessage,
+        fullError: err,
       });
     }
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Holidays Added Suceessfully",
     });
@@ -214,12 +607,13 @@ app.get("/fetch-holidays", (req, res) => {
 
   pool.query(sql, (err, result) => {
     if (err) {
-      return res.send({
+      return res.status(500).json({
         success: false,
-        message: err,
+        message: err.sqlMessage,
+        fullError: err,
       });
     }
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Fetch Successfully",
       result,
@@ -236,13 +630,14 @@ app.post("/addRole", (req, res) => {
 
   pool.query(sql, [RoleName, Desc], (err, result) => {
     if (err) {
-      returnres.send({
+      return res.status(500).json({
         success: false,
-        message: err,
+        message: err.sqlMessage,
+        fullError: err,
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Data Added Successfully",
     });
@@ -250,16 +645,29 @@ app.post("/addRole", (req, res) => {
 });
 
 app.get("/fetch-roles", (req, res) => {
-  const sql = `SELECT * FROM roles`;
+  const status = req.query.status;
 
-  pool.query(sql, (err, result) => {
+  let sql = `SELECT * FROM roles`;
+  const params = [];
+
+  if (status === "Active" || status === "Inactive") {
+    sql = `
+        SELECT * FROM roles
+        WHERE status = ?
+      `;
+
+    params.push(status);
+  }
+
+  pool.query(sql, params, (err, result) => {
     if (err) {
-      return res.send({
+      return res.status(500).json({
         success: false,
-        message: err,
+        message: err.sqlMessage,
+        fullError: err,
       });
     }
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Data Fetch Successfully",
       result,
@@ -267,36 +675,95 @@ app.get("/fetch-roles", (req, res) => {
   });
 });
 
-app.post("/addNewEmployee", (req, res) => {
+app.put("/updateRole/:id", (req, res) => {
+  const id = req.params.id;
+  const RoleName = req.body.RoleName;
+  const Desc = req.body.Desc;
+
+  const sql = `
+      UPDATE roles
+      SET role_name = ?,
+      description = ?
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [RoleName, Desc, id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Role Updated Successfully",
+    });
+  });
+});
+
+app.put("/updateRoleStatus/:id", (req, res) => {
+  const id = req.params.id;
+  const status = req.body.status;
+
+  const sql = `
+      UPDATE roles
+      SET status = ?
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Status Updated Successfully",
+    });
+  });
+});
+
+app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
   console.log(req.body);
 
-  const employeeForm = req.body.addEmployeeForm;
+  const employeeForm = req.body;
+  const photoUrl = req.file
+    ? `/uploads/employee_photos/${req.file.filename}`
+    : null;
 
   const sql = `
     INSERT INTO employee_master(
-        employee_code,
-        employee_name,
-        gender,
-        designation_id,
-        department_id,
-        branch_id,
-        shift_id,
-        role_id,
-        reporting_manager_id,
-        employeement_status,
-        employee_mobile_no,
-        employee_email_id,
-        employee_joining_date,
-        city,
-        emergency_contact_no,
-        employee_adhar_no,
-        employee_bank_account_no,
-        employee_bank_name,
-        employee_bank_ifsc_code,
-        employee_uan_no
+      employee_code,
+      employee_name,
+      gender,
+      designation_id,
+      department_id,
+      branch_id,
+      shift_id,
+      role_id,
+      reporting_manager_id,
+      employeement_status,
+      employee_mobile_no,
+      employee_email_id,
+      employee_joining_date,
+      city,
+      emergency_contact_no,
+      employee_adhar_no,
+      employee_bank_account_no,
+      employee_bank_name,
+      employee_bank_ifsc_code,
+      employee_uan_no,
+      photo_url
     )
     
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `;
 
   pool.query(
@@ -330,6 +797,7 @@ app.post("/addNewEmployee", (req, res) => {
       employeeForm.employee_bank_name,
       employeeForm.employee_bank_ifsc_code,
       employeeForm.employee_uan_no,
+      photoUrl,
     ],
 
     (err, result) => {
@@ -337,13 +805,14 @@ app.post("/addNewEmployee", (req, res) => {
       if (err) {
         console.log(err);
 
-        return res.send({
+        return res.status(500).json({
           success: false,
-          message: err,
+          message: err.sqlMessage,
+          fullError: err,
         });
       }
 
-      res.json({
+      res.status(200).json({
         success: true,
         message: "Data Added Successfully",
       });
@@ -351,14 +820,143 @@ app.post("/addNewEmployee", (req, res) => {
   );
 });
 
-app.get("/fetch-employees", (req, res) => {
-  //pagnition fuctioanlity logic
+app.put(
+  "/updateEmployee/:id",
+  employeePhotoUpload.single("photo"),
+  (req, res) => {
+    const id = req.params.id;
+    const employeeCode = req.body.employee_code;
+    const employeeName = req.body.employee_name;
+    const gender = req.body.gender;
+    const designationId = req.body.designation_id;
+    const departmentId = req.body.department_id;
+    const branchId = req.body.branch_id;
+    const shiftId = req.body.shift_id;
+    const role = req.body.role_id;
+    const reportingManagerId = req.body.reporting_manager_id || null;
+    const employeementStatus = req.body.employeement_status;
+    const employeeMobileNo = req.body.employee_mobile_no;
+    const employeeEmailId = req.body.employee_email_id;
+    const employeeJoiningDate = req.body.employee_joining_date || null;
+    const city = req.body.city;
+    const emergencyContactNo = req.body.emergency_contact_no;
+    const employeeAadharNo = req.body.employee_adhar_no;
+    const employeeBankAccNo = req.body.employee_bank_account_no;
+    const employeeBnakName = req.body.employee_bank_name;
+    const employeeIFSCCode = req.body.employee_bank_ifsc_code;
+    const employeeUANNo = req.body.employee_uan_no;
+    const photoUrl = req.file
+      ? `/uploads/employee_photos/${req.file.filename}`
+      : req.body.photo_url || null;
 
+    const sql = `
+      UPDATE employee_master
+      SET employee_code = ?,
+      employee_name = ?,
+      gender = ?,
+      designation_id = ?,
+      department_id = ?,
+      branch_id = ?,
+      shift_id = ?,
+      role_id = ?,
+      reporting_manager_id = ?,
+      employeement_status = ?,
+      employee_mobile_no = ?,
+      employee_email_id = ?,
+      employee_joining_date = ?,
+      city = ?,
+      emergency_contact_no = ?,
+      employee_adhar_no = ?,
+      employee_bank_account_no = ?,
+      employee_bank_name = ?,
+      employee_bank_ifsc_code = ?,
+      employee_uan_no = ?,
+      photo_url = ?
+      WHERE id = ?
+    `;
+
+    pool.query(
+      sql,
+      [
+        employeeCode,
+        employeeName,
+        gender,
+        designationId,
+        departmentId,
+        branchId,
+        shiftId,
+        role,
+        reportingManagerId,
+        employeementStatus,
+        employeeMobileNo,
+        employeeEmailId,
+        employeeJoiningDate,
+        city,
+        emergencyContactNo,
+        employeeAadharNo,
+        employeeBankAccNo,
+        employeeBnakName,
+        employeeIFSCCode,
+        employeeUANNo,
+        photoUrl,
+        id,
+      ],
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).json({
+            success: false,
+            message: err.sqlMessage,
+            fullError: err,
+          });
+        }
+        res.status(200).json({
+          success: true,
+          message: "Data Updated Successfully",
+          result,
+        });
+      },
+    );
+  },
+);
+
+app.put("/updateEmployeeStatus/:id", (req, res) => {
+  const id = req.params.id;
+  const status = req.body.status;
+
+  const sql = `
+      UPDATE employee_master
+      SET employeement_status = ?
+      WHERE id = ?
+    `;
+
+  pool.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Status Updated Successfully",
+      result,
+    });
+  });
+});
+
+app.get("/fetch-employees", (req, res) => {
+  const status = req.query.status;
+
+  //pagnition fuctioanlity logic
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const offset = (page - 1) * limit;
 
-  const sql = `SELECT employee_master.*,
+  let sql = `SELECT employee_master.*,
     departments.department_name,
     designations.designation_name,
     branches.branch_name,
@@ -371,30 +969,645 @@ app.get("/fetch-employees", (req, res) => {
     JOIN branches ON employee_master.branch_id= branches.id
     JOIN shift_master ON employee_master.shift_id= shift_master.id
     JOIN roles ON employee_master.role_id = roles.id
-
     LIMIT ? OFFSET ?
     `;
+  const params = [];
 
-  pool.query(sql, [limit, offset], (err, result) => {
+  if (status === "ACTIVE" || status === "RESIGNED") {
+    sql = `SELECT employee_master.*,
+    departments.department_name,
+    designations.designation_name,
+    branches.branch_name,
+    shift_master.shift_name,
+    roles.role_name
+
+    FROM employee_master
+    JOIN departments ON employee_master.department_id= departments.id
+    JOIN designations ON employee_master.designation_id= designations.id
+    JOIN branches ON employee_master.branch_id= branches.id
+    JOIN shift_master ON employee_master.shift_id= shift_master.id
+    JOIN roles ON employee_master.role_id = roles.id
+    WHERE employee_master.employeement_status = ?
+    LIMIT ? OFFSET ?
+    `;
+    params.push(status);
+  }
+  params.push(limit, offset);
+
+  let countSql = `SELECT COUNT(*) AS totalEmployees FROM employee_master`; // added this to get the total count of employees for pagination
+  const countParams = [];
+
+  if (status === "ACTIVE" || status === "RESIGNED") {
+    countSql = `SELECT COUNT(*) AS totalEmployees
+      FROM employee_master
+      WHERE employeement_status = ?
+    `;
+    countParams.push(status);
+  }
+
+  const activeEmpSql = `SELECT COUNT(*) AS activeEmployees FROM employee_master WHERE employeement_status = 'ACTIVE'`; // added this to get the total count of active employees for dashboard stats
+
+  pool.query(sql, params, (err, result) => {
     if (err) {
       console.log(err);
-      return res.send({
+      return res.status(500).json({
         success: false,
-        message: err,
+        message: err.sqlMessage,
+        fullError: err,
       });
     }
-    res.json({
+    pool.query(countSql, countParams, (err, countResult) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({
+          success: false,
+          message: err.sqlMessage,
+          fullError: err,
+        });
+      }
+      const totalCount = countResult[0].totalEmployees;
+
+      pool.query(activeEmpSql, (err, activeEmpResult) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).json({
+            success: false,
+            message: err.sqlMessage,
+            fullError: err,
+          });
+        }
+
+        const activeEmpCount = activeEmpResult[0].activeEmployees;
+
+        res.status(200).json({
+          success: true,
+          message: "Fetching Employees",
+          totalEmployees: totalCount,
+          activeEmployees: activeEmpCount,
+          result,
+        });
+      });
+    });
+  });
+});
+
+app.get("/fetchOneEmployee/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sql = `
+      SELECT employee_master.*,
+      departments.department_name,
+      designations.designation_name,
+      branches.branch_name,
+      shift_master.shift_name,
+      roles.role_name
+      FROM employee_master
+      JOIN departments ON employee_master.department_id = departments.id
+      JOIN designations ON employee_master.designation_id = designations.id
+      JOIN branches ON employee_master.branch_id = branches.id
+      JOIN shift_master ON employee_master.shift_id = shift_master.id
+      JOIN roles ON employee_master.role_id = roles.id
+      WHERE employee_master.id = ?
+    `;
+
+  pool.query(sql, [id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+    res.status(200).json({
       success: true,
-      message: "Fetching Employees",
+      message: "One employee Fetched Successfully",
       result,
     });
   });
 });
 
-app.post("/dailyAttendance", (req, res) => {
-  console.log(req.body);
+app.get("/activeEmployee", (req, res) => {
+  const sql = `
+    SELECT id, employee_name, employee_code
+    FROM employee_master
+    WHERE employeement_status = 'ACTIVE'
+  `;
+
+  pool.query(sql, (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: err.sqlMessage,
+        fullError: err,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Status Fetched Successfully",
+      result,
+    });
+  });
 });
 
-app.listen(port, () => {
+// ==================== ATTENDANCE APIs ====================
+
+// Why: On screen load, frontend calls this to know TODAY's state.
+// Backend checks: has employee punched in? punched out?
+// Returns canPunchIn / canPunchOut so frontend shows correct button.
+app.post("/attendance", async (req, res) => {
+  try {
+    const employeeId = req.body.employee_id;
+    if (!employeeId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Employee ID Missing" });
+    }
+
+    // BUG FIXED: column name is `attendance` not `attendance_date`
+    // Also use promisePool.query for async/await
+    const [rows] = await promisePool.query(
+      `SELECT * FROM attendance WHERE employee_id = ? AND DATE(attendance_date) = CURDATE() ORDER BY id DESC LIMIT 1`,
+      [employeeId],
+    );
+
+    if (rows.length === 0) {
+      return res.json({
+        canPunchIn: true,
+        canPunchOut: false,
+        message: "Allow Punch In",
+        record: null,
+      });
+    }
+
+    const record = rows[0];
+    // Format times for frontend display (HH:MM AM/PM)
+    const formatTime = (t) => {
+      if (!t) return null;
+      const [h, m] = t.split(":");
+      const hour = parseInt(h);
+      const ampm = hour >= 12 ? "PM" : "AM";
+      const hour12 = hour % 12 || 12;
+      return `${hour12}:${m} ${ampm}`;
+    };
+
+    if (record.punch_in && !record.punch_out) {
+      return res.json({
+        canPunchIn: false,
+        canPunchOut: true,
+        message: "Allow Punch Out",
+        record: {
+          punch_in: formatTime(record.punch_in),
+          punch_out: null,
+          punch_in_selfie: record.punch_in_selfie,
+          gps_location: record.gps_location,
+          attendance_mode: record.attendance_mode,
+          readable_address: record.gps_location,
+        },
+      });
+    }
+    if (record.punch_in && record.punch_out) {
+      return res.json({
+        canPunchIn: false,
+        canPunchOut: false,
+        message: "Attendance Completed",
+        record: {
+          punch_in: formatTime(record.punch_in),
+          punch_out: formatTime(record.punch_out),
+          punch_in_selfie: record.punch_in_selfie,
+          punch_out_selfie: record.punch_out_selfie,
+          gps_location: record.gps_location,
+          attendance_mode: record.attendance_mode,
+          readable_address: record.gps_location,
+        },
+      });
+    }
+
+    return res.json({
+      canPunchIn: true,
+      canPunchOut: false,
+      message: "Allow Punch In",
+      record: null,
+    });
+  } catch (err) {
+    console.error("Attendance API Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Why: Fetch the office location (lat, lng, allowed_radius) for the employee's branch.
+// This is used by frontend's haversine formula to check if employee is within 500m.
+app.get("/office-location/:employeeId", async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+
+    const [employees] = await promisePool.query(
+      `SELECT branch_id FROM employee_master WHERE id = ?`,
+      [employeeId],
+    );
+
+    if (employees.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const branchId = employees[0].branch_id;
+
+    const [locations] = await promisePool.query(
+      `SELECT * FROM office_locations WHERE branch_id = ? LIMIT 1`,
+      [branchId],
+    );
+
+    if (locations.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No office location mapped to your branch",
+      });
+    }
+
+    return res.json({
+      success: true,
+      officeLocation: locations[0],
+    });
+  } catch (err) {
+    console.error("Office Location Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Why: Check if employee is approved for WFH today.
+// If approved → skip 500m geo-fencing validation.
+app.get("/wfh-status/:employeeId", async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+
+    const [requests] = await promisePool.query(
+      `SELECT * FROM work_from_home_requests
+       WHERE employee_id = ? AND status = 'APPROVED'
+       AND CURDATE() BETWEEN start_date AND end_date
+       LIMIT 1`,
+      [employeeId],
+    );
+
+    return res.json({
+      success: true,
+      isWFH: requests.length > 0,
+    });
+  } catch (err) {
+    console.error("WFH Status Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Why: The main Punch In API.
+// Flow: Frontend validates everything (permissions, GPS, distance, selfie),
+// then sends all data here for storage.
+app.post("/punch-in", upload.single("selfie"), async (req, res) => {
+  try {
+    const {
+      employee_id,
+      latitude,
+      longitude,
+      readable_address,
+      attendance_mode,
+      office_location_id,
+    } = req.body;
+
+    // Validation
+    if (!employee_id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Employee ID required" });
+    }
+    if (!latitude || !longitude) {
+      return res
+        .status(400)
+        .json({ success: false, message: "GPS coordinates required" });
+    }
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Selfie image required" });
+    }
+
+    // Double-check: ensure no duplicate punch in for today
+    const [existing] = await promisePool.query(
+      `SELECT * FROM attendance WHERE employee_id = ? AND attendance_date = CURDATE()`,
+      [employee_id],
+    );
+
+    if (existing.length > 0) {
+      // Clean up uploaded file if duplicate
+      const fs = require("fs");
+      if (req.file?.path) fs.unlink(req.file.path, () => {});
+      return res
+        .status(400)
+        .json({ success: false, message: "Already punched in today" });
+    }
+    // const shiftSQL=  `SELECT s.late_after, s.half_day_after FROM employee_master e JOIN shift_master s ON e.shift_id= s.id WHERE e.id=?`
+    // const [shiftData]= await promisePool.query(shiftSQL, [employee_id]);
+    // if(shiftData.length===0){
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Shift not assigned to employee"
+    //   })
+    // }
+
+    // const punchInTime= new Date();
+    // const shift= shiftData[0];
+    // let status= "PRESENT";
+    // let is_late= false;
+    // let late_minutes=0;
+
+    // const [lateHour, lateMinute]= shift.late_after.split(":");
+    // const [halfHour, halfMinute]= shift.half_day_after.split(":");
+
+    // // took current date and current date to convert string to int after that
+    // const lateAfterDate= new Date();
+    // lateAfterDate.setHours(parseInt(lateHour),parseInt(lateMinute), 0,0);
+
+    const selfiePath = `/uploads/${req.file.filename}`;
+
+    const [result] = await promisePool.query(
+      `INSERT INTO attendance
+       (employee_id, attendance_date, punch_in, punch_in_selfie, punch_in_latitude, punch_in_longitude, gps_location, attendance_mode, office_location_id, status)
+       VALUES (?, CURDATE(), CURTIME(), ?, ?, ?, ?, ?, ?, 'PRESENT')`,
+      [
+        employee_id,
+        selfiePath,
+        latitude,
+        longitude,
+        readable_address || "",
+        attendance_mode || "OFFICE",
+        office_location_id || null,
+      ],
+    );
+
+    return res.json({
+      success: true,
+      message: "Punch In Successful",
+      attendanceId: result.insertId,
+    });
+  } catch (err) {
+    console.error("Punch In Error:", err);
+    // Clean up uploaded file on error
+    if (req.file?.path) {
+      const fs = require("fs");
+      fs.unlink(req.file.path, () => {});
+    }
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Why: Punch Out API
+// Employee must have punched in today already.
+app.post("/punch-out", upload.single("selfie"), async (req, res) => {
+  try {
+    const { employee_id, latitude, longitude } = req.body;
+
+    if (!employee_id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Employee ID required" });
+    }
+
+    // Find today's attendance record
+    const [existing] = await promisePool.query(
+      `SELECT * FROM attendance WHERE employee_id = ? AND attendance_date = CURDATE()`,
+      [employee_id],
+    );
+
+    if (existing.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No punch in found for today" });
+    }
+
+    if (existing[0].punch_out) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Already punched out today" });
+    }
+
+    let selfiePath = null;
+    if (req.file) {
+      selfiePath = `/uploads/${req.file.filename}`;
+    }
+
+    await promisePool.query(
+      `UPDATE attendance
+       SET punch_out = CURTIME(),
+           punch_out_selfie = COALESCE(?, punch_out_selfie),
+           punch_out_latitude = ?,
+           punch_out_longitude = ?
+       WHERE id = ?`,
+      [selfiePath, latitude || null, longitude || null, existing[0].id],
+    );
+
+    return res.json({
+      success: true,
+      message: "Punch Out Successful",
+    });
+  } catch (err) {
+    console.error("Punch Out Error:", err);
+    if (req.file?.path) {
+      const fs = require("fs");
+      fs.unlink(req.file.path, () => {});
+    }
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.get("/fetchAttendance", async (req, res) => {
+  try {
+    const [rows] =
+      await promisePool.query(`SELECT a.*, e.employee_name, e.employee_code, ds.designation_name, d.department_name FROM attendance a
+  LEFT JOIN employee_master e ON a.employee_id= e.id
+  LEFT JOIN designations ds ON e.designation_id= ds.id
+  LEFT JOIN departments d ON e.department_id= d.id
+  `);
+
+    const formattedRows = rows.map((row) => ({
+      ...row,
+      attendance_date: row.attendance_date
+        ? row.attendance_date.toLocaleDateString("en-CA")
+        : null,
+    }));
+    // only for debugging purpose-- rows are coming or not and correct data coming from db.
+    console.log(formattedRows);
+    return res.json({
+      success: true,
+      message: "Attendance Fetch Successfully",
+      result: formattedRows,
+    });
+  } catch (err) {
+    console.log("Ftech Attendance API Error:---->", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch attendance",
+      error: error.message,
+    });
+  }
+});
+
+app.post("/register", async (req, res) => {
+  try {
+    console.log(req.body);
+    const { employeeCode, email, password } = req.body;
+
+    if (!employeeCode || !email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
+    }
+
+    // Check Employee Record Exits or not in employee master table
+    const [checkRecordRows] = await promisePool.query(
+      `SELECT id, employee_email_id FROM employee_master WHERE employee_code= ? AND employee_email_id= ?`,
+      [employeeCode, email],
+    );
+
+    if (checkRecordRows.length === 0) {
+      return res.send({
+        success: false,
+        message: "Employee Record Not found. Pleae contact HR",
+      });
+    }
+
+    // if employee found
+    const employeeId = checkRecordRows[0].id;
+
+    const [userRows] = await promisePool.query(
+      `SELECT * FROM users WHERE employee_id= ?`,
+      [employeeId],
+    );
+
+    if (userRows.length > 0) {
+      return res.send({
+        success: false,
+        message: "Account already exits. Please Login",
+      });
+    }
+
+    await promisePool.query(
+      `INSERT INTO users(employee_id, employee_email, password) VALUES(?,?,?)`,
+      [employeeId, email, password],
+    );
+
+    return res.send({
+      success: true,
+      message: "Account Created Successfully... Please login",
+    });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+app.post("/login", async (req, res) => {
+  const employeeId = req.headers["employee-id"];
+  try {
+    const { email, password } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and Password are required",
+      });
+    }
+
+    console.log("Email:", email);
+    console.log("Password:", password);
+
+    const [rows] = await promisePool.query(
+      `SELECT * FROM users
+       WHERE employee_email = ?
+       AND password = ?`,
+      [email, password],
+    );
+
+    console.log("DB Result:", rows);
+
+    if (rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid Email or Password",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Login Successfully",
+      user: {
+        id: rows[0].id,
+        employee_id: rows[0].employee_id,
+        employee_email: rows[0].employee_email,
+      },
+    });
+  } catch (error) {
+    console.log("Login Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+app.get("/profile/:employeeId", async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+
+    const [profileData] = await promisePool.query(
+      `SELECT
+    employee_master.employee_name,
+    employee_master.employee_code,
+    employee_master.employee_joining_date,
+    employee_master.employee_email_id,
+    employee_master.employee_mobile_no,
+    employee_master.city,
+
+    designations.designation_name AS employee_designation,
+
+    departments.department_name AS employee_department
+
+FROM employee_master
+
+LEFT JOIN designations
+ON employee_master.designation_id = designations.id
+
+LEFT JOIN departments
+ON employee_master.department_id = departments.id
+
+WHERE employee_master.id = ?;`,
+      [employeeId],
+    );
+    if (profileData.length === 0) {
+      return res.send({
+        success: false,
+        message: "DB Error",
+      });
+    }
+    res.json({
+      success: true,
+      data: profileData[0],
+    });
+  } catch (err) {
+    console.log(err);
+    return res.send({
+      success: false,
+      message: err,
+    });
+  }
+});
+
+app.listen(port, "0.0.0.0", () => {
   console.log(`Server Listening Port ${port}`);
 });

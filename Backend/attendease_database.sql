@@ -1,5 +1,19 @@
+DROP DATABASE attendance_db;
 CREATE DATABASE attendease_database;
 USE attendease_database;
+
+
+CREATE TABLE users(
+id INT PRIMARY KEY AUTO_INCREMENT,
+employee_id INT NOT NULL UNIQUE,
+employee_email VARCHAR(50),
+password VARCHAR(255),
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+FOREIGN KEY (employee_id)
+REFERENCES employee_master(id)
+
+);
 -- --------------------------------------Employee Master Table --------------------------------------------------------------------------------
 CREATE TABLE employee_master(
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -13,7 +27,7 @@ shift_id INT,
 role_id INT,
 reporting_manager_id INT NULL,
 employeement_status ENUM('ACTIVE', 'RESIGNED') DEFAULT 'ACTIVE',
-employee_mobile_no ,
+employee_mobile_no VARCHAR(255),
 employee_email_id VARCHAR(100),
 employee_joining_date DATE,
 city VARCHAR(50),
@@ -47,32 +61,38 @@ REFERENCES employee_master(id)
 SELECT * FROM employee_master;
 
 ALTER  TABLE employee_master
-MODIFY employee_mobile_no VARCHAR(15);
+MODIFY employee_mobile_no varchar(255);
 
 CREATE TABLE departments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     department_name VARCHAR(100) UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+ALTER TABLE departments
+ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 
 
 CREATE TABLE attendance(
 id INT PRIMARY KEY AUTO_INCREMENT,
 
 employee_id INT NOT NULL,
-attendance DATE,
+attendance_date DATE,
 punch_in TIME,
 punch_out TIME,
-
+punch_in_selfie VARCHAR(255),
+punch_out_selfie VARCHAR(255),
+punch_in_latitude DECIMAL(10,8),
+punch_in_longitude DECIMAL(11,8),
+punch_out_latitude DECIMAL (10,8),
+punch_out_longitude DECIMAL(11,8),
 status ENUM(
 'PRESENT',
 'ABSENT',
-'LATE',
 'HALF DAY',
 'LEAVE'
 ),
 late_minutes INT DEFAULT 0,
+is_late BOOLEAN DEFAULT false,
 attendance_mode ENUM(
 'OFFICE',
 'WFH',
@@ -96,13 +116,20 @@ REFERENCES office_locations(id)
 
 );
 
+ALTER TABLE attendance
+ADD COLUMN is_late BOOLEAN DEFAULT false;
+
+ 
+
 DROP TABLE attendance;
+
+SELECT * FROM attendance;
 SELECT * FROM departments;
 
-
+SHOW CREATE TABLE designations;
 
 CREATE TABLE designations (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT PRIMARY KEY AUTO_INCREMENT,	
     designation_name VARCHAR(100) NOT NULL,
     department_id INT,
     status ENUM('Active', 'Inactive') DEFAULT 'Active',
@@ -116,6 +143,7 @@ ALTER TABLE designations
 ADD COLUMN status ENUM('Active', 'Inactive') DEFAULT 'Active',
 ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
+
 SELECT * FROM designations;
 
 
@@ -125,7 +153,8 @@ CREATE TABLE roles (
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+ALTER TABLE roles
+ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 	
 
 CREATE TABLE branches (
@@ -137,6 +166,9 @@ CREATE TABLE branches (
     pincode VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE branches
+ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 
 SELECT * FROM branches;
 DELETE FROM branches where id = 2;
@@ -156,6 +188,13 @@ CREATE TABLE office_locations (
     REFERENCES branches(id)
     ON DELETE CASCADE
 );
+
+
+SELECT * FROM office_locations;
+INSERT INTO office_locations(branch_id, office_name, latitude, longitude, allowed_radius  ) VALUES(1,"Noida Office", 28.499718, 77.414824, 500);
+UPDATE office_locations
+SET latitude = 28.4997222
+WHERE id=1;
 
 
 CREATE TABLE holidays(
@@ -184,4 +223,39 @@ CREATE TABLE shift_master (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE shift_master
+ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
+
+
 SELECT * FROM shift_master;
+
+
+CREATE TABLE work_from_home_requests (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    reason VARCHAR(255),
+    status ENUM('PENDING', 'APPROVED', 'REJECTED') DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (employee_id)
+    REFERENCES employee_master(id)
+    ON DELETE CASCADE
+);
+
+SELECT attendance_date,
+       DATE(attendance_date),
+       CURDATE()
+FROM attendance
+WHERE employee_id = 11;
+
+SHOW COLUMNS FROM attendance;
+
+
+SELECT attendance_date
+FROM attendance
+WHERE id = 7;
+
+DELETE FROM attendance WHERE id= 7;

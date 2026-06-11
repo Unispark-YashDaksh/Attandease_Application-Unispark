@@ -1,6 +1,4 @@
-import { useState } from 'react'
 import {BrowserRouter, Routes, Route} from "react-router-dom"
-import SideBar from './components/SideBar'
 import Layout from './layout/Layout';
 import Dashboard from './components/Dashboard';
 import LeaveManagement from './components/LeaveManagement';
@@ -9,6 +7,7 @@ import HolidaysManagement from './components/HolidaysManagement';
 import Employees from './components/Employees';
 import MasterManagement from './components/MasterManagement';
 import DailyAttendance from './components/DailyAttendance';
+
 
 
 function App() {

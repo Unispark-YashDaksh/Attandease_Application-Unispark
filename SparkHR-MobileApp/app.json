@@ -34,6 +34,19 @@
             "imageWidth": 76
           }
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow SparkHR to use your location to verify attendance.",
+          "locationWhenInUsePermission": "Allow SparkHR to use your location to verify attendance."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow SparkHR to access your camera for attendance selfie."
+        }
       ]
     ],
     "experiments": {

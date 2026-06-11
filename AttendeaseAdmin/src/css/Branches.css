@@ -1,0 +1,338 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
+
+.branches-page,
+.branches-page * {
+  box-sizing: border-box;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.branches-page {
+  background: #faf8ff;
+  color: #191b22;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.material-symbols-outlined {
+  direction: ltr;
+  display: inline-block;
+  font-family: "Material Symbols Outlined";
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  font-style: normal;
+  font-weight: normal;
+  letter-spacing: normal;
+  line-height: 1;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+}
+
+.branch-summary-grid {
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.branches-page #dashboard-cards {
+  background: #ffffff;
+  border: 1px solid #c3c6d5;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  height: 150px;
+  margin-right: 20px;
+  padding: 20px;
+  width: 150px;
+}
+
+.branch-table-card {
+  background: #ffffff;
+  border: 1px solid #c3c6d5 !important;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  height: auto !important;
+  min-height: 400px;
+  overflow: hidden;
+}
+
+.branch-table-toolbar {
+  align-items: center;
+  background: rgba(243, 243, 252, 0.5);
+  border-bottom: 1px solid #c3c6d5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 0 !important;
+  padding: 20px;
+}
+
+.branch-search-input,
+.branch-filter-select {
+  background: #ffffff;
+  border: 1px solid #c3c6d5;
+  border-radius: 8px;
+  color: #191b22;
+  font-size: 14px;
+  line-height: 20px;
+  min-height: 40px;
+  padding: 9px 12px;
+}
+
+.branch-search-input {
+  min-width: 240px;
+}
+
+.branch-search-input::placeholder {
+  color: #8a8f9d;
+}
+
+.branch-search-input:focus,
+.branch-filter-select:focus {
+  border-color: #003c90;
+  box-shadow: 0 0 0 3px rgba(0, 60, 144, 0.12);
+  outline: none;
+}
+
+.branch-add-btn,
+.branch-refresh-btn {
+  align-items: center;
+  background: #003c90;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 60, 144, 0.18);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 8px;
+  min-height: 40px;
+  padding: 10px 20px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.branch-add-btn:hover,
+.branch-refresh-btn:hover {
+  background: #0f52ba;
+}
+
+.branch-add-btn:active,
+.branch-refresh-btn:active {
+  transform: scale(0.96);
+}
+
+.branch-table-scroll {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.branch-table {
+  border-collapse: collapse;
+  margin-top: 0 !important;
+  min-width: 1080px;
+  text-align: left;
+  width: 100%;
+}
+
+.branch-table thead tr {
+  background: rgba(243, 243, 252, 0.3);
+  border-bottom: 1px solid #c3c6d5;
+}
+
+.branch-table th {
+  color: #737784;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 16px;
+  padding: 16px 24px;
+  text-transform: uppercase;
+}
+
+.branch-table td {
+  color: #434653;
+  font-size: 14px;
+  line-height: 20px;
+  padding: 16px 24px;
+  vertical-align: middle;
+}
+
+.branch-table tbody tr {
+  border-bottom: 1px solid #c3c6d5;
+  transition: background-color 0.2s ease;
+}
+
+.branch-table tbody tr:last-child {
+  border-bottom: 0;
+}
+
+.branch-row:hover {
+  background: rgba(231, 231, 241, 0.35);
+}
+
+.status-active,
+.status-inactive {
+  border-radius: 9999px;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 16px;
+  padding: 4px 10px;
+  text-transform: uppercase;
+}
+
+.status-active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-inactive {
+  background: rgba(186, 26, 26, 0.1);
+  color: #ba1a1a;
+}
+
+.edit-btn,
+.delete-btn {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: #434653;
+  cursor: pointer;
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  margin-right: 8px;
+  padding: 0;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  width: 32px;
+}
+
+.edit-btn .material-symbols-outlined,
+.delete-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.edit-btn:hover {
+  background: rgba(0, 60, 144, 0.1);
+  color: #003c90;
+}
+
+.delete-btn:hover {
+  background: rgba(186, 26, 26, 0.1);
+  color: #ba1a1a;
+}
+
+.modal-overlay {
+  align-items: center;
+  background: rgba(25, 27, 34, 0.5);
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  left: 0;
+  padding: 20px;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 1000;
+}
+
+.designation-modal {
+  background: #ffffff;
+  border: 1px solid #c3c6d5;
+  border-radius: 16px;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+  color-scheme: light;
+  max-height: 90vh;
+  max-width: 500px;
+  overflow-y: auto;
+  padding: 24px;
+  width: 100%;
+}
+
+.designation-modal h4 {
+  color: #191b22;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 28px;
+  margin: 0 0 20px;
+}
+
+.designation-modal .form-control {
+  background-color: #ffffff;
+  border: 1px solid #c3c6d5;
+  border-radius: 8px;
+  color: #191b22;
+  font-size: 14px;
+  line-height: 20px;
+  margin-bottom: 14px;
+  min-height: 42px;
+  padding: 10px 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.designation-modal .form-control::placeholder {
+  color: #8a8f9d;
+}
+
+.designation-modal .form-control:focus {
+  border-color: #003c90;
+  box-shadow: 0 0 0 3px rgba(0, 60, 144, 0.12);
+  outline: none;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.save-btn,
+.cancel-btn {
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  min-height: 40px;
+  padding: 10px 20px;
+}
+
+.save-btn {
+  background: #003c90;
+  color: #ffffff;
+}
+
+.save-btn:hover {
+  background: #0f52ba;
+}
+
+.cancel-btn {
+  background: #ededf6;
+  color: #191b22;
+}
+
+.cancel-btn:hover {
+  background: #e1e2eb;
+}
+
+@media (max-width: 900px) {
+  .branches-page {
+    padding: 18px;
+  }
+
+  .branch-table-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .branch-search-input,
+  .branch-filter-select,
+  .branch-add-btn,
+  .branch-refresh-btn {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
