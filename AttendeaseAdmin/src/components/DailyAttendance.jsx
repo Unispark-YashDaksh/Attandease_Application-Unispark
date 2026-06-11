@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import "../css/AttendanceDashboard.css";
 import axios from "axios";
-const apiUrl= import.meta.env.VITE_API;
+const apiUrl= import.meta.env.VITE_BACKEND_URL;
 
 function getTodayDate() {
   const today = new Date();

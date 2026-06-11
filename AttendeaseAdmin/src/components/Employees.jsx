@@ -3,6 +3,7 @@ import AddNewEmployeeForm from "./AddNewEmployeeForm";
 import axios from "axios";
 import "../css/designation.css";
 import "../css/Employees.css";
+const apiUrl= import.meta.env.VITE_BACKEND_URL;
 
 function EmployeeMaster() {
   const [showModal, setshowModal] = useState(false);
@@ -23,7 +24,7 @@ function EmployeeMaster() {
 
   const getEmployees = async (page, status) => {
     const response = await axios.get(
-      `http://localhost:7000/fetch-employees?page=${page}&limit=${itemsPerPage}&status=${status}`,
+      `${apiUrl}/fetch-employees?page=${page}&limit=${itemsPerPage}&status=${status}`,
     );
 
     return {
@@ -101,7 +102,7 @@ function EmployeeMaster() {
 
     try {
       await axios.put(
-        `http://localhost:7000/updateEmployeeStatus/${employee.id}`,
+        `${apiUrl}/updateEmployeeStatus/${employee.id}`,
         {
           status: nextStatus,
         },
@@ -326,7 +327,7 @@ function EmployeeMaster() {
                             <>
                               <img
                                 className="employee-photo"
-                                src={`http://localhost:7000${item.photo_url}`}
+                                src={`${apiUrl}${item.photo_url}`}
                                 alt={item.employee_name}
                                 onError={(event) => {
                                   event.currentTarget.style.display = "none";
