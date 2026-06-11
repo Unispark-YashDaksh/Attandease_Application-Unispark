@@ -1,3 +1,6 @@
+
+
+DROP DATABASE attendance_db;
 CREATE DATABASE attendease_database;
 USE attendease_database;
 
@@ -56,9 +59,6 @@ REFERENCES shift_master(id),
 FOREIGN KEY (reporting_manager_id)
 REFERENCES employee_master(id)
 );
-
-ALTER TABLE employee_master
-ADD COLUMN photo_url VARCHAR(255);
 
 SELECT * FROM employee_master;
 
@@ -145,20 +145,18 @@ ALTER TABLE designations
 ADD COLUMN status ENUM('Active', 'Inactive') DEFAULT 'Active',
 ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
+
 SELECT * FROM designations;
 
 
 CREATE TABLE roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
     role_name VARCHAR(50) UNIQUE NOT NULL,
-    description VARCHAR,
+    description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ALTER TABLE roles
 ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
-
-ALTER TABLE roles
-MODIFY description VARCHAR
 	
 
 CREATE TABLE branches (
@@ -233,6 +231,21 @@ ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 
 SELECT * FROM shift_master;
 
+
+CREATE TABLE work_from_home_requests (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    reason VARCHAR(255),
+    status ENUM('PENDING', 'APPROVED', 'REJECTED') DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (employee_id)
+    REFERENCES employee_master(id)
+    ON DELETE CASCADE
+);
 
 SELECT attendance_date,
        DATE(attendance_date),

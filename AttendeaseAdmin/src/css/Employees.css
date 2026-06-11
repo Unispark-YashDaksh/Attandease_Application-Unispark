@@ -81,9 +81,9 @@
 
 .employee-photo {
   border-radius: 9999px;
-  height: 100%;
+  height: 30px;
   object-fit: cover;
-  width: 100%;
+  width: 25px;
 }
 
 .employee-section-heading h3 {
