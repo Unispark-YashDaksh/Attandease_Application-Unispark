@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import "../css/AttendanceDashboard.css";
 import axios from "axios";
+const apiUrl= import.meta.env.VITE_API;
 
 function getTodayDate() {
   const today = new Date();
@@ -32,7 +33,7 @@ function DailyAttendance() {
   const itemsPerPage = 10;
 
   const handleFetchDailyAttendance = async () => {
-    const response = await axios.get("http://localhost:7000/fetchAttendance");
+    const response = await axios.get(`${apiUrl}/fetchAttendance`);
     setDailyAttendance(response.data.result);
   };
 
@@ -179,7 +180,7 @@ function DailyAttendance() {
           <div className="metric-top">
             <span className="material-symbols-outlined metric-icon warning">
               schedule
-            </span>
+            </span> 
             <span className="metric-label">LATE</span>
           </div>
           <h3 className="warning-text">{lateCount}</h3>

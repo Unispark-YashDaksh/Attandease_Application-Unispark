@@ -7,6 +7,8 @@ import "../css/HolidayManagement.css";
 import * as XLSX from "xlsx";
 import { useEffect } from "react";
 import axios from "axios";
+const apiUrl= import.meta.env.VITE_API;
+
 function HolidaysManagement() {
   const [date, setDate] = useState(new Date()); // Selected Date stored
   const [holidays, setHolidays] = useState({}); // All Object stored in array
@@ -38,15 +40,13 @@ function HolidaysManagement() {
   // Fetch Holidays From DB
   const fetchHolidays = async () => {
     try {
-      const response = await axios.get(`http://localhost:7000/fetch-holidays`);
+      const response = await axios.get(`${apiUrl}/fetch-holidays`);
 
       const holidayObj = {};
       const holidayArr = [];
 
       response.data.result.forEach((item) => {
-        const formattedDate = new Date(item.holiday_date)
-          .toISOString()
-          .split("T")[0];
+        const formattedDate = item.holiday_date.split("T")[0];
         holidayObj[formattedDate] = item.holiday_name;
 
         // Formatted Date Value Pass in Database
@@ -102,15 +102,20 @@ function HolidaysManagement() {
             name: name,
           });
 
-          // Save Holiday Into Database
-          await axios.post(`http://localhost:7000/addHolidays`, {
-            holidayDate: formattedDate,
-            holidayName: name,
-          });
+          try {
+            // Save Holiday Into Database
+            await axios.post(`${apiUrl}/addHolidays`, {
+              holidayDate: formattedDate,
+              holidayName: name,
+            });
+          } catch (err) {
+            console.log(`Skipping ${formattedDate} - ${name}: ${err.response?.data?.message || err.message}`);
+          }
         }
       }
 
-      fetchHolidays();
+      await fetchHolidays();
+      //Ensures the holiday list is loaded before proceeding
     };
 
     reader.readAsArrayBuffer(file);

@@ -236,6 +236,87 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#0052cc",
   },
+  calendarCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    elevation: 2,
+  },
+
+  calendarHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+
+  calendarTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1a1a2e",
+  },
+
+  calendarNav: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  weekRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 8,
+  },
+
+  weekDay: {
+    width: 36,
+    textAlign: "center",
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#999",
+  },
+
+  daysGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+
+  dayCell: {
+    width: "14.28%",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+
+  dayBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  todayBox: {
+    backgroundColor: "#0052cc",
+  },
+
+  dayText: {
+    fontSize: 13,
+    color: "#444",
+  },
+
+  todayText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+
+  holidayCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    elevation: 1,
+  },
 
 });
 

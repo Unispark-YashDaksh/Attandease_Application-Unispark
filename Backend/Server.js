@@ -7,7 +7,7 @@ const { error } = require("console");
 require("dotenv").config();
 
 const app = express();
-const port = 7000;
+const port = process.env.PORT || 7000;
 
 app.use(
   cors({
@@ -26,9 +26,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 //Multiple Connections, Faste, Production Standard, Handles Many Requests
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME || "attendease_database",
+  database: process.env.DATABASE || process.env.DB_NAME || "attendease_database",
+  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -69,6 +71,23 @@ const employeePhotoStorage = multer.diskStorage({
     cb(null, uniqueName);
   },
 });
+
+app.get("/health",(req ,res)=>{
+  const sql= `SELECT * FROM employee_master`;
+
+  pool.query(sql, (err, result) => {
+    if(err){
+      return res.send({
+        success: false,
+        message: "DB Connection Failed",
+      })
+    }
+    res.json({
+      success: true,
+      RESULT: result,
+    })
+  })
+})
 
 const employeePhotoUpload = multer({
   storage: employeePhotoStorage,

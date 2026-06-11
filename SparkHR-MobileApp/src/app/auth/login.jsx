@@ -32,7 +32,7 @@ export default function LoginScreen() {
     }
 
     console.log("Sending Login Request");
-
+    console.log("VITE_URL--", VITE_API)
     const response = await axios.post(
       `${VITE_API}/login`,
       {

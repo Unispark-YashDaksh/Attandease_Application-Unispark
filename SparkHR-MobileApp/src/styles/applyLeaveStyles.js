@@ -1,10 +1,9 @@
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
-    backgroundColor: "#faf9ff",
+    backgroundColor: "#f5f7fa",
     paddingHorizontal: 16,
   },
 
@@ -15,143 +14,256 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
 
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  backBtn: {
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 100,
-  },
-
-  headerTitle: {
+  greeting: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#0052cc",
-    marginLeft: 10,
+    color: "#1a1a2e",
   },
 
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+  greetingSub: {
+    fontSize: 14,
+    color: "#888",
+    marginTop: 2,
   },
 
   profileCircle: {
-    width: 35,
-    height: 35,
-    borderRadius: 100,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: "#0052cc",
     justifyContent: "center",
     alignItems: "center",
   },
 
-  profileText: {
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 24,
+    marginBottom: 12,
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1a1a2e",
+  },
+
+  viewAllText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#0052cc",
+  },
+
+  balanceScroll: {
+    marginLeft: -16,
+    paddingLeft: 16,
+  },
+
+  balanceCard: {
+    width: 150,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    marginRight: 12,
+    elevation: 2,
+  },
+
+  balanceIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  balanceCount: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: "#1a1a2e",
+  },
+
+  balanceLabel: {
+    fontSize: 13,
+    color: "#777",
+    marginTop: 4,
+  },
+
+  bar: {
+    height: 6,
+    backgroundColor: "#eee",
+    borderRadius: 3,
+    marginTop: 10,
+    overflow: "hidden",
+  },
+
+  barFill: {
+    height: "100%",
+    borderRadius: 3,
+  },
+
+  calendarCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    elevation: 2,
+  },
+
+  calendarHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+
+  calendarTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1a1a2e",
+  },
+
+  calendarNav: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  weekRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 8,
+  },
+
+  weekDay: {
+    width: 36,
+    textAlign: "center",
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#999",
+  },
+
+  daysGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+
+  dayCell: {
+    width: "14.28%",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+
+  dayBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  todayBox: {
+    backgroundColor: "#0052cc",
+  },
+
+  dayText: {
+    fontSize: 13,
+    color: "#444",
+  },
+
+  todayText: {
     color: "#fff",
     fontWeight: "700",
   },
 
-  totalCard: {
-    marginTop: 25,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 20,
+  holidayCard: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    elevation: 5,
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    elevation: 1,
   },
 
-  totalLabel: {
-    color: "#666",
-    marginBottom: 5,
-  },
-
-  totalDays: {
-    fontSize: 30,
-    fontWeight: "700",
-    color: "#0052cc",
-  },
-
-  totalIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 100,
-    backgroundColor: "#e8f0ff",
+  holidayDateBox: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: "#FFF3E0",
     justifyContent: "center",
     alignItems: "center",
   },
 
-  smallCardsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 18,
-  },
-
-  smallCard: {
-    width: "48%",
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 16,
-    elevation: 3,
-  },
-
-  smallCardLabel: {
-    color: "#777",
-    fontSize: 12,
-  },
-
-  smallCardNumber: {
-    fontSize: 28,
+  holidayDateText: {
+    fontSize: 11,
     fontWeight: "700",
-    marginTop: 10,
+    color: "#E65100",
   },
 
-  progressBar: {
-    height: 8,
-    backgroundColor: "#ddd",
-    borderRadius: 20,
-    marginTop: 14,
+  holidayInfo: {
+    flex: 1,
+    marginLeft: 14,
   },
 
-  progressFill: {
-    width: "65%",
-    height: "100%",
-    backgroundColor: "#0052cc",
-    borderRadius: 20,
+  holidayName: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1a1a2e",
+  },
+
+  holidayDay: {
+    fontSize: 12,
+    color: "#999",
+    marginTop: 2,
+  },
+
+  holidayListContainer: {
+    maxHeight: 340,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+
+  holidayScrollView: {
+    flexGrow: 0,
   },
 
   formCard: {
     backgroundColor: "#fff",
-    marginTop: 25,
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 20,
-    elevation: 4,
+    elevation: 2,
   },
 
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#444",
+    color: "#555",
+    marginBottom: 8,
+  },
+
+  chipScroll: {
+    marginBottom: 16,
   },
 
   leaveChip: {
-    backgroundColor: "#eee",
+    backgroundColor: "#f0f0f5",
     paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 100,
+    paddingVertical: 10,
+    borderRadius: 20,
     marginRight: 10,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
   },
 
   activeChip: {
     backgroundColor: "#0052cc",
+    borderColor: "#0052cc",
   },
 
   leaveChipText: {
-    color: "#555",
+    color: "#666",
     fontWeight: "600",
+    fontSize: 13,
   },
 
   activeChipText: {
@@ -161,55 +273,84 @@ const styles = StyleSheet.create({
   dateRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
+    gap: 12,
   },
 
   dateBox: {
-    width: "48%",
+    flex: 1,
   },
 
-  input: {
-    backgroundColor: "#f3f4f6",
+  dateInput: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#f5f7fa",
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
-    marginTop: 8,
+    marginTop: 4,
+  },
+
+  dateInputText: {
+    color: "#aaa",
+    fontSize: 13,
+  },
+
+  halfDayRow: {
+    flexDirection: "row",
+    marginTop: 14,
+  },
+
+  halfDayBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+
+  halfDayText: {
+    color: "#777",
+    fontSize: 14,
   },
 
   textArea: {
-    backgroundColor: "#f3f4f6",
-    borderRadius: 14,
-    padding: 15,
-    marginTop: 10,
+    backgroundColor: "#f5f7fa",
+    borderRadius: 12,
+    padding: 14,
     textAlignVertical: "top",
+    fontSize: 14,
+    color: "#333",
+    minHeight: 100,
   },
 
   uploadBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
     borderWidth: 2,
     borderStyle: "dashed",
-    borderColor: "#ccc",
-    borderRadius: 16,
-    padding: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 25,
+    borderColor: "#0052cc",
+    borderRadius: 14,
+    padding: 18,
+    marginTop: 18,
+    backgroundColor: "#F0F4FF",
   },
 
   uploadText: {
-    marginTop: 8,
-    color: "#666",
+    color: "#0052cc",
+    fontWeight: "600",
+    fontSize: 14,
   },
 
   applyBtn: {
     backgroundColor: "#0052cc",
-    marginTop: 30,
-    marginBottom: 40,
-    borderRadius: 18,
-    paddingVertical: 18,
+    marginTop: 20,
+    borderRadius: 14,
+    paddingVertical: 16,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
   },
 
   applyBtnText: {
@@ -217,7 +358,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-
 });
 
 export default styles;
