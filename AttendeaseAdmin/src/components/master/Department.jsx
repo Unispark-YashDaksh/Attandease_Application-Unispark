@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../../css/designation.css";
-const apiUrl = import.meta.env.VITE_API
+const apiUrl = import.meta.env.VITE_BACKEND_URL
 
 function Department() {
   const [departmentName, setDepartmentName] = useState("");
@@ -81,11 +81,11 @@ function Department() {
 
     try {
       if (editingId) {
-        await axios.put(`http://localhost:7000/updateDepartment/${editingId}`, {
+        await axios.put(`${apiUrl}/updateDepartment/${editingId}`, {
           departmentName,
         });
       } else {
-        await axios.post("http://localhost:7000/addDepartmentName", {
+        await axios.post(`${apiUrl}/addDepartmentName`, {
           departmentName,
         });
       }
@@ -102,7 +102,7 @@ function Department() {
 
     try {
       await axios.put(
-        `http://localhost:7000/updateDepartmentStatus/${department.id}`,
+        `${apiUrl}/updateDepartmentStatus/${department.id}`,
         {
           status: nextStatus,
         },

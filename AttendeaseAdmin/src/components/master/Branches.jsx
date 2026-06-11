@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../../css/designation.css";
+const apiUrl = import.meta.env.VITE_BACKEND_URL
 
 function Branches() {
   const [branchName, setBranchName] = useState("");
@@ -20,7 +21,7 @@ function Branches() {
   async function getBranches(filter) {
     try {
       const response = await axios.get(
-        `http://localhost:7000/fetch-branches?status=${filter}`,
+        `${apiUrl}/fetch-branches?status=${filter}`,
       );
 
       return Array.isArray(response.data.result) ? response.data.result : [];
@@ -92,7 +93,7 @@ function Branches() {
 
     try {
       if (editingId) {
-        await axios.put(`http://localhost:7000/updateBranch/${editingId}`, {
+        await axios.put(`${apiUrl}/updateBranch/${editingId}`, {
           branchName,
           address,
           city,
@@ -100,7 +101,7 @@ function Branches() {
           pincode,
         });
       } else {
-        await axios.post("http://localhost:7000/addBranch", {
+        await axios.post(`${apiUrl}/addBranch`, {
           branchName,
           address,
           city,
@@ -120,7 +121,7 @@ function Branches() {
     const nextStatus = branch.status === "Active" ? "Inactive" : "Active";
 
     try {
-      await axios.put(`http://localhost:7000/updateBranchStatus/${branch.id}`, {
+      await axios.put(`${apiUrl}/updateBranchStatus/${branch.id}`, {
         branchName: branch.branch_name,
         address: branch.address,
         city: branch.city,

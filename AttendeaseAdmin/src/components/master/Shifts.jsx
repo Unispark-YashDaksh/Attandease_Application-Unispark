@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import "../../css/designation.css";
+const apiUrl = import.meta.env.VITE_BACKEND_URL
 
 function Shifts() {
   const [showModal, setShowModal] = useState(false);
@@ -20,7 +21,7 @@ function Shifts() {
   async function getShifts(filter) {
     try {
       const response = await axios.get(
-        `http://localhost:7000/fetch-shifts?status=${filter}`,
+        `${apiUrl}/fetch-shifts?status=${filter}`,
       );
 
       return Array.isArray(response.data.result) ? response.data.result : [];
@@ -91,7 +92,7 @@ function Shifts() {
 
     try {
       if (editingId) {
-        await axios.put(`http://localhost:7000/updateShift/${editingId}`, {
+        await axios.put(`${apiUrl}/updateShift/${editingId}`, {
           shiftName,
           startTime,
           endTime,
@@ -99,7 +100,7 @@ function Shifts() {
           halfdayAfter,
         });
       } else {
-        await axios.post("http://localhost:7000/addShift", {
+        await axios.post(`${apiUrl}/addShift`, {
           shiftName,
           startTime,
           endTime,
@@ -119,7 +120,7 @@ function Shifts() {
     const nextStatus = shift.status === "Active" ? "Inactive" : "Active";
 
     try {
-      await axios.put(`http://localhost:7000/updateShiftStatus/${shift.id}`, {
+      await axios.put(`${apiUrl}/updateShiftStatus/${shift.id}`, {
         shiftName: shift.shift_name,
         startTime: shift.start_time,
         endTime: shift.end_time,
