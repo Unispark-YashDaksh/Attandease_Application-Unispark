@@ -323,11 +323,24 @@ function EmployeeMaster() {
                       <td>
                         <div className="role-cell">
                           {item.photo_url ? (
-                            <img
-                              className="employee-photo"
-                              src={`http://localhost:7000${item.photo_url}`}
-                              alt={item.employee_name}
-                            />
+                            <>
+                              <img
+                                className="employee-photo"
+                                src={`http://localhost:7000${item.photo_url}`}
+                                alt={item.employee_name}
+                                onError={(event) => {
+                                  event.currentTarget.style.display = "none";
+                                  event.currentTarget.nextElementSibling.style.display =
+                                    "inline-block";
+                                }}
+                              />
+                              <span
+                                className="material-symbols-outlined"
+                                style={{ display: "none" }}
+                              >
+                                person
+                              </span>
+                            </>
                           ) : (
                             <span className="material-symbols-outlined">
                               person
@@ -463,9 +476,7 @@ function EmployeeMaster() {
                 }}
               >
                 <div className="form-group">
-                  <label htmlFor="employee_department_filter">
-                    Department
-                  </label>
+                  <label htmlFor="employee_department_filter">Department</label>
                   <select
                     id="employee_department_filter"
                     value={departmentFilter}
