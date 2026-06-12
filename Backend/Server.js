@@ -36,6 +36,16 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
+const dbTimezone = process.env.DB_TIMEZONE || "+05:30";
+
+pool.on("connection", (connection) => {
+  connection.query("SET time_zone = ?", [dbTimezone], (err) => {
+    if (err) {
+      console.error("Failed to set DB timezone:", err.message);
+    }
+  });
+});
+
 // Convert pool to promise-based (was missing - caused async/await crash)
 const promisePool = pool.promise();
 
