@@ -43,11 +43,18 @@
         }
       ],
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow SparkHR to access your camera for attendance selfie."
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "cameraPermission": "Allow SparkHR to access your camera for attendance selfie."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

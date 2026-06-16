@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../../css/designation.css";
+const apiUrl= import.meta.env.VITE_API;
 
 function Roles() {
   const [showModal, setShowModal] = useState(false);
@@ -17,7 +18,7 @@ function Roles() {
   async function getRoles(filter) {
     try {
       const response = await axios.get(
-        `http://localhost:7000/fetch-roles?status=${filter}`,
+        `${apiUrl}/fetch-roles?status=${filter}`,
       );
 
       return Array.isArray(response.data.result) ? response.data.result : [];

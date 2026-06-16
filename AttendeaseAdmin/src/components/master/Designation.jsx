@@ -3,12 +3,13 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
 import "../../css/designation.css";
+const apiUrl= import.meta.env.VITE_API;
 
 // to be moved to .env file in for better security and configurability
-const Fetch_API_URL = "http://localhost:7000/fetch-designation";
-const Post_API_URL = "http://localhost:7000/addDesignation";
-const PUT_API_URL = "http://localhost:7000/updateDesignation"; // added this
-const Fetch_Dept_ID = "http://localhost:7000/fetch-departments";
+const Fetch_API_URL = `${apiUrl}/fetch-designation`;
+const Post_API_URL = `${apiUrl}/addDesignation`;
+const PUT_API_URL = `${apiUrl}/updateDesignation`; // added this
+const Fetch_Dept_ID = `${apiUrl}/fetch-departments`;
 
 const roleIcons = [
   "engineering",

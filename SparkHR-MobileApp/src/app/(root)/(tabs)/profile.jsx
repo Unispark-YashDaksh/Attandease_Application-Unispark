@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from "react";
 import {
-  SafeAreaView,
   ScrollView,
   View,
   Text,
   Image,
   TouchableOpacity,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import styles from "../../../styles/ProfileScreenStyles";
+import Header from "../../../components/Header";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import AnimatedScreen from "../../../components/AnimatedScreen";
 import axios from "axios";
 import {
   VITE_API
@@ -50,7 +52,9 @@ export default function Profile() {
    }
   }
   return (
+    <AnimatedScreen>
     <SafeAreaView style={styles.container}>
+      <Header showBack onBackPress={() => router.back()} />
       <ScrollView
         showsVerticalScrollIndicator={false}
       >
@@ -153,6 +157,7 @@ export default function Profile() {
         <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 

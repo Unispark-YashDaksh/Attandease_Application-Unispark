@@ -1,8 +1,13 @@
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import styles from "../../../styles/homeStyles";
+import Header from "../../../components/Header";
+import AnimatedScreen from "../../../components/AnimatedScreen";
+import useTodayLogs from "../../../hooks/useTodayLogs"; // Today logs fuctionality main file
+import { useState } from "react";
 
 const QUICK_ACTIONS = [
   { icon: "event-busy", label: "Leaves" },
@@ -10,19 +15,15 @@ const QUICK_ACTIONS = [
   { icon: "calendar-month", label: "Calendar" },
   { icon: "payments", label: "Salary" },
   { icon: "groups", label: "Team" },
-  { icon: "analytics", label: "Stats" },
+  { icon: "work", label: "Apply WFH" },
 ];
 
 export default function Home() {
+  const { todayRecords, loading } = useTodayLogs();
   return (
+    <AnimatedScreen>
     <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* Top Bar */}
-      <View style={styles.topBar}>
-        <Text style={styles.topBarTitle}>SparkHR</Text>
-        <View style={styles.topBarProfile}>
-          <MaterialIcons name="person" size={20} color="#fff" />
-        </View>
-      </View>
+      <Header onProfilePress={() => router.navigate("profile")} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -33,10 +34,6 @@ export default function Home() {
           <View style={styles.welcomeSection}>
             <Text style={styles.greeting}>Good Morning, Yash</Text>
             <View style={styles.dateTimeRow}>
-              <MaterialIcons name="calendar-today" size={16} color="#434654" />
-              <Text style={styles.dateTimeText}>24 Oct 2023</Text>
-              <Text style={styles.dateTimeText}>•</Text>
-              <Text style={styles.dateTimeText}>09:15 AM</Text>
             </View>
           </View>
 
@@ -72,17 +69,19 @@ export default function Home() {
               <View style={styles.attendanceFooter}>
                 <View style={styles.footerItem}>
                   <MaterialIcons name="schedule" size={18} color="#0052cc" />
-                  <Text style={styles.footerText}>Punch In: 09:15 AM</Text>
+                  <Text style={styles.footerText}>Punch In: {todayRecords?.punch_in || "--:--"}</Text>
                 </View>
                 <View style={styles.footerItem}>
-                  <MaterialIcons name="location-on" size={18} color="#737685" />
-                  <Text style={styles.footerText}>Verified</Text>
+                  <MaterialIcons name="location-on" size={18} color={todayRecords?.punch_in ? "#0052cc": "#737685"} />
+                  <Text style={styles.footerText}>
+                    {todayRecords?.punch_in ? "Verified": "Not Checked In"}
+                  </Text>
                 </View>
               </View>
             </View>
 
             {/* Verification Card */}
-            <View style={styles.verificationCard}>
+            {/* <View style={styles.verificationCard}>
               <Text style={styles.verificationTitle}>Verification</Text>
               <View style={styles.officeRow}>
                 <View style={styles.officeIconBox}>
@@ -100,7 +99,7 @@ export default function Home() {
                 </View>
                 <MaterialIcons name="check-circle" size={18} color="#006477" />
               </View>
-            </View>
+            </View> */}
           </View>
 
           {/* Action Center */}
@@ -195,5 +194,6 @@ export default function Home() {
         </View>
       </ScrollView>
     </SafeAreaView>
+  </AnimatedScreen>
   );
 }

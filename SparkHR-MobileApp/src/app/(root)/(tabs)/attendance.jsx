@@ -1,18 +1,20 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Image,
   Alert,
   ActivityIndicator,
 } from "react-native";
-
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
+import AnimatedScreen from "../../../components/AnimatedScreen";
+import SelfieCameraModal from "../../../components/SelfieCameraModal";
 import {
   VITE_API,
   GEO_FENCING_RADIUS,
@@ -22,6 +24,7 @@ import {
 import axios from "axios";
 
 import styles from "../../.././styles/attendanceStyles";
+import Header from "../../../components/Header";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ---------------------------------------------------------------------------
@@ -129,6 +132,8 @@ export default function AttendanceScreen() {
 
   // ---- Selfie State ----
   const [selfieUri, setSelfieUri] = useState(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const cameraResolverRef = useRef(null);
 
   // ---- Loading States ----
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
@@ -377,20 +382,15 @@ export default function AttendanceScreen() {
         console.log("WFH approved — skipping geo-fencing");
       }
 
-      // STEP 8: Open front camera for selfie
-      const result = await ImagePicker.launchCameraAsync({
-        cameraType: ImagePicker.CameraType.front,
-        allowsEditing: false,
-        quality: parseFloat(SELFIE_QUALITY) || 0.7,
+      // STEP 8-9: Open front camera for selfie (in-app, no external Intent)
+      setShowCamera(true);
+      const capturedUri = await new Promise((resolve) => {
+        cameraResolverRef.current = resolve;
       });
-
-      // STEP 9: Handle cancellation
-      if (result.canceled) {
+      if (!capturedUri) {
         setIsProcessingPunch(false);
         return;
       }
-
-      const capturedUri = result.assets[0].uri;
       setSelfieUri(capturedUri);
 
       // STEP 10: Call Punch In API
@@ -463,13 +463,11 @@ export default function AttendanceScreen() {
         longitude: currentLocation.coords.longitude,
       };
 
-      const result = await ImagePicker.launchCameraAsync({
-        cameraType: ImagePicker.CameraType.front,
-        allowsEditing: false,
-        quality: parseFloat(SELFIE_QUALITY) || 0.7,
+      setShowCamera(true);
+      const capturedUri = await new Promise((resolve) => {
+        cameraResolverRef.current = resolve;
       });
-
-      if (result.canceled) {
+      if (!capturedUri) {
         setIsProcessingPunch(false);
         return;
       }
@@ -479,7 +477,7 @@ export default function AttendanceScreen() {
       formData.append("latitude", userCoords.latitude.toString());
       formData.append("longitude", userCoords.longitude.toString());
       formData.append("selfie", {
-        uri: result.assets[0].uri,
+        uri: capturedUri,
         type: "image/jpeg",
         name: `selfie_${Date.now()}.jpg`,
       });
@@ -522,12 +520,10 @@ export default function AttendanceScreen() {
   }
 
   return (
+    <AnimatedScreen>
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* ========== HEADER ========== */}
-        <View style={styles.header}>
-          <Text style={styles.logoText}>SparkHR</Text>
-        </View>
+      <Header onProfilePress={() => router.navigate("profile")} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
 
         {/* ========== TITLE + CLOCK ========== */}
         <View className="mt-5">
@@ -749,5 +745,23 @@ export default function AttendanceScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+      <SelfieCameraModal
+        visible={showCamera}
+        onCapture={(uri) => {
+          setShowCamera(false);
+          if (cameraResolverRef.current) {
+            cameraResolverRef.current(uri);
+            cameraResolverRef.current = null;
+          }
+        }}
+        onCancel={() => {
+          setShowCamera(false);
+          if (cameraResolverRef.current) {
+            cameraResolverRef.current(null);
+            cameraResolverRef.current = null;
+          }
+        }}
+      />
+    </AnimatedScreen>
   );
 }

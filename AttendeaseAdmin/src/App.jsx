@@ -10,6 +10,7 @@ import DailyAttendance from './components/DailyAttendance';
 
 
 
+
 function App() {
 
   return (  
@@ -20,7 +21,7 @@ function App() {
          <Layout/>
       }
       >
-       <Route path='dashbord' element= {<Dashboard/>}></Route>
+       <Route path='dashboard' element= {<Dashboard/>}></Route>
        <Route path='LeaveManag' element={<LeaveManagement/>}></Route>
        <Route path='holidays' element={<HolidaysManagement/>}></Route>
         <Route path='masterMmangement' element={<MasterManagement/>}></Route>

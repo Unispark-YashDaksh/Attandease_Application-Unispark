@@ -66,13 +66,11 @@ const styles = StyleSheet.create({
   },
 
   bentoGrid: {
-    flexDirection: "row",
     gap: 12,
     marginBottom: 20,
   },
 
   attendanceCard: {
-    flex: 2,
     backgroundColor: "#fff",
     borderRadius: 16,
     padding: 16,
@@ -177,11 +175,9 @@ const styles = StyleSheet.create({
   },
 
   verificationCard: {
-    flex: 1,
     backgroundColor: "#d8e2ff",
     borderRadius: 16,
     padding: 16,
-    justifyContent: "space-between",
     shadowColor: "#091e42",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -330,13 +326,11 @@ const styles = StyleSheet.create({
   },
 
   summaryRow: {
-    flexDirection: "row",
     gap: 12,
     marginBottom: 24,
   },
 
   summaryCard: {
-    flex: 1,
     backgroundColor: "#fff",
     borderRadius: 14,
     padding: 16,
@@ -384,7 +378,6 @@ const styles = StyleSheet.create({
   },
 
   aiCard: {
-    flex: 1,
     borderRadius: 14,
     padding: 16,
     overflow: "hidden",

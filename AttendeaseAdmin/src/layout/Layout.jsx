@@ -7,7 +7,7 @@ const Layout = () => {
       {/* this class purpose of use because need sidebar in fixed position and other div will take a full width. */}
       <SideBar />
 
-      <div style={{ marginLeft: "15rem" }}> {/*added this. */}
+      <div style={{ marginLeft: "15rem", minHeight: "100vh" }}>
         <Outlet />
       </div>
     </div>

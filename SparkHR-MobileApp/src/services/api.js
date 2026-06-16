@@ -6,6 +6,7 @@ const api= axios.create({
     baseURL: VITE_API
 });
 
+console.log(VITE_API)
 api.interceptors.request.use(async(config)=>{
     const employeeId= await AsyncStorage.getItem("employee_id");
     if(employeeId){

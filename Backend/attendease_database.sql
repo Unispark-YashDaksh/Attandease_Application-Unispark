@@ -1,6 +1,4 @@
 
-
-DROP DATABASE attendance_db;
 CREATE DATABASE attendease_database;
 USE attendease_database;
 
@@ -16,6 +14,8 @@ FOREIGN KEY (employee_id)
 REFERENCES employee_master(id)
 
 );
+
+SELECT * FROM users;
 -- --------------------------------------Employee Master Table --------------------------------------------------------------------------------
 CREATE TABLE employee_master(
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -27,6 +27,7 @@ department_id INT,
 branch_id INT,
 shift_id INT,
 role_id INT,
+photo_url VARCHAR(255),
 reporting_manager_id INT NULL,
 employeement_status ENUM('ACTIVE', 'RESIGNED') DEFAULT 'ACTIVE',
 employee_mobile_no VARCHAR(255),
@@ -60,8 +61,11 @@ FOREIGN KEY (reporting_manager_id)
 REFERENCES employee_master(id)
 );
 
-SELECT * FROM employee_master;
 
+ALTER TABLE employee_master
+ADD COLUMN photo_url VARCHAR(255);
+SELECT * FROM employee_master;
+DELETE FROM employee_master WHERE id= 2;
 ALTER  TABLE employee_master
 MODIFY employee_mobile_no varchar(255);
 
@@ -73,6 +77,7 @@ CREATE TABLE departments (
 ALTER TABLE departments
 ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 
+SELECT * FROM departments;
 
 CREATE TABLE attendance(
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -153,6 +158,7 @@ CREATE TABLE roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
     role_name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
+    status ENUM('Active','Inactive') DEFAULT 'Active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ALTER TABLE roles
@@ -166,6 +172,7 @@ CREATE TABLE branches (
     city VARCHAR(100),
     state VARCHAR(100),
     pincode VARCHAR(20),
+    status ENUM('Active','Inactive') DEFAULT 'Active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -221,6 +228,7 @@ CREATE TABLE shift_master (
     
     late_after TIME,
     half_day_after TIME,
+    status ENUM('Active','Inactive') DEFAULT 'Active',
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -232,6 +240,88 @@ ADD COLUMN status ENUM('Active','Inactive') DEFAULT 'Active';
 SELECT * FROM shift_master;
 
 
+CREATE TABLE leave_types(
+id INT PRIMARY KEY AUTO_INCREMENT,
+leave_name ENUM("Sick Leave", "Casual Leave", "Earn Leave") NOT NULL,
+code ENUM("SL", "CL", "EL") NOT NULL,
+is_active BOOLEAN DEFAULT TRUE,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE leave_defaults(
+id INT PRIMARY KEY AUTO_INCREMENT,
+leave_type_id INT NOT NULL,
+default_days INT,
+financial_year VARCHAR(10),
+is_Active BOOLEAN,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+FOREIGN KEY (leave_type_id)
+REFERENCES leave_types(id)
+);
+
+CREATE TABLE employee_leave_balances(
+id INT PRIMARY KEY AUTO_INCREMENT,
+employee_id INT NOT NULL,
+leave_type_id INT,
+total_days INT,
+used_days INT,
+remaining_days INT,
+financial_year VARCHAR(10),
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+FOREIGN KEY (employee_id)
+REFERENCES employee_master(id),
+
+FOREIGN KEY (leave_type_id)
+REFERENCES leave_types(id)
+);
+
+CREATE TABLE leave_applications(
+id INT PRIMARY KEY AUTO_INCREMENT,
+employee_id INT NOT NULL,
+leave_type_id INT NOT NULL,
+from_date DATE,
+to_date DATE,
+total_days INT,
+reason TEXT,
+status ENUM("PENDING", "APPROVED", "REJECTED") DEFAULT "PENDING",
+applied_on DATE,
+approved_by INT,
+approved_on TIMESTAMP NULL,
+
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+FOREIGN KEY (employee_id)
+REFERENCES employee_master(id),
+
+FOREIGN KEY (leave_type_id)
+REFERENCES leave_types(id),
+
+FOREIGN KEY (approved_by)
+REFERENCES employee_master(id)
+);
+
+CREATE TABLE leave_adjustments(
+id INT PRIMARY KEY AUTO_INCREMENT,
+employee_id INT NOT NULL,
+leave_type_id INT NOT NULL,
+adjustment_type ENUM("CREDIT", "DEBIT"),
+days INT,
+reason VARCHAR(255),
+adjusted_by INT,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+FOREIGN KEY (employee_id)
+REFERENCES employee_master(id),
+
+FOREIGN KEY (leave_type_id)
+REFERENCES leave_types(id),
+
+FOREIGN KEY (adjusted_by)
+REFERENCES employee_master(id)
+);
 CREATE TABLE work_from_home_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
     employee_id INT NOT NULL,
@@ -247,6 +337,7 @@ CREATE TABLE work_from_home_requests (
     ON DELETE CASCADE
 );
 
+SELECT * FROM work_from_home_requests;
 SELECT attendance_date,
        DATE(attendance_date),
        CURDATE()

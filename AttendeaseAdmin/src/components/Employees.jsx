@@ -3,6 +3,8 @@ import AddNewEmployeeForm from "./AddNewEmployeeForm";
 import axios from "axios";
 import "../css/designation.css";
 import "../css/Employees.css";
+const apiUrl= import.meta.env.VITE_API;
+console.log(apiUrl)
 
 function EmployeeMaster() {
   const [showModal, setshowModal] = useState(false);
@@ -23,7 +25,7 @@ function EmployeeMaster() {
 
   const getEmployees = async (page, status) => {
     const response = await axios.get(
-      `http://localhost:7000/fetch-employees?page=${page}&limit=${itemsPerPage}&status=${status}`,
+      `${apiUrl}/fetch-employees?page=${page}&limit=${itemsPerPage}&status=${status}`,
     );
 
     return {
@@ -101,7 +103,7 @@ function EmployeeMaster() {
 
     try {
       await axios.put(
-        `http://localhost:7000/updateEmployeeStatus/${employee.id}`,
+        `${apiUrl}/updateEmployeeStatus/${employee.id}`,
         {
           status: nextStatus,
         },
