@@ -3,7 +3,8 @@ import AddNewEmployeeForm from "./AddNewEmployeeForm";
 import axios from "axios";
 import "../css/designation.css";
 import "../css/Employees.css";
-const apiUrl= import.meta.env.VITE_BACKEND_URL;
+const apiUrl= import.meta.env.VITE_API;
+console.log(apiUrl)
 
 function EmployeeMaster() {
   const [showModal, setshowModal] = useState(false);

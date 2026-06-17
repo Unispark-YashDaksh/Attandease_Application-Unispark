@@ -1,31 +1,63 @@
-.SideBarList{
-    margin-bottom: 1rem;
-    list-style: none;
-    font-size: 1.5rem;
-    
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 260px;
+  height: 100vh;
+  background: #2e3037;
+  color: #f0f0f9;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
 }
 
-.SideBarList a{
-    text-decoration: none;
+.sidebar-header {
+  padding: 30px 24px;
 }
 
-.SideBarList a{
-    font-size: 20px;
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffffff;
 }
 
-.Stats-Div{
-    height: 5rem;
-    width: 10rem;
-    border: 1px solid black;
-    border-radius: 10px;
-    text-align: center;
+.sidebar-header p {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #c3c6d5;
 }
 
-.large-stats-div{
-    height: 25rem;
-    width: 30rem;
-    border: 1px solid black;
-    border-radius: 10px;
-    margin: 0 auto;
-    text-align: center;
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 24px;
+  text-decoration: none;
+  color: #c3c6d5;
+  transition: all 0.3s ease;
+  font-size: 15px;
+}
+
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.sidebar-link.active {
+  border-left: 4px solid #0f52ba;
+  background: rgba(15, 82, 186, 0.15);
+  color: #b0c6ff;
+  font-weight: 600;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding-bottom: 20px;
 }

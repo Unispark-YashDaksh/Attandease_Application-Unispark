@@ -7,6 +7,8 @@ import HolidaysManagement from './components/HolidaysManagement';
 import Employees from './components/Employees';
 import MasterManagement from './components/MasterManagement';
 import DailyAttendance from './components/DailyAttendance';
+import AttendanceReport from './components/AttendanceReport';
+
 
 
 
@@ -20,12 +22,13 @@ function App() {
          <Layout/>
       }
       >
-       <Route path='dashbord' element= {<Dashboard/>}></Route>
+       <Route path='dashboard' element= {<Dashboard/>}></Route>
        <Route path='LeaveManag' element={<LeaveManagement/>}></Route>
        <Route path='holidays' element={<HolidaysManagement/>}></Route>
         <Route path='masterMmangement' element={<MasterManagement/>}></Route>
         <Route path='Employees' element={<Employees/>}></Route>
         <Route path='dailyAttendance' element={<DailyAttendance/>}></Route>
+        <Route path='reports' element={<AttendanceReport/>}></Route>
       </Route>
     </Routes>
     

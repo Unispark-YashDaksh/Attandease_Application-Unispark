@@ -1,106 +1,176 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Alert,
+  ActivityIndicator,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import fetchHolidays from "../../../api/holidayApi"
+import Header from "../../../components/Header";
+import AnimatedScreen from "../../../components/AnimatedScreen";
+import { fetchLeaveBalance, applyLeave } from "../../../services/leaveApi";
 
 import styles from "../../../styles/applyLeaveStyles";
 
-
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-];
-
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const LEAVE_TYPE_MAP = {
+  "Sick Leave": "SL",
+  "Casual Leave": "CL",
+  "Earn Leave": "EL",
+};
 
 export default function ApplyLeaveScreen() {
 
   const [upcomingHolidays, setUpcomingHolidays]= useState([])
   const [selectedType, setSelectedType] = useState("Sick Leave");
   const [showAllHolidays, setShowAllHolidays] = useState(false);
-  const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
+  const [balances, setBalances] = useState([]);
+  const [employeeId, setEmployeeId] = useState(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [showFromPicker, setShowFromPicker] = useState(false);
+  const [showToPicker, setShowToPicker] = useState(false);
 
-  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const todayDate = today.getDate();
-
-  const calendarDays = [];
-  for (let i = 0; i < firstDay; i++) {
-    calendarDays.push(null);
-  }
-  for (let i = 1; i <= daysInMonth; i++) {
-    calendarDays.push(i);
-  }
-
-  const loadHolidays= async()=>{
-    const holidays= await fetchHolidays();
+  const loadHolidays = async () => {
+    const holidays = await fetchHolidays();
     setUpcomingHolidays(holidays);
+  };
 
-    console.log(holidays)
-  }
+  const loadBalances = useCallback(async (empId) => {
+    try {
+      const res = await fetchLeaveBalance(empId);
+      setBalances(res.leaves || []);
+    } catch (_) {}
+  }, []);
+
+  useEffect(() => {
+    loadHolidays();
+    AsyncStorage.getItem("employee_id").then((id) => {
+      if (id) {
+        setEmployeeId(id);
+        loadBalances(id);
+      }
+    });
+  }, []);
+
+  const getLeaveTypeId = (typeName) => {
+    const code = LEAVE_TYPE_MAP[typeName];
+    const match = balances.find((b) => b.code === code);
+    return match ? match.leave_type_id : null;
+  };
+
+  const handleApplyLeave = async () => {
+    if (!employeeId) {
+      Alert.alert("Error", "Employee not found. Please login again.");
+      return;
+    }
+    const leaveTypeId = getLeaveTypeId(selectedType);
+    if (!leaveTypeId) {
+      Alert.alert("Error", `Leave type "${selectedType}" not found in your balance. Contact admin.`);
+      return;
+    }
+    if (!fromDate.trim() || !toDate.trim()) {
+      Alert.alert("Error", "Please enter From Date and To Date");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await applyLeave({
+        employee_id: parseInt(employeeId),
+        leave_type_id: leaveTypeId,
+        from_date: fromDate.trim(),
+        to_date: toDate.trim(),
+        reason: reason.trim() || undefined,
+      });
+      Alert.alert("Success", res.message);
+      loadBalances(employeeId);
+      setFromDate("");
+      setToDate("");
+      setReason("");
+    } catch (err) {
+      const msg = err.response?.data?.error || err.message;
+      Alert.alert("Error", msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const formatDate = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+
+  const handleFromDateChange = (_event, selectedDate) => {
+    setShowFromPicker(Platform.OS === "ios");
+    if (selectedDate) {
+      setFromDate(formatDate(selectedDate));
+    }
+  };
+
+  const handleToDateChange = (_event, selectedDate) => {
+    setShowToPicker(Platform.OS === "ios");
+    if (selectedDate) {
+      setToDate(formatDate(selectedDate));
+    }
+  };
 
   const leaveTypes = ["Sick Leave", "Casual Leave", "Earn Leave"];
-   useEffect(()=>{
-    loadHolidays()
-  },[])
-
 
   return (
+    <AnimatedScreen>
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Leave Management</Text>
-            <Text style={styles.greetingSub}>Plan your time off</Text>
-          </View>
-          <TouchableOpacity style={styles.profileCircle}>
-            <MaterialIcons name="person" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
+      <Header onProfilePress={() => router.navigate("profile")} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
 
         {/* Leave Balance Cards */}
-        <Text style={styles.sectionTitle}>Leave Balance</Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <Text style={styles.sectionTitle}>Leave Balance</Text>
+          <TouchableOpacity onPress={() => employeeId && loadBalances(employeeId)}>
+            <MaterialIcons name="refresh" size={22} color="#0052cc" />
+          </TouchableOpacity>
+        </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.balanceScroll}>
-          <View style={styles.balanceCard}>
-            <View style={[styles.balanceIcon, { backgroundColor: "#E8F5E9" }]}>
-              <MaterialIcons name="hotel" size={24} color="#2E7D32" />
+          {balances.length > 0 ? balances.map((item, index) => {
+            const colors = [
+              { bg: "#E8F5E9", icon: "hotel", color: "#2E7D32" },
+              { bg: "#FFF3E0", icon: "wb-sunny", color: "#E65100" },
+              { bg: "#E3F2FD", icon: "card-giftcard", color: "#1565C0" },
+            ];
+            const c = colors[index % 3];
+            const pct = item.total_days > 0 ? (item.remaining_days / item.total_days) * 100 : 0;
+            return (
+              <View key={item.id || index} style={styles.balanceCard}>
+                <View style={[styles.balanceIcon, { backgroundColor: c.bg }]}>
+                  <MaterialIcons name={c.icon} size={24} color={c.color} />
+                </View>
+                <Text style={styles.balanceCount}>{item.remaining_days}</Text>
+                <Text style={styles.balanceLabel}>{item.leave_name || item.lave_name || item.code}</Text>
+                <View style={styles.bar}>
+                  <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: c.color }]} />
+                </View>
+              </View>
+            );
+          }) : (
+            <View style={styles.balanceCard}>
+              <View style={[styles.balanceIcon, { backgroundColor: "#f0f0f5" }]}>
+                <MaterialIcons name="hourglass-empty" size={24} color="#999" />
+              </View>
+              <Text style={[styles.balanceCount, { fontSize: 14 }]}>No data</Text>
+              <Text style={styles.balanceLabel}>Pull to refresh</Text>
             </View>
-            <Text style={styles.balanceCount}>12</Text>
-            <Text style={styles.balanceLabel}>Sick Leave</Text>
-            <View style={styles.bar}>
-              <View style={[styles.barFill, { width: "60%", backgroundColor: "#2E7D32" }]} />
-            </View>
-          </View>
-          <View style={styles.balanceCard}>
-            <View style={[styles.balanceIcon, { backgroundColor: "#FFF3E0" }]}>
-              <MaterialIcons name="wb-sunny" size={24} color="#E65100" />
-            </View>
-            <Text style={styles.balanceCount}>8</Text>
-            <Text style={styles.balanceLabel}>Casual Leave</Text>
-            <View style={styles.bar}>
-              <View style={[styles.barFill, { width: "40%", backgroundColor: "#E65100" }]} />
-            </View>
-          </View>
-          <View style={styles.balanceCard}>
-            <View style={[styles.balanceIcon, { backgroundColor: "#E3F2FD" }]}>
-              <MaterialIcons name="card-giftcard" size={24} color="#1565C0" />
-            </View>
-            <Text style={styles.balanceCount}>18</Text>
-            <Text style={styles.balanceLabel}>Earn Leave</Text>
-            <View style={styles.bar}>
-              <View style={[styles.barFill, { width: "90%", backgroundColor: "#1565C0" }]} />
-            </View>
-          </View>
+          )}
         </ScrollView>
 
        
@@ -136,6 +206,7 @@ export default function ApplyLeaveScreen() {
         </View>
 
         {/* Apply Leave Section */}
+        <Text style={styles.greetingSub}>Plan your time off</Text>
         <Text style={styles.sectionTitle}>Apply Leave</Text>
         <View style={styles.formCard}>
           <Text style={styles.label}>Leave Type</Text>
@@ -162,25 +233,38 @@ export default function ApplyLeaveScreen() {
           <View style={styles.dateRow}>
             <View style={styles.dateBox}>
               <Text style={styles.label}>From Date</Text>
-              <TouchableOpacity style={styles.dateInput}>
-                <Text style={styles.dateInputText}>Select Date</Text>
+              <TouchableOpacity style={styles.dateInput} onPress={() => setShowFromPicker(true)}>
+                <Text style={[styles.dateInputText, fromDate && { color: "#333" }]}>
+                  {fromDate || "Select Date"}
+                </Text>
                 <MaterialIcons name="calendar-today" size={18} color="#999" />
               </TouchableOpacity>
+              {showFromPicker && (
+                <DateTimePicker
+                  value={fromDate ? new Date(fromDate) : new Date()}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleFromDateChange}
+                />
+              )}
             </View>
             <View style={styles.dateBox}>
               <Text style={styles.label}>To Date</Text>
-              <TouchableOpacity style={styles.dateInput}>
-                <Text style={styles.dateInputText}>Select Date</Text>
+              <TouchableOpacity style={styles.dateInput} onPress={() => setShowToPicker(true)}>
+                <Text style={[styles.dateInputText, toDate && { color: "#333" }]}>
+                  {toDate || "Select Date"}
+                </Text>
                 <MaterialIcons name="calendar-today" size={18} color="#999" />
               </TouchableOpacity>
+              {showToPicker && (
+                <DateTimePicker
+                  value={toDate ? new Date(toDate) : new Date()}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleToDateChange}
+                />
+              )}
             </View>
-          </View>
-
-          <View style={styles.halfDayRow}>
-            <TouchableOpacity style={styles.halfDayBtn}>
-              <MaterialIcons name="check-box-outline-blank" size={20} color="#777" />
-              <Text style={styles.halfDayText}>Half Day</Text>
-            </TouchableOpacity>
           </View>
 
           <Text style={[styles.label, { marginTop: 16 }]}>Reason</Text>
@@ -188,22 +272,30 @@ export default function ApplyLeaveScreen() {
             multiline
             numberOfLines={4}
             placeholder="Write your reason for leave..."
+            value={reason}
+            onChangeText={setReason}
             style={styles.textArea}
           />
 
-          <TouchableOpacity style={styles.uploadBox}>
-            <MaterialIcons name="cloud-upload" size={28} color="#0052cc" />
-            <Text style={styles.uploadText}>Upload supporting document</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.applyBtn}>
-            <MaterialIcons name="send" size={20} color="#fff" />
-            <Text style={styles.applyBtnText}>Submit Leave Request</Text>
+          <TouchableOpacity
+            style={[styles.applyBtn, submitting && { opacity: 0.6 }]}
+            onPress={handleApplyLeave}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <MaterialIcons name="send" size={20} color="#fff" />
+            )}
+            <Text style={styles.applyBtnText}>
+              {submitting ? "Submitting..." : "Submit Leave Request"}
+            </Text>
           </TouchableOpacity>
         </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
+    </AnimatedScreen>
   );
 }

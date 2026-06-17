@@ -2,7 +2,9 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import "../css/Employees.css";
-const apiUrl = import.meta.env.VITE_BACKEND_URL
+
+const apiUrl= import.meta.env.VITE_API;
+
 
 function AddNewEmployeeForm({
   setshowModal,

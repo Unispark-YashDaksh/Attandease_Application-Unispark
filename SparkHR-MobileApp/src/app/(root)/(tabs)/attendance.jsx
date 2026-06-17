@@ -1,18 +1,20 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Text,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Image,
   Alert,
   ActivityIndicator,
 } from "react-native";
-
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router, useFocusEffect } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
+import AnimatedScreen from "../../../components/AnimatedScreen";
+import SelfieCameraModal from "../../../components/SelfieCameraModal";
 import {
   VITE_API,
   GEO_FENCING_RADIUS,
@@ -22,6 +24,7 @@ import {
 import axios from "axios";
 
 import styles from "../../.././styles/attendanceStyles";
+import Header from "../../../components/Header";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ---------------------------------------------------------------------------
@@ -79,36 +82,86 @@ export default function AttendanceScreen() {
   //         authentication context (login state / JWT token / AsyncStorage).
   // ---------------------------------------------------------------------------
   const [loggedInEmployeeId, setLoggedInEmployeeId] = useState(null);
-    const [selectedType, setSelectedType] = useState("Sick Leave");
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-  
-    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const todayDate = today.getDate();
-  
-    const calendarDays = [];
-    for (let i = 0; i < firstDay; i++) {
-      calendarDays.push(null);
-    }
-    for (let i = 1; i <= daysInMonth; i++) {
-      calendarDays.push(i);
-    }
+  const [selectedType, setSelectedType] = useState("Sick Leave");
 
-  useEffect(()=>{
-    const loadandInit= async()=>{
-      const id= await AsyncStorage.getItem("employee_id");
+  // --- TODAY'S REFERENCE DATE ---
+  // Used to determine which calendar days are in the past vs future.
+  // `todayMidnight` = start of today (00:00:00) so comparison is day-level, not time-level.
+  const today = new Date();
+  const todayDate = today.getDate();       // 1-31
+  const todayMonth = today.getMonth();     // 0-11 (Jan=0)
+  const todayYear = today.getFullYear();
+  const todayMidnight = new Date(todayYear, todayMonth, todayDate);
+
+  // --- CALENDAR NAVIGATION STATE ---
+  // Starts at the current month/year. Updated when user taps < or > arrows.
+  const [calendarMonth, setCalendarMonth] = useState(todayMonth);
+  const [calendarYear, setCalendarYear] = useState(todayYear);
+
+  // --- MONTHLY ATTENDANCE DATA ---
+  // `presentDates` is an array of day numbers (e.g. [1, 3, 5]) where the employee
+  // has a punch-in record in the currently-viewed month. Fetched from backend.
+  const [presentDates, setPresentDates] = useState([]);
+  const [loadingCalendar, setLoadingCalendar] = useState(false);
+  // `joiningDate` is the employee's joining date (YYYY-MM-DD) from backend.
+  // Used to skip red highlights for dates before the employee joined.
+  const [joiningDate, setJoiningDate] = useState(null);
+
+  // --- BUILD CALENDAR GRID ---
+  // `calendarDays` is an array of length = leading empty cells + days in month.
+  //   - `null` entries = blank cells before the 1st (so the 1st aligns to the correct weekday column)
+  //   - `1, 2, 3, ...` = actual day numbers rendered inside circular boxes.
+  // Recalculated via useMemo whenever the viewed month/year changes.
+  const calendarDays = useMemo(() => {
+    const firstDayOfWeek = new Date(calendarYear, calendarMonth, 1).getDay(); // 0=Sun
+    const totalDays = new Date(calendarYear, calendarMonth + 1, 0).getDate(); // 28-31
+    const days = [];
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      days.push(null); // placeholder for days before the 1st
+    }
+    for (let i = 1; i <= totalDays; i++) {
+      days.push(i);
+    }
+    return days;
+  }, [calendarMonth, calendarYear]);
+
+  // =========================================================================
+  // MOUNT EFFECT — Load employee ID from AsyncStorage then initialize screen
+  // Why: Runs once when the screen mounts. Reads the logged-in employee's ID
+  //      from storage, then kicks off all attendance data fetching.
+  // Dependencies: empty array `[]` = run once on mount only.
+  // =========================================================================
+  useEffect(() => {
+    const loadAndInit = async () => {
+      const id = await AsyncStorage.getItem("employee_id");
       setLoggedInEmployeeId(id);
-
-      if(id){
-        await initializeScreen(id) //id pass here
-      }else{
-        setIsCheckingStatus(false)
+      if (id) {
+        await initializeScreen(id);
+      } else {
+        setIsCheckingStatus(false);
       }
     };
-    loadandInit();
-  }, [])
+    loadAndInit();
+  }, []);
+
+  // =========================================================================
+  // FOCUS EFFECT — Reset calendar to current month every time screen is viewed
+  // Why: Without this, if the user navigated to a different month and switches
+  //      tabs, the calendar stays on the old month when they come back.
+  //      This ensures the attendance screen always opens to "today" month.
+  // Called: every time this screen gains focus (tab switch, navigation back, etc.)
+  // =========================================================================
+  useFocusEffect(
+    useCallback(() => {
+      // Reset to current month/year
+      setCalendarMonth(todayMonth);
+      setCalendarYear(todayYear);
+      // Re-fetch attendance data for the current month
+      if (loggedInEmployeeId) {
+        fetchMonthlyAttendance(loggedInEmployeeId, todayMonth, todayYear);
+      }
+    }, [loggedInEmployeeId])
+  );
 
   // ---- Attendance State ----
   const [canPunchIn, setCanPunchIn] = useState(false);
@@ -129,6 +182,8 @@ export default function AttendanceScreen() {
 
   // ---- Selfie State ----
   const [selfieUri, setSelfieUri] = useState(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const cameraResolverRef = useRef(null);
 
   // ---- Loading States ----
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
@@ -158,15 +213,87 @@ export default function AttendanceScreen() {
   // =========================================================================
   
 
-  const initializeScreen = async (employeeId) => {  // added parameter
+  // =========================================================================
+  // SCREEN INITIALIZATION (called once on mount)
+  // Why: Runs three parallel tasks that the attendance screen needs:
+  //   1. checkAttendanceStatus  — today's punch-in/out status (canPunchIn/Out)
+  //   2. fetchLocationAndOffice  — GPS location + office distance + WFH status
+  //   3. fetchMonthlyAttendance  — which dates this month have punch-in (for calendar dots)
+  // All three run concurrently via Promise.all for faster load time.
+  // =========================================================================
+  const initializeScreen = async (employeeId) => {
     setIsCheckingStatus(true);
     try {
-      await Promise.all([checkAttendanceStatus(employeeId), fetchLocationAndOffice(employeeId)]);
+      await Promise.all([
+        checkAttendanceStatus(employeeId),
+        fetchLocationAndOffice(employeeId),
+        fetchMonthlyAttendance(employeeId, todayMonth, todayYear),
+      ]);
     } catch (err) {
       console.log("Initialize Error:", err);
     } finally {
       setIsCheckingStatus(false);
     }
+  };
+
+  // =========================================================================
+  // FETCH MONTHLY ATTENDANCE
+  // Why: Calls backend GET /attendance/:empId/:month/:year to get:
+  //      1. `dates` — day-numbers where the employee has a punch-in record
+  //      2. `joiningDate` — when the employee joined (to avoid marking pre-joining dates as absent)
+  // Stores in: `presentDates` and `joiningDate` state, used by the calendar
+  //            to paint green dots and decide red-absent eligibility.
+  // Called: on mount (current month) and when user navigates to prev/next month.
+  // Note: `month` is 0-based (JS), but backend expects 1-based, so we add 1.
+  // =========================================================================
+  const fetchMonthlyAttendance = async (empId, month, year) => {
+    setLoadingCalendar(true);
+    try {
+      // Convert JS 0-based month → backend 1-based month (+1)
+      const res = await axios.get(
+        `${API_BASE}/attendance/${empId}/${month + 1}/${year}`
+      );
+      setPresentDates(res.data.dates || []);
+      // Store joining date (YYYY-MM-DD string) for pre-joining date filtering
+      if (res.data.joiningDate) {
+        setJoiningDate(res.data.joiningDate);
+      }
+    } catch (err) {
+      console.log("Monthly Attendance Fetch Error:", err);
+      setPresentDates([]); // clear highlights on error so nothing is mis-marked
+    } finally {
+      setLoadingCalendar(false);
+    }
+  };
+
+  // =========================================================================
+  // GO TO PREVIOUS MONTH
+  // Why: Decrements the calendar view by one month.
+  // Edge case: If current view is January (month=0), wrapping to December (month=11)
+  //            also decrements the year.
+  // Then: Re-fetches attendance data for the newly displayed month.
+  // =========================================================================
+  const goPrevMonth = () => {
+    const prevMonth = calendarMonth === 0 ? 11 : calendarMonth - 1;
+    const prevYear = calendarMonth === 0 ? calendarYear - 1 : calendarYear;
+    setCalendarMonth(prevMonth);
+    setCalendarYear(prevYear);
+    fetchMonthlyAttendance(loggedInEmployeeId, prevMonth, prevYear);
+  };
+
+  // =========================================================================
+  // GO TO NEXT MONTH
+  // Why: Increments the calendar view by one month.
+  // Edge case: If current view is December (month=11), wrapping to January (month=0)
+  //            also increments the year.
+  // Then: Re-fetches attendance data for the newly displayed month.
+  // =========================================================================
+  const goNextMonth = () => {
+    const nextMonth = calendarMonth === 11 ? 0 : calendarMonth + 1;
+    const nextYear = calendarMonth === 11 ? calendarYear + 1 : calendarYear;
+    setCalendarMonth(nextMonth);
+    setCalendarYear(nextYear);
+    fetchMonthlyAttendance(loggedInEmployeeId, nextMonth, nextYear);
   };
 
   useEffect(()=>{
@@ -377,20 +504,15 @@ export default function AttendanceScreen() {
         console.log("WFH approved — skipping geo-fencing");
       }
 
-      // STEP 8: Open front camera for selfie
-      const result = await ImagePicker.launchCameraAsync({
-        cameraType: ImagePicker.CameraType.front,
-        allowsEditing: false,
-        quality: parseFloat(SELFIE_QUALITY) || 0.7,
+      // STEP 8-9: Open front camera for selfie (in-app, no external Intent)
+      setShowCamera(true);
+      const capturedUri = await new Promise((resolve) => {
+        cameraResolverRef.current = resolve;
       });
-
-      // STEP 9: Handle cancellation
-      if (result.canceled) {
+      if (!capturedUri) {
         setIsProcessingPunch(false);
         return;
       }
-
-      const capturedUri = result.assets[0].uri;
       setSelfieUri(capturedUri);
 
       // STEP 10: Call Punch In API
@@ -463,13 +585,11 @@ export default function AttendanceScreen() {
         longitude: currentLocation.coords.longitude,
       };
 
-      const result = await ImagePicker.launchCameraAsync({
-        cameraType: ImagePicker.CameraType.front,
-        allowsEditing: false,
-        quality: parseFloat(SELFIE_QUALITY) || 0.7,
+      setShowCamera(true);
+      const capturedUri = await new Promise((resolve) => {
+        cameraResolverRef.current = resolve;
       });
-
-      if (result.canceled) {
+      if (!capturedUri) {
         setIsProcessingPunch(false);
         return;
       }
@@ -479,7 +599,7 @@ export default function AttendanceScreen() {
       formData.append("latitude", userCoords.latitude.toString());
       formData.append("longitude", userCoords.longitude.toString());
       formData.append("selfie", {
-        uri: result.assets[0].uri,
+        uri: capturedUri,
         type: "image/jpeg",
         name: `selfie_${Date.now()}.jpg`,
       });
@@ -522,12 +642,10 @@ export default function AttendanceScreen() {
   }
 
   return (
+    <AnimatedScreen>
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* ========== HEADER ========== */}
-        <View style={styles.header}>
-          <Text style={styles.logoText}>SparkHR</Text>
-        </View>
+      <Header onProfilePress={() => router.navigate("profile")} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
 
         {/* ========== TITLE + CLOCK ========== */}
         <View className="mt-5">
@@ -657,13 +775,13 @@ export default function AttendanceScreen() {
         <View style={styles.calendarCard}>
           <View style={styles.calendarHeader}>
             <Text style={styles.calendarTitle}>
-              {MONTHS[currentMonth]} {currentYear}
+              {MONTHS[calendarMonth]} {calendarYear}
             </Text>
             <View style={styles.calendarNav}>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={goPrevMonth}>
                 <MaterialIcons name="chevron-left" size={24} color="#333" />
               </TouchableOpacity>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={goNextMonth}>
                 <MaterialIcons name="chevron-right" size={24} color="#333" />
               </TouchableOpacity>
             </View>
@@ -675,24 +793,85 @@ export default function AttendanceScreen() {
             ))}
           </View>
 
-          <View style={styles.daysGrid}>
-            {calendarDays.map((day, index) => (
-              <View key={index} style={styles.dayCell}>
-                {day !== null && (
-                  <View style={[
-                    styles.dayBox,
-                    day === todayDate && styles.todayBox,
-                  ]}>
-                    <Text style={[
-                      styles.dayText,
-                      day === todayDate && styles.todayText,
-                    ]}>
-                      {day}
-                    </Text>
+           <View style={styles.daysGrid}>
+            {calendarDays.map((day, index) => {
+              // Skip null placeholder cells (empty days before the 1st of the month)
+              if (day === null) {
+                return <View key={index} style={styles.dayCell} />;
+              }
+
+              // --- IS THIS A PAST DATE? ---
+              // Build midnight of this calendar day using the VIEWED month/year (not today's).
+              // Compare against `todayMidnight` (start of today) so the comparison is
+              // day-boundary accurate. This avoids the `day + 1` overflow bug where
+              // `new Date(2026, 0, 32)` rolls to Feb 1.
+              const dayMidnight = new Date(calendarYear, calendarMonth, day);
+              const isPast = dayMidnight < todayMidnight;
+
+              // --- IS THIS DATE BEFORE THE EMPLOYEE JOINED? ---
+              // If `joiningDate` is known, build its midnight and compare.
+              // Dates before the employee joined should NOT be marked as absent (red)
+              // because the employee wasn't employed yet. They stay neutral (gray).
+              let isBeforeJoining = false;
+              if (joiningDate) {
+                const join = new Date(joiningDate);
+                const joinMidnight = new Date(
+                  join.getFullYear(),
+                  join.getMonth(),
+                  join.getDate()
+                );
+                isBeforeJoining = dayMidnight < joinMidnight;
+              }
+
+              // --- DOES THIS DAY HAVE A PUNCH-IN? ---
+              // `presentDates` is fetched from backend on mount & month change.
+              // It contains day-numbers (e.g. [2, 5, 12]) where attendance exists.
+              const isPresent = presentDates.includes(day);
+
+              // --- IS THIS "TODAY" IN THE VIEWED MONTH? ---
+              // Must match day, month, AND year simultaneously.
+              // When viewing December 2025 from June 2026, todayDate might be 17
+              // but the 17th of Dec 2025 is NOT today — so `isToday` stays false.
+              const isToday =
+                day === todayDate &&
+                calendarMonth === todayMonth &&
+                calendarYear === todayYear;
+
+              // --- ASSIGN COLOR PRIORITY: Green > Red > Blue > Default ---
+              // Priority order:
+              //   1. Has attendance → GREEN (always, even if today or past)
+              //   2. Past date, no attendance, not today, NOT before joining → RED
+              //   3. Past date, no attendance, NOT before joining → RED
+              //   4. Today, no attendance yet → BLUE (existing "today" highlight)
+              //   5. Future date, OR before-joining-date → default (gray circle)
+              let boxStyle, textStyle;
+
+              if (isPresent) {
+                // Green: employee was present (punch-in exists for this date)
+                boxStyle = [styles.dayBox, styles.presentBox];
+                textStyle = [styles.dayText, styles.whiteText];
+              } else if (isPast && !isToday && !isBeforeJoining) {
+                // Red: past date with NO attendance record AND employee was hired by then
+                boxStyle = [styles.dayBox, styles.absentBox];
+                textStyle = [styles.dayText, styles.whiteText];
+              } else if (isToday) {
+                // Blue: today but hasn't punched in yet (or view hasn't refreshed)
+                boxStyle = [styles.dayBox, styles.todayBox];
+                textStyle = [styles.dayText, styles.todayText];
+              } else {
+                // Future date or pre-joining date: gray circle (no highlight)
+                boxStyle = styles.dayBox;
+                textStyle = styles.dayText;
+              }
+
+              return (
+                <View key={index} style={styles.dayCell}>
+                  <View style={boxStyle}>
+                    <Text style={textStyle}>{day}</Text>
                   </View>
-                )}
-              </View>
-            ))}
+                </View>
+              );
+            })}
           </View>
         </View>
         {/* ========== TODAY'S LOG ========== */}
@@ -749,5 +928,23 @@ export default function AttendanceScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+      <SelfieCameraModal
+        visible={showCamera}
+        onCapture={(uri) => {
+          setShowCamera(false);
+          if (cameraResolverRef.current) {
+            cameraResolverRef.current(uri);
+            cameraResolverRef.current = null;
+          }
+        }}
+        onCancel={() => {
+          setShowCamera(false);
+          if (cameraResolverRef.current) {
+            cameraResolverRef.current(null);
+            cameraResolverRef.current = null;
+          }
+        }}
+      />
+    </AnimatedScreen>
   );
 }
