@@ -10,3 +10,12 @@ export const applyLeave = async (payload) => {
   const res = await api.post("/leave-applications", payload);
   return res.data;
 };
+
+
+// fetch Leave History
+export const fetchLeaveHistory = async (employeeId, status) => {
+  const params = { employee_id: employeeId };
+  if (status) params.status = status;
+  const res = await api.get("/leave-applications", { params });
+  return res.data;
+};

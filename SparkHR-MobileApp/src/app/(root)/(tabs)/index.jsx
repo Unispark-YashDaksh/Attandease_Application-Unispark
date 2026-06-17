@@ -10,8 +10,8 @@ import useTodayLogs from "../../../hooks/useTodayLogs"; // Today logs fuctionali
 import { useState } from "react";
 
 const QUICK_ACTIONS = [
-  { icon: "event-busy", label: "Leaves" },
-  { icon: "history", label: "History" },
+  { icon: "event-busy", label: "Leaves", route: "/applyleaveScreen"},
+  { icon: "history", label: "History", route: "/leaveHistoryScreen" },
   { icon: "calendar-month", label: "Calendar" },
   { icon: "payments", label: "Salary" },
   { icon: "groups", label: "Team" },
@@ -120,7 +120,11 @@ export default function Home() {
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
             {QUICK_ACTIONS.map((item) => (
-              <TouchableOpacity key={item.label} style={styles.quickActionItem}>
+              <TouchableOpacity
+                key={item.label}
+                style={styles.quickActionItem}
+                onPress={item.route ? () => router.navigate(item.route) : undefined}
+              >
                 <MaterialIcons name={item.icon} size={24} color="#0052cc" />
                 <Text style={styles.quickActionLabel}>{item.label}</Text>
               </TouchableOpacity>

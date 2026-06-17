@@ -291,10 +291,19 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#e8e8ed", // light gray circle for all days (consistent shape)
   },
 
   todayBox: {
     backgroundColor: "#0052cc",
+  },
+
+  presentBox: {
+    backgroundColor: "#2E7D32",
+  },
+
+  absentBox: {
+    backgroundColor: "#C62828",
   },
 
   dayText: {
@@ -305,6 +314,11 @@ const styles = StyleSheet.create({
   todayText: {
     color: "#fff",
     fontWeight: "700",
+  },
+
+  whiteText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 
   holidayCard: {
