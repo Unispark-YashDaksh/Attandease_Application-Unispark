@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import "../../css/designation.css";
-const apiUrl= import.meta.env.VITE_API;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 function Shifts() {
   const [showModal, setShowModal] = useState(false);

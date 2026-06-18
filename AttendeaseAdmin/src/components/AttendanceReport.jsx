@@ -2,11 +2,21 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../css/AttendanceReport.css";
 
-const apiUrl = import.meta.env.VITE_API;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const ITEMS_PER_PAGE = 15;
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export default function AttendanceReport() {
@@ -23,9 +33,12 @@ export default function AttendanceReport() {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    axios.get(`${apiUrl}/activeEmployee`).then((res) => {
-      if (res.data.success) setEmployees(res.data.result || []);
-    }).catch(() => {});
+    axios
+      .get(`${apiUrl}/activeEmployee`)
+      .then((res) => {
+        if (res.data.success) setEmployees(res.data.result || []);
+      })
+      .catch(() => {});
   }, []);
 
   // Reset to page 1 whenever filters change
@@ -39,7 +52,7 @@ export default function AttendanceReport() {
     setError("");
     try {
       const res = await axios.get(
-        `${apiUrl}/attendance/report/${selectedEmp}/${reportMonth}/${reportYear}`
+        `${apiUrl}/attendance/report/${selectedEmp}/${reportMonth}/${reportYear}`,
       );
       setReport(res.data);
     } catch (err) {
@@ -85,9 +98,14 @@ export default function AttendanceReport() {
   };
 
   // Pagination calculations
-  const totalPages = report ? Math.ceil(report.days.length / ITEMS_PER_PAGE) : 0;
+  const totalPages = report
+    ? Math.ceil(report.days.length / ITEMS_PER_PAGE)
+    : 0;
   const paginatedDays = report
-    ? report.days.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+    ? report.days.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE,
+      )
     : [];
 
   const goToPage = (page) => {
@@ -101,7 +119,10 @@ export default function AttendanceReport() {
       <div className="report-filters">
         <div className="filter-group">
           <label>Employee</label>
-          <select value={selectedEmp} onChange={(e) => setSelectedEmp(e.target.value)}>
+          <select
+            value={selectedEmp}
+            onChange={(e) => setSelectedEmp(e.target.value)}
+          >
             <option value="">-- Select Employee --</option>
             {employees.map((emp) => (
               <option key={emp.id} value={emp.id}>
@@ -113,9 +134,14 @@ export default function AttendanceReport() {
 
         <div className="filter-group">
           <label>Month</label>
-          <select value={reportMonth} onChange={(e) => setReportMonth(Number(e.target.value))}>
+          <select
+            value={reportMonth}
+            onChange={(e) => setReportMonth(Number(e.target.value))}
+          >
             {MONTHS.map((name, i) => (
-              <option key={i + 1} value={i + 1}>{name}</option>
+              <option key={i + 1} value={i + 1}>
+                {name}
+              </option>
             ))}
           </select>
         </div>
@@ -175,14 +201,19 @@ export default function AttendanceReport() {
               </thead>
               <tbody>
                 {paginatedDays.map((d, i) => (
-                  <tr key={d.date} className={getStatusClass(d.status, d.reason)}>
+                  <tr
+                    key={d.date}
+                    className={getStatusClass(d.status, d.reason)}
+                  >
                     <td>{(currentPage - 1) * ITEMS_PER_PAGE + i + 1}</td>
                     <td>{d.date}</td>
                     <td>{d.day_name}</td>
                     <td>{d.punch_in || "-"}</td>
                     <td>{d.punch_out || "-"}</td>
                     <td>
-                      <span className={`badge ${getStatusClass(d.status, d.reason)}`}>
+                      <span
+                        className={`badge ${getStatusClass(d.status, d.reason)}`}
+                      >
                         {d.status}
                       </span>
                     </td>
@@ -210,15 +241,17 @@ export default function AttendanceReport() {
               >
                 &lsaquo;
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  className={`page-btn ${currentPage === page ? "page-active" : ""}`}
-                  onClick={() => goToPage(page)}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    className={`page-btn ${currentPage === page ? "page-active" : ""}`}
+                    onClick={() => goToPage(page)}
+                  >
+                    {page}
+                  </button>
+                ),
+              )}
               <button
                 className="page-btn"
                 disabled={currentPage === totalPages}
@@ -239,7 +272,9 @@ export default function AttendanceReport() {
       )}
 
       {!selectedEmp && !loading && (
-        <p className="report-placeholder">Select an employee to view attendance report.</p>
+        <p className="report-placeholder">
+          Select an employee to view attendance report.
+        </p>
       )}
     </div>
   );

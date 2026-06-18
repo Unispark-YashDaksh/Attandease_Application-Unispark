@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
 import "../../css/designation.css";
-const apiUrl= import.meta.env.VITE_API;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 // to be moved to .env file in for better security and configurability
 const Fetch_API_URL = `${apiUrl}/fetch-designation`;

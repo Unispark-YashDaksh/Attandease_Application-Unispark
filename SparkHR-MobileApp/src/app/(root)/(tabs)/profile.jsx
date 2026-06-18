@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  ScrollView,
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-} from "react-native";
+import { ScrollView, View, Text, Image, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import styles from "../../../styles/ProfileScreenStyles";
@@ -14,69 +8,67 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import AnimatedScreen from "../../../components/AnimatedScreen";
 import axios from "axios";
-import {
-  VITE_API
-} from "@env";
+import { VITE_BACKEND_URL } from "@env";
 
 export default function Profile() {
-  const [loggedInEmployee, setLoggedInEmployee]= useState(null);
-  const [profileData, setProfileData]= useState(null)
+  const [loggedInEmployee, setLoggedInEmployee] = useState(null);
+  const [profileData, setProfileData] = useState(null);
 
-  useEffect(()=>{
-   const getEmployeeId= async()=>{
-     const Id=  await AsyncStorage.getItem("employee_id");
-     console.log("Stored Employee Id:-->", Id );
+  useEffect(() => {
+    const getEmployeeId = async () => {
+      const Id = await AsyncStorage.getItem("employee_id");
+      console.log("Stored Employee Id:-->", Id);
 
-     setLoggedInEmployee(Id)
+      setLoggedInEmployee(Id);
 
-     if(Id){
-      handleFetchProfile(Id)
-     }
-   }
-   getEmployeeId()
-  },[])
+      if (Id) {
+        handleFetchProfile(Id);
+      }
+    };
+    getEmployeeId();
+  }, []);
 
-  const handleFetchProfile= async(employeeId)=>{
-    const response= await axios.get(`${VITE_API}/profile/${employeeId}`)
+  const handleFetchProfile = async (employeeId) => {
+    const response = await axios.get(
+      `${VITE_BACKEND_URL}/profile/${employeeId}`,
+    );
 
     setProfileData(response.data.data);
-  }
-  const handleLogout=  async()=>{
-    console.log("Clicked Handle Logout Function")
-   try{
-     await AsyncStorage.removeItem("employee_id");
+  };
+  const handleLogout = async () => {
+    console.log("Clicked Handle Logout Function");
+    try {
+      await AsyncStorage.removeItem("employee_id");
 
-     router.replace("/auth/login")
-   }catch(err){
-    console.log("Logout Error:---> ", err)
-   }
-  }
+      router.replace("/auth/login");
+    } catch (err) {
+      console.log("Logout Error:---> ", err);
+    }
+  };
   return (
     <AnimatedScreen>
-    <SafeAreaView style={styles.container}>
-      <Header showBack onBackPress={() => router.back()} />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Profile */}
+      <SafeAreaView style={styles.container}>
+        <Header showBack onBackPress={() => router.back()} />
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Profile */}
 
-        <View style={styles.profileSection}>
-          {/* <Image
+          <View style={styles.profileSection}>
+            {/* <Image
             source={{
               uri: "https://i.pravatar.cc/500",
             }}
             style={styles.profileImage}
           /> */}
 
-          <Text style={styles.employeeName}>
-            {profileData?.employee_name}
-          </Text>
+            <Text style={styles.employeeName}>
+              {profileData?.employee_name}
+            </Text>
 
-          <Text style={styles.designation}>
-            {profileData?.employee_designation}
-          </Text>
+            <Text style={styles.designation}>
+              {profileData?.employee_designation}
+            </Text>
 
-          {/* <View style={styles.actionContainer}>
+            {/* <View style={styles.actionContainer}>
             <TouchableOpacity
               style={styles.messageBtn}
             >
@@ -93,70 +85,56 @@ export default function Profile() {
               </Text>
             </TouchableOpacity>
           </View> */}
-        </View>
+          </View>
 
-        {/* Professional Info */}
+          {/* Professional Info */}
 
-        <Text style={styles.sectionTitle}>
-          Professional Info
-        </Text>
+          <Text style={styles.sectionTitle}>Professional Info</Text>
 
-        <View style={styles.card}>
-          <InfoRow
-            label="Employee ID"
-            value={profileData?.employee_code}
-          />
+          <View style={styles.card}>
+            <InfoRow label="Employee ID" value={profileData?.employee_code} />
 
-          <InfoRow
-            label="Department"
-            value= {profileData?.employee_department}
-          />
+            <InfoRow
+              label="Department"
+              value={profileData?.employee_department}
+            />
 
-          <InfoRow
-            label="Joining Date"
-            value={profileData?.employee_joining_date}
-          />
-        </View>
+            <InfoRow
+              label="Joining Date"
+              value={profileData?.employee_joining_date}
+            />
+          </View>
 
-        {/* Personal Info */}
+          {/* Personal Info */}
 
-        <Text style={styles.sectionTitle}>
-          Personal Info
-        </Text>
+          <Text style={styles.sectionTitle}>Personal Info</Text>
 
-        <View style={styles.card}>
-          <InfoRow
-            label="Email"
-            value={profileData?.employee_email_id}
-          />
+          <View style={styles.card}>
+            <InfoRow label="Email" value={profileData?.employee_email_id} />
 
-          <InfoRow
-            label="Phone"
-            value={profileData?.employee_mobile_no}
-          />
+            <InfoRow label="Phone" value={profileData?.employee_mobile_no} />
 
-          <InfoRow
-            label="Location"
-            value={profileData?.city}
-          />
-        </View>
+            <InfoRow label="Location" value={profileData?.city} />
+          </View>
 
-        {/* Settings */}
+          {/* Settings */}
 
-        <Text style={styles.sectionTitle}>
-          Settings
-        </Text>
+          <Text style={styles.sectionTitle}>Settings</Text>
 
-        <View style={styles.card}>
-          <SettingRow title="Privacy & Security" />
-          <SettingRow title="Notifications" />
-          <SettingRow title="Language" />
-          <SettingRow style={styles.logout} title="Logout" onPress={handleLogout}/>
-        </View>
+          <View style={styles.card}>
+            <SettingRow title="Privacy & Security" />
+            <SettingRow title="Notifications" />
+            <SettingRow title="Language" />
+            <SettingRow
+              style={styles.logout}
+              title="Logout"
+              onPress={handleLogout}
+            />
+          </View>
 
-        <View style={{ height: 100 }} />
-      </ScrollView>
-    </SafeAreaView>
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      </SafeAreaView>
     </AnimatedScreen>
   );
 }
@@ -164,26 +142,17 @@ export default function Profile() {
 function InfoRow({ label, value }) {
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>
-        {label}
-      </Text>
+      <Text style={styles.infoLabel}>{label}</Text>
 
-      <Text style={styles.infoValue}>
-        {value}
-      </Text>
+      <Text style={styles.infoValue}>{value}</Text>
     </View>
   );
 }
 
 function SettingRow({ title, onPress }) {
   return (
-    <TouchableOpacity
-      style={styles.settingRow}
-      onPress={onPress}
-    >
-      <Text style={styles.settingText}>
-        {title}
-      </Text>
+    <TouchableOpacity style={styles.settingRow} onPress={onPress}>
+      <Text style={styles.settingText}>{title}</Text>
     </TouchableOpacity>
   );
 }
