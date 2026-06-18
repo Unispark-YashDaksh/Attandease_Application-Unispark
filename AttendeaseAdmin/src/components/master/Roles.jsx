@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../../css/designation.css";
-const apiUrl= import.meta.env.VITE_API;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 function Roles() {
   const [showModal, setShowModal] = useState(false);
@@ -141,7 +141,9 @@ function Roles() {
 
     return nameMatches || descriptionMatches;
   });
-  const activeRoles = allRoles.filter((role) => role.status === "Active").length;
+  const activeRoles = allRoles.filter(
+    (role) => role.status === "Active",
+  ).length;
   const documentedRoles = allRoles.filter((role) => role.description).length;
   const documentedPercent = allRoles.length
     ? Math.round((documentedRoles / allRoles.length) * 100)
@@ -185,7 +187,9 @@ function Roles() {
           <article className="summary-card">
             <div className="summary-card-top">
               <div className="summary-icon summary-icon-primary">
-                <span className="material-symbols-outlined">admin_panel_settings</span>
+                <span className="material-symbols-outlined">
+                  admin_panel_settings
+                </span>
               </div>
               <span className="summary-label">Total Roles</span>
             </div>

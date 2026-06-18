@@ -3,8 +3,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import "../css/Employees.css";
 
-const apiUrl= import.meta.env.VITE_API;
-
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 function AddNewEmployeeForm({
   setshowModal,
@@ -100,61 +99,84 @@ function AddNewEmployeeForm({
       `${apiUrl}/fetch-departments?status=Active`,
     );
 
-    setShowDepartments(response.data.result);
+    const departments = response.data.result;
+
+    setShowDepartments(Array.isArray(departments) ? departments : []);
   };
+
+  const safeDepartments = Array.isArray(showDepartments) ? showDepartments : [];
 
   const departmentsForDropdown =
     selectedEmployee &&
     selectedEmployee.department_id &&
-    !showDepartments.some((item) => item.id === selectedEmployee.department_id)
+    !safeDepartments.some((item) => item.id === selectedEmployee.department_id)
       ? [
-          ...showDepartments,
+          ...safeDepartments,
           {
             id: selectedEmployee.department_id,
             department_name: selectedEmployee.department_name,
           },
         ]
-      : showDepartments;
+      : safeDepartments;
 
   const fetchBranchs = async () => {
     const response = await axios.get(`${apiUrl}/fetch-branches`);
 
-    setShowBranchs(response.data.result);
+    const branchs = response.data.result;
+
+    setShowBranchs(Array.isArray(branchs) ? branchs : []);
   };
   const fetchShifts = async () => {
     const response = await axios.get(`${apiUrl}/fetch-shifts`);
 
-    setShowShifts(response.data.result);
+    const shifts = response.data.result;
+
+    setShowShifts(Array.isArray(shifts) ? shifts : []);
   };
 
   const fetchRoles = async () => {
     const response = await axios.get(`${apiUrl}/fetch-roles`);
 
-    setShowRoles(response.data.result);
+    const roles = response.data.result;
+
+    setShowRoles(Array.isArray(roles) ? roles : []);
   };
 
   const fetchDesignation = async () => {
     const response = await axios.get(`${apiUrl}/designationStatus`);
 
-    setShowDesignation(response.data.result);
+    const designations = response.data.result;
+
+    setShowDesignation(Array.isArray(designations) ? designations : []);
   };
+
+  const safeBranchs = Array.isArray(showBranchs) ? showBranchs : [];
+  const safeShifts = Array.isArray(showShifts) ? showShifts : [];
+  const safeRoles = Array.isArray(showRoles) ? showRoles : [];
+  const safeDesignations = Array.isArray(showDesignation)
+    ? showDesignation
+    : [];
 
   const designationsForDropdown =
     selectedEmployee &&
     selectedEmployee.designation_id &&
-    !showDesignation.some((item) => item.id === selectedEmployee.designation_id)
+    !safeDesignations.some(
+      (item) => item.id === selectedEmployee.designation_id,
+    )
       ? [
-          ...showDesignation,
+          ...safeDesignations,
           {
             id: selectedEmployee.designation_id,
             designation_name: selectedEmployee.designation_name,
           },
         ]
-      : showDesignation;
+      : safeDesignations;
 
   const fetchReportingManagers = async () => {
     const response = await axios.get(`${apiUrl}/activeEmployee`);
-    setReportingManagers(response.data.result);
+    const managers = response.data.result;
+
+    setReportingManagers(Array.isArray(managers) ? managers : []);
   };
 
   useEffect(() => {
@@ -320,10 +342,7 @@ function AddNewEmployeeForm({
           {(photoPreview || addEmployeeForm.photo_url) && (
             <img
               className="employee-photo-preview"
-              src={
-                photoPreview ||
-                `${apiUrl}${addEmployeeForm.photo_url}`
-              }
+              src={photoPreview || `${apiUrl}${addEmployeeForm.photo_url}`}
               alt="Employee preview"
             />
           )}
@@ -383,7 +402,7 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.branch_id}
             >
               <option value="">Select Branch</option>
-              {showBranchs.map((item) => (
+              {safeBranchs.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.branch_name}
                 </option>
@@ -400,7 +419,7 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.shift_id}
             >
               <option value="">Select Shift</option>
-              {showShifts.map((item) => (
+              {safeShifts.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.shift_name}
                 </option>
@@ -417,7 +436,7 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.role_id}
             >
               <option value="">Select Role</option>
-              {showRoles.map((item) => (
+              {safeRoles.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.role_name}
                 </option>
@@ -433,7 +452,7 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.reporting_manager_id}
             >
               <option value="">Select Reporting Manager</option>
-              {reportingManagers
+              {(Array.isArray(reportingManagers) ? reportingManagers : [])
                 .filter((item) => item.id !== selectedEmployee?.id)
                 .map((item) => (
                   <option key={item.id} value={item.id}>

@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import {
   View,
   Text,
@@ -16,7 +22,7 @@ import * as Location from "expo-location";
 import AnimatedScreen from "../../../components/AnimatedScreen";
 import SelfieCameraModal from "../../../components/SelfieCameraModal";
 import {
-  VITE_API,
+  VITE_BACKEND_URL,
   GEO_FENCING_RADIUS,
   GPS_ACCURACY,
   SELFIE_QUALITY,
@@ -29,17 +35,27 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ---------------------------------------------------------------------------
 // API_BASE — Backend server URL
-// Source: .env variable VITE_API (set to your machine's LAN IP, e.g. http://192.168.0.147:7000)
+// Source: .env variable VITE_BACKEND_URL (set to your machine's LAN IP, e.g. http://192.168.0.147:7000)
 // Why: Mobile app needs to know where to send API requests.
 // ---------------------------------------------------------------------------
-const API_BASE = VITE_API;
+const API_BASE = VITE_BACKEND_URL;
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-console.log("api-base-url-->", API_BASE)
+console.log("api-base-url-->", API_BASE);
 // ---------------------------------------------------------------------------
 // GPS_ACCURACY_MAP — Maps string values from .env to expo-location Accuracy enum
 // Source: .env variable GPS_ACCURACY (values: Balanced, High, Low)
@@ -88,8 +104,8 @@ export default function AttendanceScreen() {
   // Used to determine which calendar days are in the past vs future.
   // `todayMidnight` = start of today (00:00:00) so comparison is day-level, not time-level.
   const today = new Date();
-  const todayDate = today.getDate();       // 1-31
-  const todayMonth = today.getMonth();     // 0-11 (Jan=0)
+  const todayDate = today.getDate(); // 1-31
+  const todayMonth = today.getMonth(); // 0-11 (Jan=0)
   const todayYear = today.getFullYear();
   const todayMidnight = new Date(todayYear, todayMonth, todayDate);
 
@@ -160,7 +176,7 @@ export default function AttendanceScreen() {
       if (loggedInEmployeeId) {
         fetchMonthlyAttendance(loggedInEmployeeId, todayMonth, todayYear);
       }
-    }, [loggedInEmployeeId])
+    }, [loggedInEmployeeId]),
   );
 
   // ---- Attendance State ----
@@ -171,7 +187,6 @@ export default function AttendanceScreen() {
   // ---- Today's Record (for log display) ----
   // Source: Backend /attendance API returns full record including times.
   const [todayRecord, setTodayRecord] = useState(null);
-
 
   // ---- GPS & Location State ----
   const [gpsLocation, setGpsLocation] = useState(null);
@@ -211,7 +226,6 @@ export default function AttendanceScreen() {
   // SCREEN INITIALIZATION
   // Why: On mount, check attendance status + get location + office data.
   // =========================================================================
-  
 
   // =========================================================================
   // SCREEN INITIALIZATION (called once on mount)
@@ -251,7 +265,7 @@ export default function AttendanceScreen() {
     try {
       // Convert JS 0-based month → backend 1-based month (+1)
       const res = await axios.get(
-        `${API_BASE}/attendance/${empId}/${month + 1}/${year}`
+        `${API_BASE}/attendance/${empId}/${month + 1}/${year}`,
       );
       setPresentDates(res.data.dates || []);
       // Store joining date (YYYY-MM-DD string) for pre-joining date filtering
@@ -296,9 +310,9 @@ export default function AttendanceScreen() {
     fetchMonthlyAttendance(loggedInEmployeeId, nextMonth, nextYear);
   };
 
-  useEffect(()=>{
-     console.log("todayRecord= ", todayRecord)
-  },[todayRecord])
+  useEffect(() => {
+    console.log("todayRecord= ", todayRecord);
+  }, [todayRecord]);
   // =========================================================================
   // ATTENDANCE STATUS CHECK
   // Why: Calls backend to determine today's attendance state.
@@ -359,7 +373,7 @@ export default function AttendanceScreen() {
 
       // Fetch office location from backend (for distance display)
       const officeRes = await axios.get(
-        `${API_BASE}/office-location/${employeeId}`
+        `${API_BASE}/office-location/${employeeId}`,
       );
       if (officeRes.data.success) {
         setOfficeLocation(officeRes.data.officeLocation);
@@ -373,14 +387,12 @@ export default function AttendanceScreen() {
       }
 
       // Check WFH status
-      const wfhRes = await axios.get(
-        `${API_BASE}/wfh-status/${employeeId}`
-      );
+      const wfhRes = await axios.get(`${API_BASE}/wfh-status/${employeeId}`);
       if (wfhRes.data.success) {
         setIsWFH(wfhRes.data.isWFH);
         console.log(
           "WFH Status:",
-          wfhRes.data.isWFH ? "WFH Approved" : "Office Mode"
+          wfhRes.data.isWFH ? "WFH Approved" : "Office Mode",
         );
       }
     } catch (err) {
@@ -400,14 +412,14 @@ export default function AttendanceScreen() {
     if (cameraReq.status !== "granted") {
       Alert.alert(
         "Camera Permission Required",
-        "Please enable camera access in Settings to capture selfie"
+        "Please enable camera access in Settings to capture selfie",
       );
       return false;
     }
     if (locationReq.status !== "granted") {
       Alert.alert(
         "Location Permission Required",
-        "Please enable location access in Settings for attendance"
+        "Please enable location access in Settings for attendance",
       );
       return false;
     }
@@ -447,7 +459,7 @@ export default function AttendanceScreen() {
         if (geoCode.length > 0) {
           const addr = geoCode[0];
           // Use formattedAddress for complete location string
-          readableAddress = addr.formattedAddress
+          readableAddress = addr.formattedAddress;
           setCurrentAddress(readableAddress);
         }
       } catch (geoErr) {
@@ -456,7 +468,7 @@ export default function AttendanceScreen() {
 
       // STEP 4: Check WFH status FIRST
       const wfhRes = await axios.get(
-        `${API_BASE}/wfh-status/${loggedInEmployeeId}`
+        `${API_BASE}/wfh-status/${loggedInEmployeeId}`,
       );
       const wfhApproved = wfhRes.data.success && wfhRes.data.isWFH;
       setIsWFH(wfhApproved);
@@ -467,12 +479,12 @@ export default function AttendanceScreen() {
       if (!wfhApproved) {
         // STEP 5: Fetch office coordinates (only for non-WFH)
         const officeRes = await axios.get(
-          `${API_BASE}/office-location/${loggedInEmployeeId}`
+          `${API_BASE}/office-location/${loggedInEmployeeId}`,
         );
         if (!officeRes.data.success) {
           Alert.alert(
             "Error",
-            "Office location not configured for your branch"
+            "Office location not configured for your branch",
           );
           setIsProcessingPunch(false);
           return;
@@ -495,7 +507,7 @@ export default function AttendanceScreen() {
         if (distInMeters > allowedRadius) {
           Alert.alert(
             "Outside Office Location",
-            `You are ${Math.round(distInMeters)}m away from office.\nPlease come within ${allowedRadius}m of the office to punch in.`
+            `You are ${Math.round(distInMeters)}m away from office.\nPlease come within ${allowedRadius}m of the office to punch in.`,
           );
           setIsProcessingPunch(false);
           return;
@@ -526,7 +538,7 @@ export default function AttendanceScreen() {
       formData.append("attendance_mode", wfhApproved ? "WFH" : "OFFICE");
       formData.append(
         "office_location_id",
-        officeLoc ? officeLoc.id.toString() : ""
+        officeLoc ? officeLoc.id.toString() : "",
       );
       formData.append("selfie", {
         uri: capturedUri,
@@ -534,21 +546,16 @@ export default function AttendanceScreen() {
         name: `selfie_${Date.now()}.jpg`,
       });
 
-
       //Send Form Data to post api for db store
-      const punchResponse = await axios.post(
-        `${API_BASE}/punch-in`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+      const punchResponse = await axios.post(`${API_BASE}/punch-in`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       console.log("Punch In Response:", punchResponse.data);
 
       if (punchResponse.data.success) {
         Alert.alert("Success", "Punch In Successful!");
-        await checkAttendanceStatus(loggedInEmployeeId);// call with argument passed
+        await checkAttendanceStatus(loggedInEmployeeId); // call with argument passed
       } else {
         Alert.alert("Error", punchResponse.data.message || "Punch In failed");
       }
@@ -556,7 +563,7 @@ export default function AttendanceScreen() {
       console.log("Punch In Error:", err);
       Alert.alert(
         "Error",
-        err.response?.data?.message || "Something went wrong during Punch In"
+        err.response?.data?.message || "Something went wrong during Punch In",
       );
     } finally {
       setIsProcessingPunch(false);
@@ -614,10 +621,7 @@ export default function AttendanceScreen() {
       }
     } catch (err) {
       console.log("Punch Out Error:", err);
-      Alert.alert(
-        "Error",
-        err.response?.data?.message || "Punch Out failed"
-      );
+      Alert.alert("Error", err.response?.data?.message || "Punch Out failed");
     } finally {
       setIsProcessingPunch(false);
     }
@@ -643,23 +647,29 @@ export default function AttendanceScreen() {
 
   return (
     <AnimatedScreen>
-    <SafeAreaView style={styles.container}>
-      <Header onProfilePress={() => router.navigate("profile")} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-
-        {/* ========== TITLE + CLOCK ========== */}
-        <View className="mt-5">
-          <Text style={styles.title}>Attendance</Text>
-          <View style={styles.dateRow}>
-            <MaterialIcons name="calendar-month" size={18} color="#666" />
-            <Text style={styles.dateText}>{formatClockDate(currentTime)}</Text>
-            <Text style={styles.dot}>•</Text>
-            <Text style={styles.dateText}>{formatClockTime(currentTime)}</Text>
+      <SafeAreaView style={styles.container}>
+        <Header onProfilePress={() => router.navigate("profile")} />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
+          {/* ========== TITLE + CLOCK ========== */}
+          <View className="mt-5">
+            <Text style={styles.title}>Attendance</Text>
+            <View style={styles.dateRow}>
+              <MaterialIcons name="calendar-month" size={18} color="#666" />
+              <Text style={styles.dateText}>
+                {formatClockDate(currentTime)}
+              </Text>
+              <Text style={styles.dot}>•</Text>
+              <Text style={styles.dateText}>
+                {formatClockTime(currentTime)}
+              </Text>
+            </View>
           </View>
-        </View>
 
-        {/* ========== STATUS CARD ========== */}
-        {/* <View style={styles.statusCard}>
+          {/* ========== STATUS CARD ========== */}
+          {/* <View style={styles.statusCard}>
           <View style={styles.statusTop}>
             <View>
               <Text style={styles.checkInBadge}>
@@ -678,256 +688,329 @@ export default function AttendanceScreen() {
           </View>
         </View> */}
 
-        {/* ========== PUNCH BUTTONS ========== */}
-        <View style={styles.buttonGrid}>
-          <TouchableOpacity
-            onPress={handlePunchIn}
-            disabled={!canPunchIn || isProcessingPunch}
-            style={[
-              canPunchIn ? styles.activeButton : styles.inactiveButton,
-              isProcessingPunch && { opacity: 0.6 },
-            ]}
-          >
-            {isProcessingPunch ? (
-              <ActivityIndicator
-                size="small"
-                color={canPunchIn ? "#fff" : "#999"}
-              />
-            ) : (
-              <MaterialIcons
-                name="fingerprint"
-                size={40}
-                color={canPunchIn ? "#fff" : "#999"}
-              />
-            )}
-            <Text
-              style={canPunchIn ? styles.activeText : styles.inactiveText}
+          {/* ========== PUNCH BUTTONS ========== */}
+          <View style={styles.buttonGrid}>
+            <TouchableOpacity
+              onPress={handlePunchIn}
+              disabled={!canPunchIn || isProcessingPunch}
+              style={[
+                canPunchIn ? styles.activeButton : styles.inactiveButton,
+                isProcessingPunch && { opacity: 0.6 },
+              ]}
             >
-              {isProcessingPunch ? "Processing..." : "Punch In"}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handlePunchOut}
-            disabled={!canPunchOut || isProcessingPunch}
-            style={[
-              canPunchOut ? styles.activeButton : styles.inactiveButton,
-              isProcessingPunch && { opacity: 0.6 },
-            ]}
-          >
-            {isProcessingPunch ? (
-              <ActivityIndicator
-                size="small"
-                color={canPunchOut ? "#fff" : "#999"}
-              />
-            ) : (
-              <MaterialIcons
-                name="logout"
-                size={40}
-                color={canPunchOut ? "#fff" : "#999"}
-              />
-            )}
-            <Text
-              style={canPunchOut ? styles.activeText : styles.inactiveText}
-            >
-              {isProcessingPunch ? "Processing..." : "Punch Out"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* ========== SELFIE PREVIEW ========== */}
-        {selfieUri && (
-          <View style={{ alignItems: "center", marginTop: 16 }}>
-            <Image
-              source={{ uri: selfieUri }}
-              style={{ width: 100, height: 100, borderRadius: 12 }}
-            />
-            <Text style={{ color: "#666", marginTop: 4, fontSize: 12 }}>
-              Selfie Captured
-            </Text>
-          </View>
-        )}
-
-        {/* ========== CURRENT LOCATION CARD ========== */}
-        <View style={styles.verificationCard}>
-          <Text style={styles.sectionTitle}>Current Location</Text>
-          <View style={styles.officeRow}>
-            <View style={styles.officeIcon}>
-              <MaterialIcons name="business" size={24} color="#fff" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.officeTitle} numberOfLines={3}>
-                {currentAddress || "Fetching Location..."}
+              {isProcessingPunch ? (
+                <ActivityIndicator
+                  size="small"
+                  color={canPunchIn ? "#fff" : "#999"}
+                />
+              ) : (
+                <MaterialIcons
+                  name="fingerprint"
+                  size={40}
+                  color={canPunchIn ? "#fff" : "#999"}
+                />
+              )}
+              <Text
+                style={canPunchIn ? styles.activeText : styles.inactiveText}
+              >
+                {isProcessingPunch ? "Processing..." : "Punch In"}
               </Text>
-              <Text style={styles.officeSub}>
-                {isWFH
-                  ? "WFH Mode (Geo-fencing bypassed)"
-                  : distance !== null
-                  ? distance <= 500
-                    ? "Within office premises"
-                    : `${distance}m from office`
-                  : "Calculating distance..."}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handlePunchOut}
+              disabled={!canPunchOut || isProcessingPunch}
+              style={[
+                canPunchOut ? styles.activeButton : styles.inactiveButton,
+                isProcessingPunch && { opacity: 0.6 },
+              ]}
+            >
+              {isProcessingPunch ? (
+                <ActivityIndicator
+                  size="small"
+                  color={canPunchOut ? "#fff" : "#999"}
+                />
+              ) : (
+                <MaterialIcons
+                  name="logout"
+                  size={40}
+                  color={canPunchOut ? "#fff" : "#999"}
+                />
+              )}
+              <Text
+                style={canPunchOut ? styles.activeText : styles.inactiveText}
+              >
+                {isProcessingPunch ? "Processing..." : "Punch Out"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* ========== SELFIE PREVIEW ========== */}
+          {selfieUri && (
+            <View style={{ alignItems: "center", marginTop: 16 }}>
+              <Image
+                source={{ uri: selfieUri }}
+                style={{ width: 100, height: 100, borderRadius: 12 }}
+              />
+              <Text style={{ color: "#666", marginTop: 4, fontSize: 12 }}>
+                Selfie Captured
               </Text>
             </View>
-          </View>
-        </View>
-                   {/* Calendar Section */}
-        <View style={styles.calendarCard}>
-          <View style={styles.calendarHeader}>
-            <Text style={styles.calendarTitle}>
-              {MONTHS[calendarMonth]} {calendarYear}
-            </Text>
-            <View style={styles.calendarNav}>
-              <TouchableOpacity onPress={goPrevMonth}>
-                <MaterialIcons name="chevron-left" size={24} color="#333" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={goNextMonth}>
-                <MaterialIcons name="chevron-right" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
-          </View>
+          )}
 
-          <View style={styles.weekRow}>
-            {DAYS.map((day) => (
-              <Text key={day} style={styles.weekDay}>{day}</Text>
-            ))}
-          </View>
-
-           <View style={styles.daysGrid}>
-            {calendarDays.map((day, index) => {
-              // Skip null placeholder cells (empty days before the 1st of the month)
-              if (day === null) {
-                return <View key={index} style={styles.dayCell} />;
-              }
-
-              // --- IS THIS A PAST DATE? ---
-              // Build midnight of this calendar day using the VIEWED month/year (not today's).
-              // Compare against `todayMidnight` (start of today) so the comparison is
-              // day-boundary accurate. This avoids the `day + 1` overflow bug where
-              // `new Date(2026, 0, 32)` rolls to Feb 1.
-              const dayMidnight = new Date(calendarYear, calendarMonth, day);
-              const isPast = dayMidnight < todayMidnight;
-
-              // --- IS THIS DATE BEFORE THE EMPLOYEE JOINED? ---
-              // If `joiningDate` is known, build its midnight and compare.
-              // Dates before the employee joined should NOT be marked as absent (red)
-              // because the employee wasn't employed yet. They stay neutral (gray).
-              let isBeforeJoining = false;
-              if (joiningDate) {
-                const join = new Date(joiningDate);
-                const joinMidnight = new Date(
-                  join.getFullYear(),
-                  join.getMonth(),
-                  join.getDate()
-                );
-                isBeforeJoining = dayMidnight < joinMidnight;
-              }
-
-              // --- DOES THIS DAY HAVE A PUNCH-IN? ---
-              // `presentDates` is fetched from backend on mount & month change.
-              // It contains day-numbers (e.g. [2, 5, 12]) where attendance exists.
-              const isPresent = presentDates.includes(day);
-
-              // --- IS THIS "TODAY" IN THE VIEWED MONTH? ---
-              // Must match day, month, AND year simultaneously.
-              // When viewing December 2025 from June 2026, todayDate might be 17
-              // but the 17th of Dec 2025 is NOT today — so `isToday` stays false.
-              const isToday =
-                day === todayDate &&
-                calendarMonth === todayMonth &&
-                calendarYear === todayYear;
-
-              // --- ASSIGN COLOR PRIORITY: Green > Red > Blue > Default ---
-              // Priority order:
-              //   1. Has attendance → GREEN (always, even if today or past)
-              //   2. Past date, no attendance, not today, NOT before joining → RED
-              //   3. Past date, no attendance, NOT before joining → RED
-              //   4. Today, no attendance yet → BLUE (existing "today" highlight)
-              //   5. Future date, OR before-joining-date → default (gray circle)
-              let boxStyle, textStyle;
-
-              if (isPresent) {
-                // Green: employee was present (punch-in exists for this date)
-                boxStyle = [styles.dayBox, styles.presentBox];
-                textStyle = [styles.dayText, styles.whiteText];
-              } else if (isPast && !isToday && !isBeforeJoining) {
-                // Red: past date with NO attendance record AND employee was hired by then
-                boxStyle = [styles.dayBox, styles.absentBox];
-                textStyle = [styles.dayText, styles.whiteText];
-              } else if (isToday) {
-                // Blue: today but hasn't punched in yet (or view hasn't refreshed)
-                boxStyle = [styles.dayBox, styles.todayBox];
-                textStyle = [styles.dayText, styles.todayText];
-              } else {
-                // Future date or pre-joining date: gray circle (no highlight)
-                boxStyle = styles.dayBox;
-                textStyle = styles.dayText;
-              }
-
-              return (
-                <View key={index} style={styles.dayCell}>
-                  <View style={boxStyle}>
-                    <Text style={textStyle}>{day}</Text>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        </View>
-        {/* ========== TODAY'S LOG ========== */}
-        <View className="mt-6 mb-10">
-          <Text style={styles.sectionTitle}>Today's Log</Text>
-
-          {todayRecord && todayRecord.punch_in ? (
-            <>
-              <View style={[styles.logCard, { flexDirection: "column" }]}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-                    <View style={styles.logIcon}>
-                      <MaterialIcons name="login" size={22} color="#0052cc" />
-                    </View>
-                    <Text style={styles.logTitle}>Punch In</Text>
-                  </View>
-                  <Text style={{ fontWeight: "700", color: "#0052cc", fontSize: 18 }}>
-                    {todayRecord.punch_in || "N/A"}
-                  </Text>
-                </View>
-                <Text style={{ color: "#666", marginTop: 4, marginLeft: 57, fontSize: 13 }} numberOfLines={2} ellipsizeMode="tail">
-                  {todayRecord.readable_address || "Office"}
+          {/* ========== CURRENT LOCATION CARD ========== */}
+          <View style={styles.verificationCard}>
+            <Text style={styles.sectionTitle}>Current Location</Text>
+            <View style={styles.officeRow}>
+              <View style={styles.officeIcon}>
+                <MaterialIcons name="business" size={24} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.officeTitle} numberOfLines={3}>
+                  {currentAddress || "Fetching Location..."}
+                </Text>
+                <Text style={styles.officeSub}>
+                  {isWFH
+                    ? "WFH Mode (Geo-fencing bypassed)"
+                    : distance !== null
+                      ? distance <= 500
+                        ? "Within office premises"
+                        : `${distance}m from office`
+                      : "Calculating distance..."}
                 </Text>
               </View>
+            </View>
+          </View>
+          {/* Calendar Section */}
+          <View style={styles.calendarCard}>
+            <View style={styles.calendarHeader}>
+              <Text style={styles.calendarTitle}>
+                {MONTHS[calendarMonth]} {calendarYear}
+              </Text>
+              <View style={styles.calendarNav}>
+                <TouchableOpacity onPress={goPrevMonth}>
+                  <MaterialIcons name="chevron-left" size={24} color="#333" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={goNextMonth}>
+                  <MaterialIcons name="chevron-right" size={24} color="#333" />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-              {todayRecord.punch_out ? (
-                <View style={[styles.logCard, { flexDirection: "column", marginTop: 8 }]}>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-                      <View style={styles.logIcon}>
-                        <MaterialIcons name="logout" size={22} color="#0052cc" />
-                      </View>
-                      <Text style={styles.logTitle}>Punch Out</Text>
+            <View style={styles.weekRow}>
+              {DAYS.map((day) => (
+                <Text key={day} style={styles.weekDay}>
+                  {day}
+                </Text>
+              ))}
+            </View>
+
+            <View style={styles.daysGrid}>
+              {calendarDays.map((day, index) => {
+                // Skip null placeholder cells (empty days before the 1st of the month)
+                if (day === null) {
+                  return <View key={index} style={styles.dayCell} />;
+                }
+
+                // --- IS THIS A PAST DATE? ---
+                // Build midnight of this calendar day using the VIEWED month/year (not today's).
+                // Compare against `todayMidnight` (start of today) so the comparison is
+                // day-boundary accurate. This avoids the `day + 1` overflow bug where
+                // `new Date(2026, 0, 32)` rolls to Feb 1.
+                const dayMidnight = new Date(calendarYear, calendarMonth, day);
+                const isPast = dayMidnight < todayMidnight;
+
+                // --- IS THIS DATE BEFORE THE EMPLOYEE JOINED? ---
+                // If `joiningDate` is known, build its midnight and compare.
+                // Dates before the employee joined should NOT be marked as absent (red)
+                // because the employee wasn't employed yet. They stay neutral (gray).
+                let isBeforeJoining = false;
+                if (joiningDate) {
+                  const join = new Date(joiningDate);
+                  const joinMidnight = new Date(
+                    join.getFullYear(),
+                    join.getMonth(),
+                    join.getDate(),
+                  );
+                  isBeforeJoining = dayMidnight < joinMidnight;
+                }
+
+                // --- DOES THIS DAY HAVE A PUNCH-IN? ---
+                // `presentDates` is fetched from backend on mount & month change.
+                // It contains day-numbers (e.g. [2, 5, 12]) where attendance exists.
+                const isPresent = presentDates.includes(day);
+
+                // --- IS THIS "TODAY" IN THE VIEWED MONTH? ---
+                // Must match day, month, AND year simultaneously.
+                // When viewing December 2025 from June 2026, todayDate might be 17
+                // but the 17th of Dec 2025 is NOT today — so `isToday` stays false.
+                const isToday =
+                  day === todayDate &&
+                  calendarMonth === todayMonth &&
+                  calendarYear === todayYear;
+
+                // --- ASSIGN COLOR PRIORITY: Green > Red > Blue > Default ---
+                // Priority order:
+                //   1. Has attendance → GREEN (always, even if today or past)
+                //   2. Past date, no attendance, not today, NOT before joining → RED
+                //   3. Past date, no attendance, NOT before joining → RED
+                //   4. Today, no attendance yet → BLUE (existing "today" highlight)
+                //   5. Future date, OR before-joining-date → default (gray circle)
+                let boxStyle, textStyle;
+
+                if (isPresent) {
+                  // Green: employee was present (punch-in exists for this date)
+                  boxStyle = [styles.dayBox, styles.presentBox];
+                  textStyle = [styles.dayText, styles.whiteText];
+                } else if (isPast && !isToday && !isBeforeJoining) {
+                  // Red: past date with NO attendance record AND employee was hired by then
+                  boxStyle = [styles.dayBox, styles.absentBox];
+                  textStyle = [styles.dayText, styles.whiteText];
+                } else if (isToday) {
+                  // Blue: today but hasn't punched in yet (or view hasn't refreshed)
+                  boxStyle = [styles.dayBox, styles.todayBox];
+                  textStyle = [styles.dayText, styles.todayText];
+                } else {
+                  // Future date or pre-joining date: gray circle (no highlight)
+                  boxStyle = styles.dayBox;
+                  textStyle = styles.dayText;
+                }
+
+                return (
+                  <View key={index} style={styles.dayCell}>
+                    <View style={boxStyle}>
+                      <Text style={textStyle}>{day}</Text>
                     </View>
-                    <Text style={{ fontWeight: "700", color: "#0052cc", fontSize: 18 }}>
-                      {todayRecord.punch_out || "N/A"}
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+          {/* ========== TODAY'S LOG ========== */}
+          <View className="mt-6 mb-10">
+            <Text style={styles.sectionTitle}>Today's Log</Text>
+
+            {todayRecord && todayRecord.punch_in ? (
+              <>
+                <View style={[styles.logCard, { flexDirection: "column" }]}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        flex: 1,
+                      }}
+                    >
+                      <View style={styles.logIcon}>
+                        <MaterialIcons name="login" size={22} color="#0052cc" />
+                      </View>
+                      <Text style={styles.logTitle}>Punch In</Text>
+                    </View>
+                    <Text
+                      style={{
+                        fontWeight: "700",
+                        color: "#0052cc",
+                        fontSize: 18,
+                      }}
+                    >
+                      {todayRecord.punch_in || "N/A"}
                     </Text>
                   </View>
-                  <Text style={{ color: "#666", marginTop: 4, marginLeft: 57, fontSize: 13 }} numberOfLines={2} ellipsizeMode="tail">
+                  <Text
+                    style={{
+                      color: "#666",
+                      marginTop: 4,
+                      marginLeft: 57,
+                      fontSize: 13,
+                    }}
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
+                  >
                     {todayRecord.readable_address || "Office"}
                   </Text>
                 </View>
-              ) : (
-                <Text style={{ color: "#666", textAlign: "center", marginTop: 12 }}>
-                  Not punched out yet
-                </Text>
-              )}
-            </>
-          ) : (
-            <Text style={{ color: "#666", textAlign: "center", marginTop: 16 }}>
-              No activity yet today
-            </Text>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+
+                {todayRecord.punch_out ? (
+                  <View
+                    style={[
+                      styles.logCard,
+                      { flexDirection: "column", marginTop: 8 },
+                    ]}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          flex: 1,
+                        }}
+                      >
+                        <View style={styles.logIcon}>
+                          <MaterialIcons
+                            name="logout"
+                            size={22}
+                            color="#0052cc"
+                          />
+                        </View>
+                        <Text style={styles.logTitle}>Punch Out</Text>
+                      </View>
+                      <Text
+                        style={{
+                          fontWeight: "700",
+                          color: "#0052cc",
+                          fontSize: 18,
+                        }}
+                      >
+                        {todayRecord.punch_out || "N/A"}
+                      </Text>
+                    </View>
+                    <Text
+                      style={{
+                        color: "#666",
+                        marginTop: 4,
+                        marginLeft: 57,
+                        fontSize: 13,
+                      }}
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                    >
+                      {todayRecord.readable_address || "Office"}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text
+                    style={{
+                      color: "#666",
+                      textAlign: "center",
+                      marginTop: 12,
+                    }}
+                  >
+                    Not punched out yet
+                  </Text>
+                )}
+              </>
+            ) : (
+              <Text
+                style={{ color: "#666", textAlign: "center", marginTop: 16 }}
+              >
+                No activity yet today
+              </Text>
+            )}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
       <SelfieCameraModal
         visible={showCamera}
         onCapture={(uri) => {

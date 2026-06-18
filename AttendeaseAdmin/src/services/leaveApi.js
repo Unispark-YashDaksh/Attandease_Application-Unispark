@@ -1,14 +1,20 @@
 import axios from "axios";
-const apiUrl = import.meta.env.VITE_API;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 export const autoAssignLeaveBalance = async (employeeId, payload = {}) => {
-  const res = await axios.post(`${apiUrl}/employees/${employeeId}/leave-balance`, payload);
+  const res = await axios.post(
+    `${apiUrl}/employees/${employeeId}/leave-balance`,
+    payload,
+  );
   return res.data;
 };
 
 export const fetchLeaveBalance = async (employeeId, year) => {
   const params = year ? { year } : {};
-  const res = await axios.get(`${apiUrl}/employees/${employeeId}/leave-balance`, { params });
+  const res = await axios.get(
+    `${apiUrl}/employees/${employeeId}/leave-balance`,
+    { params },
+  );
   return res.data;
 };
 
