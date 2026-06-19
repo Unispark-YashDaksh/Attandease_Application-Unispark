@@ -1853,7 +1853,7 @@ app.post("/employees/:id/leave-balance", async(req, res)=>{
     }
 
     // defaults
-    const [defaults]= await promisePool.query(`SELECT Id.leave_type_id, id.default_days FROM leave_defaults Id JOIN leave_types lt ON lt.id= Id.leave_type_id WHERE Id.is_Active = TRUE AND lt.is_active= TRUE`);
+    const [defaults]= await promisePool.query(`SELECT Id.leave_type_id, Id.default_days FROM leave_defaults Id JOIN leave_types lt ON lt.id= Id.leave_type_id WHERE Id.is_Active = TRUE AND lt.is_active= TRUE`);
 
     if(defaults.length===0){
       return res.status(400).json({
