@@ -83,7 +83,12 @@ const employeePhotoStorage = multer.diskStorage({
 });
 
 app.get("/health",(req ,res)=>{
-  const sql= `SELECT * FROM employee_master`;
+  const sql= `
+      SELECT * 
+      FROM employee_master 
+      ORDER BY created_at ASC 
+      LIMIT 1;
+    `;
 
   pool.query(sql, (err, result) => {
     if(err){
