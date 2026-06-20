@@ -1,12 +1,17 @@
+require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const { error } = require("console");
-require("dotenv").config();
+
+const {storage}= require("./cloudConfig");
+const upload= multer({storage})
 
 const app = express();
+const redis= require('redis');
+const { url } = require("inspector");
 const port = 7000;
 
 app.use(
@@ -37,8 +42,8 @@ const pool = mysql.createPool({
 // Convert pool to promise-based (was missing - caused async/await crash)
 const promisePool = pool.promise();
 
-// Multer config for selfie uploads
-const storage = multer.diskStorage({
+// Multer config for selfie uploads //local storage for attendance
+const localDiskStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
   },
@@ -47,9 +52,10 @@ const storage = multer.diskStorage({
     cb(null, uniqueName);
   },
 });
+console.log(process.env.VITE_API)
 
-const upload = multer({
-  storage,
+const SelfieUpload = multer({
+  storage: localDiskStorage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif|webp/;
@@ -59,48 +65,26 @@ const upload = multer({
     cb(new Error("Only image files allowed"));
   },
 });
-
-const employeePhotoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/employee_photos/");
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `employee_${Date.now()}_${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  },
+// upload image particular image
+const employeePhotoStorage = multer({
+  storage: storage,
+  limits: {fileSize: 5*1024*1024}, // 5MB limit
 });
 
 app.get("/health",(req ,res)=>{
-  const sql= `SELECT * FROM employee_master`;
-
-  pool.query(sql, (err, result) => {
-    if(err){
-      return res.send({
-        success: false,
-        message: "DB Connection Failed",
-      })
-    }
-    res.json({
-      success: true,
-      result:  result
-    })
-  })
+  console.log("Health Checked...Backend Run Properly");
 })
 
 const employeePhotoUpload = multer({
-  storage: employeePhotoStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|gif|webp/;
-    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-    const mime = allowed.test(file.mimetype);
-    if (ext && mime) {
-      return cb(null, true);
-    }
-    cb(new Error("Only image files allowed"));
-  },
+  storage: storage,
+  limits: {fileSize: 5 * 1024*1024}
 });
 
+
+module.exports={
+  SelfieUpload,
+  employeePhotoUpload
+}
 app.post("/addDepartmentName", (req, res) => {
   console.log(req.body);
   const departmentName = req.body.departmentName;
@@ -730,11 +714,12 @@ app.put("/updateRoleStatus/:id", (req, res) => {
 
 app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
   console.log(req.body);
+  console.log(req.file);//this will show cloudinaryuploads details
 
   const employeeForm = req.body;
-  const photoUrl = req.file
-    ? `/uploads/employee_photos/${req.file.filename}`
-    : null;
+  const cloudinaryUrl = req.file ? req.file.path: null;
+
+
 
   const sql = `
     INSERT INTO employee_master(
@@ -795,7 +780,7 @@ app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
       employeeForm.employee_bank_name,
       employeeForm.employee_bank_ifsc_code,
       employeeForm.employee_uan_no,
-      photoUrl,
+      cloudinaryUrl,
     ],
 
     (err, result) => {
@@ -813,6 +798,7 @@ app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
       res.status(200).json({
         success: true,
         message: "Data Added Successfully",
+        url: cloudinaryUrl
       });
     },
   );
@@ -1330,7 +1316,7 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
     // // took current date and current date to convert string to int after that
     // const lateAfterDate= new Date();
     // lateAfterDate.setHours(parseInt(lateHour),parseInt(lateMinute), 0,0);
-
+    // saved locally in /uploads/
     const selfiePath = `/uploads/${req.file.filename}`;
 
     const [result] = await promisePool.query(
