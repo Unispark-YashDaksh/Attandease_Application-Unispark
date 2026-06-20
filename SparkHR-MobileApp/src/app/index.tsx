@@ -14,16 +14,19 @@ export default function Index() {
   },[]);
 
   const checkLoginStatus= async()=>{
-        // employee id stored in Asysnc Storage 
+    try {
         const employeeId= await AsyncStorage.getItem("employee_id");
-
         console.log("Stored Employee Id:", employeeId);
 
         if(employeeId){
             setIsLoggedIn(true);
         }
+    } catch (error) {
+        console.error("Error checking login status:", error);
+    } finally {
         setIsLoading(false)
     }
+  }
    
 
   if(isLoading){
