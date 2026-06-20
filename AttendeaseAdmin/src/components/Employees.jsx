@@ -327,7 +327,7 @@ function EmployeeMaster() {
                           {item.photo_url ? (
                             <img
                               className="employee-photo"
-                              src={`http://localhost:7000${item.photo_url}`}
+                              src={item.photo_url}
                               alt={item.employee_name}
                             />
                           ) : (
