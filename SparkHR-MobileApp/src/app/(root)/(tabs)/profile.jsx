@@ -5,6 +5,7 @@ import {
   Text,
   Image,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -17,6 +18,7 @@ import axios from "axios";
 import {
   VITE_API
 } from "@env";
+import usePullToRefresh from "../../../hooks/usePullToRefresh";
 
 export default function Profile() {
   const [loggedInEmployee, setLoggedInEmployee]= useState(null);
@@ -41,6 +43,12 @@ export default function Profile() {
 
     setProfileData(response.data.data);
   }
+  // ---- Pull to Refresh ----
+  const { refreshing, onRefresh } = usePullToRefresh(async () => {
+    if (loggedInEmployee) {
+      await handleFetchProfile(loggedInEmployee);
+    }
+  });
   const handleLogout=  async()=>{
     console.log("Clicked Handle Logout Function")
    try{
@@ -56,6 +64,7 @@ export default function Profile() {
     <SafeAreaView style={styles.container}>
       <Header showBack onBackPress={() => router.back()} />
       <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
         {/* Profile */}

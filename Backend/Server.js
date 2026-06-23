@@ -5,12 +5,12 @@ const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const { error } = require("console");
+const redisClient= require("./config/redis");
 
 const {storage}= require("./cloudConfig");
 const upload= multer({storage})
 
 const app = express();
-const redis= require('redis');
 const { url } = require("inspector");
 const port = 7000;
 
@@ -1113,10 +1113,11 @@ app.post("/attendance", async (req, res) => {
         .json({ success: false, message: "Employee ID Missing" });
     }
 
-    // BUG FIXED: column name is `attendance` not `attendance_date`
+    
+
     // Also use promisePool.query for async/await
     const [rows] = await promisePool.query(
-      `SELECT * FROM attendance WHERE employee_id = ? AND DATE(attendance_date) = CURDATE() ORDER BY id DESC LIMIT 1`,
+      `SELECT * FROM attendance WHERE employee_id = ? AND attendance_date >= CURDATE() AND attendance_date < CURDATE() + INTERVAL 1 DAY ORDER BY id DESC LIMIT 1`,
       [employeeId],
     );
 
@@ -1283,7 +1284,7 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
 
     // Double-check: ensure no duplicate punch in for today
     const [existing] = await promisePool.query(
-      `SELECT * FROM attendance WHERE employee_id = ? AND attendance_date = CURDATE()`,
+      `SELECT * FROM attendance WHERE employee_id = ? AND attendance_date >= CURDATE() AND attendance_date < CURDATE() + INTERVAL 1 DAY`,
       [employee_id],
     );
 
@@ -1448,13 +1449,14 @@ app.get("/attendance/:employeeId/:month/:year", async (req, res) => {
   const { employeeId, month, year } = req.params;
   try {
     // Fetch distinct attendance dates for the given employee in the given month/year
+    const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
     const [rows] = await promisePool.query(
       `SELECT DISTINCT DAY(attendance_date) AS day 
        FROM attendance 
        WHERE employee_id = ? 
-         AND MONTH(attendance_date) = ? 
-         AND YEAR(attendance_date) = ?`,
-      [employeeId, parseInt(month), parseInt(year)]
+         AND attendance_date >= ? 
+         AND attendance_date < DATE_ADD(?, INTERVAL 1 MONTH)`,
+      [employeeId, monthStart, monthStart]
     );
     // Fetch joining date to avoid marking dates before joining as absent
     const [empRows] = await promisePool.query(

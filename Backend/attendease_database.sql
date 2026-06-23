@@ -123,6 +123,9 @@ REFERENCES office_locations(id)
 
 );
 
+ALTER TABLE attendance ADD INDEX idx_emp_date (employee_id, attendance_date);
+
+
 ALTER TABLE attendance
 ADD COLUMN is_late BOOLEAN DEFAULT false;
 
@@ -202,7 +205,7 @@ CREATE TABLE office_locations (
 SELECT * FROM office_locations;
 INSERT INTO office_locations(branch_id, office_name, latitude, longitude, allowed_radius  ) VALUES(1,"Noida Office", 28.499718, 77.414824, 500);
 UPDATE office_locations
-SET latitude = 28.4997222
+SET allowed_radius = 1100
 WHERE id=1;
 
 

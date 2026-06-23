@@ -1,12 +1,13 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import styles from "../../../styles/homeStyles";
 import Header from "../../../components/Header";
 import AnimatedScreen from "../../../components/AnimatedScreen";
-import useTodayLogs from "../../../hooks/useTodayLogs"; // Today logs fuctionality main file
+import useTodayLogs from "../../../hooks/useTodayLogs";
+import usePullToRefresh from "../../../hooks/usePullToRefresh";
 import { useState } from "react";
 
 const QUICK_ACTIONS = [
@@ -19,13 +20,15 @@ const QUICK_ACTIONS = [
 ];
 
 export default function Home() {
-  const { todayRecords, loading } = useTodayLogs();
+  const { todayRecords, loading, refetch } = useTodayLogs();
+  const { refreshing, onRefresh } = usePullToRefresh(refetch);
   return (
     <AnimatedScreen>
     <SafeAreaView style={styles.container} edges={["top"]}>
       <Header onProfilePress={() => router.navigate("profile")} />
 
       <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
