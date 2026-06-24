@@ -830,7 +830,7 @@ app.put(
     const employeeIFSCCode = req.body.employee_bank_ifsc_code;
     const employeeUANNo = req.body.employee_uan_no;
     const photoUrl = req.file
-      ? `/uploads/employee_photos/${req.file.filename}`
+      ? req.file.path
       : req.body.photo_url || null;
 
     const sql = `
@@ -1287,6 +1287,164 @@ app.post("/wfh-request", async (req, res) => {
   }
 });
 
+// ============================================
+// GET /pending-approvals/:managerId
+// Why: Returns all pending WFH + Leave requests from employees
+//      whose reporting_manager_id matches the given manager.
+// Flow: Manager opens Approvals screen → app calls this endpoint →
+//       backend queries both work_from_home_requests and
+//       leave_applications where status = 'PENDING' and the
+//       employee's reporting_manager = this manager.
+// Returns: Array of requests with a "type" field ('WFH' or 'LEAVE')
+// ============================================
+app.get("/pending-approvals/:managerId", async (req, res) => {
+  try {
+    const { managerId } = req.params;
+
+    // Fetch pending WFH requests from subordinates
+    const [wfhRequests] = await promisePool.query(
+      `SELECT wfr.id, wfr.employee_id, wfr.start_date, wfr.end_date,
+              wfr.reason, wfr.status, wfr.created_at,
+              em.employee_name, em.employee_code
+       FROM work_from_home_requests wfr
+       JOIN employee_master em ON em.id = wfr.employee_id
+       WHERE em.reporting_manager_id = ?
+         AND wfr.status = 'PENDING'
+       ORDER BY wfr.created_at DESC`,
+      [managerId],
+    );
+
+    // Fetch pending Leave requests from subordinates
+    const [leaveRequests] = await promisePool.query(
+      `SELECT la.id, la.employee_id, la.from_date AS start_date,
+              la.to_date AS end_date, la.reason, la.status, la.created_at,
+              em.employee_name, em.employee_code,
+              lt.leave_name AS leave_type_name
+       FROM leave_applications la
+       JOIN employee_master em ON em.id = la.employee_id
+       JOIN leave_types lt ON lt.id = la.leave_type_id
+       WHERE em.reporting_manager_id = ?
+         AND la.status = 'PENDING'
+       ORDER BY la.created_at DESC`,
+      [managerId],
+    );
+
+    // Tag each request with its type so frontend can distinguish them
+    const taggedWfh = wfhRequests.map((r) => ({ ...r, requestType: "WFH" }));
+    const taggedLeave = leaveRequests.map((r) => ({
+      ...r,
+      requestType: "LEAVE",
+    }));
+
+    // Combine both arrays into a single response
+    const allPending = [...taggedWfh, ...taggedLeave];
+
+    // Sort by created_at descending (newest first)
+    allPending.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    return res.json({
+      success: true,
+      count: allPending.length,
+      requests: allPending,
+    });
+  } catch (err) {
+    console.error("Pending Approvals Error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ============================================
+// PUT /wfh-request/:id/approve
+// Why: Manager approves or rejects a WFH request.
+// Body: { status: "APPROVED" | "REJECTED", approved_by: <manager_employee_id> }
+// Flow: Frontend sends status + manager's ID → backend verifies
+//       the manager IS the reporting manager of the requesting employee →
+//       updates the request status, approved_by, and approved_on.
+// ============================================
+app.put("/wfh-request/:id/approve", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, approved_by } = req.body; // "APPROVED" or "REJECTED"
+
+    // ---- Validate status ----
+    if (!["APPROVED", "REJECTED"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: "Status must be APPROVED or REJECTED",
+      });
+    }
+
+    // ---- Validate approved_by ----
+    if (!approved_by) {
+      return res.status(400).json({
+        success: false,
+        error: "approved_by (manager employee ID) is required",
+      });
+    }
+
+    // ---- Fetch the WFH request along with the employee's reporting manager ----
+    const [requests] = await promisePool.query(
+      `SELECT wfr.*, em.reporting_manager_id, em.employee_name AS employee_name
+       FROM work_from_home_requests wfr
+       JOIN employee_master em ON em.id = wfr.employee_id
+       WHERE wfr.id = ?`,
+      [id],
+    );
+
+    if (requests.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "WFH request not found",
+      });
+    }
+
+    const request = requests[0];
+
+    // ---- Check if already processed ----
+    if (request.status !== "PENDING") {
+      return res.status(400).json({
+        success: false,
+        error: `This request is already ${request.status.toLowerCase()}`,
+      });
+    }
+
+    // ---- Hierarchy check: only the reporting manager can approve ----
+    if (request.reporting_manager_id !== parseInt(approved_by)) {
+      return res.status(403).json({
+        success: false,
+        error: "You are not authorized to approve this request",
+      });
+    }
+
+    // ---- Update the request ----
+    await promisePool.query(
+      `UPDATE work_from_home_requests
+       SET status = ?, approved_by = ?, approved_on = NOW()
+       WHERE id = ?`,
+      [status, approved_by, id],
+    );
+
+    // ---- Fetch the updated record to return ----
+    const [updated] = await promisePool.query(
+      `SELECT wfr.*, em.employee_name, ap.employee_name AS approved_by_name
+       FROM work_from_home_requests wfr
+       JOIN employee_master em ON em.id = wfr.employee_id
+       LEFT JOIN employee_master ap ON ap.id = wfr.approved_by
+       WHERE wfr.id = ?`,
+      [id],
+    );
+
+    return res.json({
+      success: true,
+      message: `WFH request ${status.toLowerCase()} successfully`,
+      data: updated[0],
+    });
+  } catch (err) {
+    console.error("WFH Approve Error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Why: The main Punch In API.
 // Flow: Frontend validates everything (permissions, GPS, distance, selfie),
 // then sends all data here for storage.
@@ -1332,34 +1490,62 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
         .status(400)
         .json({ success: false, message: "Already punched in today" });
     }
-    // const shiftSQL=  `SELECT s.late_after, s.half_day_after FROM employee_master e JOIN shift_master s ON e.shift_id= s.id WHERE e.id=?`
-    // const [shiftData]= await promisePool.query(shiftSQL, [employee_id]);
-    // if(shiftData.length===0){
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Shift not assigned to employee"
-    //   })
-    // }
+    const shiftSQL=  `SELECT s.start_time, s.late_after, s.half_day_after FROM employee_master e JOIN shift_master s ON e.shift_id= s.id WHERE e.id=?`
+    const [shiftData]= await promisePool.query(shiftSQL, [employee_id]);
+    if(shiftData.length===0){
+      return res.status(400).json({
+        success: false,
+        message: "Shift not assigned to employee"
+      })
+    }
 
-    // const punchInTime= new Date();
-    // const shift= shiftData[0];
-    // let status= "PRESENT";
-    // let is_late= false;
-    // let late_minutes=0;
+    const shift= shiftData[0];
+    /*
+     * Why: Determine if employee is late by comparing actual punch-in time
+     * against the shift's late_after threshold (e.g. 09:15).
+     * If punch-in > late_after → is_late=true, late_minutes = minutes past start_time.
+     * If punch-in >= half_day_after → status = "HALF DAY".
+     */
+    let status= "PRESENT";
+    let is_late= false;
+    let late_minutes= 0;
 
-    // const [lateHour, lateMinute]= shift.late_after.split(":");
-    // const [halfHour, halfMinute]= shift.half_day_after.split(":");
+    const punchInTime= new Date();
+    if (shift.late_after) {
+      const [lateHour, lateMinute]= shift.late_after.split(":");
+      const lateThreshold= new Date();
+      lateThreshold.setHours(parseInt(lateHour), parseInt(lateMinute), 0, 0);
 
-    // // took current date and current date to convert string to int after that
-    // const lateAfterDate= new Date();
-    // lateAfterDate.setHours(parseInt(lateHour),parseInt(lateMinute), 0,0);
-    // saved locally in /uploads/
+      if (punchInTime > lateThreshold) {
+        is_late= true;
+        // Why: Store total minutes late relative to shift start (not late_after)
+        // so admin can display "X hours Y minutes" or "Z mins late".
+        if (shift.start_time) {
+          const [startHour, startMinute]= shift.start_time.split(":");
+          const shiftStart= new Date();
+          shiftStart.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
+          late_minutes= Math.round((punchInTime - shiftStart) / 60000);
+        }
+      }
+    }
+
+    // Why: If punch-in is at or after half_day_after time, mark as HALF DAY
+    if (shift.half_day_after) {
+      const [halfHour, halfMinute]= shift.half_day_after.split(":");
+      const halfDayThreshold= new Date();
+      halfDayThreshold.setHours(parseInt(halfHour), parseInt(halfMinute), 0, 0);
+
+      if (punchInTime >= halfDayThreshold) {
+        status= "HALF DAY";
+      }
+    }
+
     const selfiePath = `/uploads/${req.file.filename}`;
 
     const [result] = await promisePool.query(
       `INSERT INTO attendance
-       (employee_id, attendance_date, punch_in, punch_in_selfie, punch_in_latitude, punch_in_longitude, gps_location, attendance_mode, office_location_id, status)
-       VALUES (?, CURDATE(), CURTIME(), ?, ?, ?, ?, ?, ?, 'PRESENT')`,
+       (employee_id, attendance_date, punch_in, punch_in_selfie, punch_in_latitude, punch_in_longitude, gps_location, attendance_mode, office_location_id, status, late_minutes, is_late)
+       VALUES (?, CURDATE(), CURTIME(), ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         employee_id,
         selfiePath,
@@ -1368,6 +1554,9 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
         readable_address || "",
         attendance_mode || "OFFICE",
         office_location_id || null,
+        status,
+        late_minutes,
+        is_late,
       ],
     );
 
@@ -1796,6 +1985,8 @@ app.get("/profile/:employeeId", async (req, res) => {
     employee_master.employee_email_id,
     employee_master.employee_mobile_no,
     employee_master.city,
+    employee_master.photo_url,
+    employee_master.gender,
 
     designations.designation_name AS employee_designation,
 
