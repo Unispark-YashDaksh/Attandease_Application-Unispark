@@ -669,7 +669,6 @@ export default function AttendanceScreen() {
 
         {/* ========== TITLE + CLOCK ========== */}
         <View className="mt-5">
-          <Text style={styles.title}>Attendance</Text>
           <View style={styles.dateRow}>
             <MaterialIcons name="calendar-month" size={18} color="#666" />
             <Text style={styles.dateText}>{formatClockDate(currentTime)}</Text>
@@ -798,12 +797,13 @@ export default function AttendanceScreen() {
               {MONTHS[calendarMonth]} {calendarYear}
             </Text>
             <View style={styles.calendarNav}>
-              <TouchableOpacity onPress={goPrevMonth}>
+              {/* ** Hide Calender Shift Button */}
+              {/* <TouchableOpacity onPress={goPrevMonth}>
                 <MaterialIcons name="chevron-left" size={24} color="#333" />
               </TouchableOpacity>
               <TouchableOpacity onPress={goNextMonth}>
                 <MaterialIcons name="chevron-right" size={24} color="#333" />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
 

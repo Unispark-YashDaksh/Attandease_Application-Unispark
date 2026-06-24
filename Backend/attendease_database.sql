@@ -61,7 +61,7 @@ FOREIGN KEY (reporting_manager_id)
 REFERENCES employee_master(id)
 );
 
-
+DESC employee_master;
 ALTER TABLE employee_master
 ADD COLUMN photo_url VARCHAR(255);
 SELECT * FROM employee_master;
@@ -132,7 +132,7 @@ ADD COLUMN is_late BOOLEAN DEFAULT false;
  
 
 DROP TABLE attendance;
-
+DELETE FROM attendance WHERE id= 4;
 SELECT * FROM attendance;
 SELECT * FROM departments;
 
@@ -351,14 +351,21 @@ CREATE TABLE work_from_home_requests (
     end_date DATE NOT NULL,
     reason VARCHAR(255),
     status ENUM('PENDING', 'APPROVED', 'REJECTED') DEFAULT 'PENDING',
+    approved_by INT NULL,
+    approved_on TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
+	FOREIGN KEY (approved_by) REFERENCES employee_master(id),
     FOREIGN KEY (employee_id)
     REFERENCES employee_master(id)
     ON DELETE CASCADE
 );
 
+ALTER TABLE work_from_home_requests
+ADD COLUMN approved_by INT NULL,
+ADD COLUMN approved_on TIMESTAMP NULL,
+ADD FOREIGN KEY (approved_by) REFERENCES employee_master(id);
+DESC work_from_home_requests;
 SELECT * FROM work_from_home_requests;
 SELECT attendance_date,
        DATE(attendance_date),

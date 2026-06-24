@@ -1251,6 +1251,42 @@ app.get("/wfh-status/:employeeId", async (req, res) => {
   }
 });
 
+// ============================================
+// POST /wfh-request — Submit a Work From Home request
+// Why: Employee applies for WFH from the mobile app.
+// Body: { employee_id, start_date, end_date, reason }
+// Flow: Validates fields → inserts into work_from_home_requests table → returns success
+// ============================================
+app.post("/wfh-request", async (req, res) => {
+  try {
+    const { employee_id, start_date, end_date, reason } = req.body;
+
+    // ---- Validation ----
+    if (!employee_id || !start_date || !end_date) {
+      return res.status(400).json({
+        success: false,
+        error: "employee_id, start_date, and end_date are required",
+      });
+    }
+
+    // Insert the WFH request with status = 'PENDING' by default
+    const [result] = await promisePool.query(
+      `INSERT INTO work_from_home_requests (employee_id, start_date, end_date, reason)
+       VALUES (?, ?, ?, ?)`,
+      [employee_id, start_date, end_date, reason || null],
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "WFH request submitted successfully",
+      requestId: result.insertId,
+    });
+  } catch (err) {
+    console.error("WFH Request Error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Why: The main Punch In API.
 // Flow: Frontend validates everything (permissions, GPS, distance, selfie),
 // then sends all data here for storage.
