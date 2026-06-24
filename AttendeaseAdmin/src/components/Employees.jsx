@@ -327,7 +327,11 @@ function EmployeeMaster() {
                           {item.photo_url ? (
                             <img
                               className="employee-photo"
-                              src={item.photo_url}
+                              src={
+                                item.photo_url?.startsWith("http")
+                                  ? item.photo_url
+                                  : `${apiUrl}${item.photo_url}`
+                              }
                               alt={item.employee_name}
                             />
                           ) : (
