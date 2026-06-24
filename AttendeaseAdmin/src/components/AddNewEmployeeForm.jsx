@@ -320,7 +320,9 @@ function AddNewEmployeeForm({
               className="employee-photo-preview"
               src={
                 photoPreview ||
-                `http://localhost:7000${addEmployeeForm.photo_url}`
+                (addEmployeeForm.photo_url?.startsWith("http")
+                  ? addEmployeeForm.photo_url
+                  : `${apiUrl}${addEmployeeForm.photo_url}`)
               }
               alt="Employee preview"
             />
