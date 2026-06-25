@@ -5,10 +5,10 @@ const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const { error } = require("console");
-const redisClient= require("./config/redis");
+const redisClient = require("./config/redis");
 
-const {storage}= require("./cloudConfig");
-const upload= multer({storage})
+const { storage } = require("./cloudConfig");
+const upload = multer({ storage });
 
 const app = express();
 const port = 7000;
@@ -65,7 +65,7 @@ const localDiskStorage = multer.diskStorage({
     cb(null, uniqueName);
   },
 });
-console.log(process.env.VITE_API)
+console.log(process.env.VITE_API);
 
 const SelfieUpload = multer({
   storage: localDiskStorage,
@@ -81,36 +81,35 @@ const SelfieUpload = multer({
 // upload image particular image
 const employeePhotoStorage = multer({
   storage: storage,
-  limits: {fileSize: 5*1024*1024}, // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
-app.get("/health",(req ,res)=>{
-  const sql= `SELECT * FROM employee_master`;
+app.get("/health", (req, res) => {
+  const sql = `SELECT * FROM employee_master`;
 
   pool.query(sql, (err, result) => {
-    if(err){
+    if (err) {
       return res.send({
         success: false,
         message: "DB Connection Failed",
-      })
+      });
     }
     res.json({
       success: true,
-      result:  result
-    })
-  })
-})
+      result: result,
+    });
+  });
+});
 
 const employeePhotoUpload = multer({
   storage: storage,
-  limits: {fileSize: 5 * 1024*1024}
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-
-module.exports={
+module.exports = {
   SelfieUpload,
-  employeePhotoUpload
-}
+  employeePhotoUpload,
+};
 app.post("/addDepartmentName", (req, res) => {
   console.log(req.body);
   const departmentName = req.body.departmentName;
@@ -740,12 +739,10 @@ app.put("/updateRoleStatus/:id", (req, res) => {
 
 app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
   console.log(req.body);
-  console.log(req.file);//this will show cloudinaryuploads details
+  console.log(req.file); //this will show cloudinaryuploads details
 
   const employeeForm = req.body;
-  const cloudinaryUrl = req.file ? req.file.path: null;
-
-
+  const cloudinaryUrl = req.file ? req.file.path : null;
 
   const sql = `
     INSERT INTO employee_master(
@@ -824,7 +821,7 @@ app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
       res.status(200).json({
         success: true,
         message: "Data Added Successfully",
-        url: cloudinaryUrl
+        url: cloudinaryUrl,
       });
     },
   );
@@ -855,9 +852,7 @@ app.put(
     const employeeBnakName = req.body.employee_bank_name;
     const employeeIFSCCode = req.body.employee_bank_ifsc_code;
     const employeeUANNo = req.body.employee_uan_no;
-    const photoUrl = req.file
-      ? req.file.path
-      : req.body.photo_url || null;
+    const photoUrl = req.file ? req.file.path : req.body.photo_url || null;
 
     const sql = `
       UPDATE employee_master
@@ -1137,9 +1132,6 @@ app.post("/attendance", async (req, res) => {
         .status(400)
         .json({ success: false, message: "Employee ID Missing" });
     }
-
-    
-
     // Also use promisePool.query for async/await
     const [rows] = await promisePool.query(
       `SELECT * FROM attendance WHERE employee_id = ? AND attendance_date >= CURDATE() AND attendance_date < CURDATE() + INTERVAL 1 DAY ORDER BY id DESC LIMIT 1`,
@@ -1515,53 +1507,53 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
         .status(400)
         .json({ success: false, message: "Already punched in today" });
     }
-    const shiftSQL=  `SELECT s.start_time, s.late_after, s.half_day_after FROM employee_master e JOIN shift_master s ON e.shift_id= s.id WHERE e.id=?`
-    const [shiftData]= await promisePool.query(shiftSQL, [employee_id]);
-    if(shiftData.length===0){
+    const shiftSQL = `SELECT s.start_time, s.late_after, s.half_day_after FROM employee_master e JOIN shift_master s ON e.shift_id= s.id WHERE e.id=?`;
+    const [shiftData] = await promisePool.query(shiftSQL, [employee_id]);
+    if (shiftData.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Shift not assigned to employee"
-      })
+        message: "Shift not assigned to employee",
+      });
     }
 
-    const shift= shiftData[0];
+    const shift = shiftData[0];
     /*
      * Why: Determine if employee is late by comparing actual punch-in time
      * against the shift's late_after threshold (e.g. 09:15).
      * If punch-in > late_after → is_late=true, late_minutes = minutes past start_time.
      * If punch-in >= half_day_after → status = "HALF DAY".
      */
-    let status= "PRESENT";
-    let is_late= false;
-    let late_minutes= 0;
+    let status = "PRESENT";
+    let is_late = false;
+    let late_minutes = 0;
 
-    const punchInTime= new Date();
+    const punchInTime = new Date();
     if (shift.late_after) {
-      const [lateHour, lateMinute]= shift.late_after.split(":");
-      const lateThreshold= new Date();
+      const [lateHour, lateMinute] = shift.late_after.split(":");
+      const lateThreshold = new Date();
       lateThreshold.setHours(parseInt(lateHour), parseInt(lateMinute), 0, 0);
 
       if (punchInTime > lateThreshold) {
-        is_late= true;
+        is_late = true;
         // Why: Store total minutes late relative to shift start (not late_after)
         // so admin can display "X hours Y minutes" or "Z mins late".
         if (shift.start_time) {
-          const [startHour, startMinute]= shift.start_time.split(":");
-          const shiftStart= new Date();
+          const [startHour, startMinute] = shift.start_time.split(":");
+          const shiftStart = new Date();
           shiftStart.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
-          late_minutes= Math.round((punchInTime - shiftStart) / 60000);
+          late_minutes = Math.round((punchInTime - shiftStart) / 60000);
         }
       }
     }
 
     // Why: If punch-in is at or after half_day_after time, mark as HALF DAY
     if (shift.half_day_after) {
-      const [halfHour, halfMinute]= shift.half_day_after.split(":");
-      const halfDayThreshold= new Date();
+      const [halfHour, halfMinute] = shift.half_day_after.split(":");
+      const halfDayThreshold = new Date();
       halfDayThreshold.setHours(parseInt(halfHour), parseInt(halfMinute), 0, 0);
 
       if (punchInTime >= halfDayThreshold) {
-        status= "HALF DAY";
+        status = "HALF DAY";
       }
     }
 
@@ -1662,11 +1654,23 @@ app.post("/punch-out", upload.single("selfie"), async (req, res) => {
 
 app.get("/fetchAttendance", async (req, res) => {
   try {
-    const [rows] =
-      await promisePool.query(`SELECT a.*, e.employee_name, e.employee_code, ds.designation_name, d.department_name FROM attendance a
-  LEFT JOIN employee_master e ON a.employee_id= e.id
-  LEFT JOIN designations ds ON e.designation_id= ds.id
-  LEFT JOIN departments d ON e.department_id= d.id
+    const [rows] = await promisePool.query(`
+      SELECT
+          a.*,
+          e.employee_name,
+          e.employee_code,
+          ds.designation_name,
+          d.department_name,
+          b.branch_name
+      FROM attendance a
+      LEFT JOIN employee_master e
+          ON a.employee_id = e.id
+      LEFT JOIN designations ds
+          ON e.designation_id = ds.id
+      LEFT JOIN departments d
+          ON e.department_id = d.id
+      LEFT JOIN branches b
+          ON e.branch_id = b.id;
   `);
 
     const formattedRows = rows.map((row) => ({
@@ -1699,14 +1703,14 @@ app.get("/attendance/:employeeId/:month/:year", async (req, res) => {
   const { employeeId, month, year } = req.params;
   try {
     // Fetch distinct attendance dates for the given employee in the given month/year
-    const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
+    const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
     const [rows] = await promisePool.query(
       `SELECT DISTINCT DAY(attendance_date) AS day 
        FROM attendance 
        WHERE employee_id = ? 
          AND MONTH(attendance_date) = ? 
          AND YEAR(attendance_date) = ?`,
-      [employeeId, parseInt(month), parseInt(year)]
+      [employeeId, parseInt(month), parseInt(year)],
     );
     // Fetch joining date to avoid marking dates before joining as absent
     const [empRows] = await promisePool.query(

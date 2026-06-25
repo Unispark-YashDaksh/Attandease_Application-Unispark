@@ -397,16 +397,6 @@ export default function AttendanceScreen() {
         setDistance(Math.round(dist));
         console.log(`Distance from office: ${Math.round(dist)} meters`);
       }
-
-      // Check WFH status
-      const wfhRes = await axios.get(`${API_BASE}/wfh-status/${employeeId}`);
-      if (wfhRes.data.success) {
-        setIsWFH(wfhRes.data.isWFH);
-        console.log(
-          "WFH Status:",
-          wfhRes.data.isWFH ? "WFH Approved" : "Office Mode",
-        );
-      }
     } catch (err) {
       console.log("Location/Office Fetch Error:", err);
     }
@@ -457,7 +447,8 @@ export default function AttendanceScreen() {
       const getGps = async () => {
         if (gpsLocation) return null;
         return await Location.getCurrentPositionAsync({
-          accuracy: GPS_ACCURACY_MAP[GPS_ACCURACY] || Location.Accuracy.Balanced,
+          accuracy:
+            GPS_ACCURACY_MAP[GPS_ACCURACY] || Location.Accuracy.Balanced,
         });
       };
 
@@ -483,17 +474,17 @@ export default function AttendanceScreen() {
         if (geoCode.length > 0) {
           const addr = geoCode[0];
           // Use formattedAddress for complete location string
-          readableAddress = addr.formattedAddress
+          readableAddress = addr.formattedAddress;
           setCurrentAddress(readableAddress);
         }
       } catch (geoErr) {
         console.log("Reverse Geocode Error:", geoErr);
       }
 
-      // STEP 4: Check WFH status FIRST
-      const wfhRes = await axios.get(
-        `${API_BASE}/wfh-status/${loggedInEmployeeId}`
-      );
+      // // STEP 4: Check WFH status FIRST
+      // const wfhRes = await axios.get(
+      //   `${API_BASE}/wfh-status/${loggedInEmployeeId}`,
+      // );
       const wfhApproved = wfhRes.data.success && wfhRes.data.isWFH;
       setIsWFH(wfhApproved);
 
@@ -503,7 +494,7 @@ export default function AttendanceScreen() {
       if (!wfhApproved) {
         // STEP 5: Fetch office coordinates (only for non-WFH)
         const officeRes = await axios.get(
-          `${API_BASE}/office-location/${loggedInEmployeeId}`
+          `${API_BASE}/office-location/${loggedInEmployeeId}`,
         );
         if (!officeRes.data.success) {
           Alert.alert(
@@ -671,20 +662,26 @@ export default function AttendanceScreen() {
 
   return (
     <AnimatedScreen>
-    <SafeAreaView style={styles.container}>
-      <Header onProfilePress={() => router.navigate("profile")} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-
-        {/* ========== TITLE + CLOCK ========== */}
-        <View className="mt-5">
-          <Text style={styles.title}>Attendance</Text>
-          <View style={styles.dateRow}>
-            <MaterialIcons name="calendar-month" size={18} color="#666" />
-            <Text style={styles.dateText}>{formatClockDate(currentTime)}</Text>
-            <Text style={styles.dot}>•</Text>
-            <Text style={styles.dateText}>{formatClockTime(currentTime)}</Text>
+      <SafeAreaView style={styles.container}>
+        <Header onProfilePress={() => router.navigate("profile")} />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
+          {/* ========== TITLE + CLOCK ========== */}
+          <View className="mt-5">
+            <Text style={styles.title}>Attendance</Text>
+            <View style={styles.dateRow}>
+              <MaterialIcons name="calendar-month" size={18} color="#666" />
+              <Text style={styles.dateText}>
+                {formatClockDate(currentTime)}
+              </Text>
+              <Text style={styles.dot}>•</Text>
+              <Text style={styles.dateText}>
+                {formatClockTime(currentTime)}
+              </Text>
+            </View>
           </View>
-        </View>
 
           {/* ========== STATUS CARD ========== */}
           {/* <View style={styles.statusCard}>
@@ -776,44 +773,44 @@ export default function AttendanceScreen() {
             </View>
           )}
 
-        {/* ========== CURRENT LOCATION CARD ========== */}
-        <View style={styles.verificationCard}>
-          <Text style={styles.sectionTitle}>Current Location</Text>
-          <View style={styles.officeRow}>
-            <View style={styles.officeIcon}>
-              <MaterialIcons name="business" size={24} color="#fff" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.officeTitle} numberOfLines={3}>
-                {currentAddress || "Fetching Location..."}
-              </Text>
-              <Text style={styles.officeSub}>
-                {isWFH
-                  ? "WFH Mode (Geo-fencing bypassed)"
-                  : distance !== null
-                  ? distance <= 500
-                    ? "Within office premises"
-                    : `${distance}m from office`
-                  : "Calculating distance..."}
-              </Text>
-            </View>
-          </View>
-        </View>
-                   {/* Calendar Section */}
-        <View style={styles.calendarCard}>
-          <View style={styles.calendarHeader}>
-            <Text style={styles.calendarTitle}>
-              {MONTHS[calendarMonth]} {calendarYear}
-            </Text>
-            <View style={styles.calendarNav}>
-              <TouchableOpacity onPress={goPrevMonth}>
-                <MaterialIcons name="chevron-left" size={24} color="#333" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={goNextMonth}>
-                <MaterialIcons name="chevron-right" size={24} color="#333" />
-              </TouchableOpacity>
+          {/* ========== CURRENT LOCATION CARD ========== */}
+          <View style={styles.verificationCard}>
+            <Text style={styles.sectionTitle}>Current Location</Text>
+            <View style={styles.officeRow}>
+              <View style={styles.officeIcon}>
+                <MaterialIcons name="business" size={24} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.officeTitle} numberOfLines={3}>
+                  {currentAddress || "Fetching Location..."}
+                </Text>
+                <Text style={styles.officeSub}>
+                  {isWFH
+                    ? "WFH Mode (Geo-fencing bypassed)"
+                    : distance !== null
+                      ? distance <= 500
+                        ? "Within office premises"
+                        : `${distance}m from office`
+                      : "Calculating distance..."}
+                </Text>
+              </View>
             </View>
           </View>
+          {/* Calendar Section */}
+          <View style={styles.calendarCard}>
+            <View style={styles.calendarHeader}>
+              <Text style={styles.calendarTitle}>
+                {MONTHS[calendarMonth]} {calendarYear}
+              </Text>
+              <View style={styles.calendarNav}>
+                <TouchableOpacity onPress={goPrevMonth}>
+                  <MaterialIcons name="chevron-left" size={24} color="#333" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={goNextMonth}>
+                  <MaterialIcons name="chevron-right" size={24} color="#333" />
+                </TouchableOpacity>
+              </View>
+            </View>
 
             <View style={styles.weekRow}>
               {DAYS.map((day) => (
