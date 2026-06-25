@@ -21,7 +21,7 @@ const QUICK_ACTIONS = [
   { icon: "history", label: "History", route: "/leaveHistoryScreen" },
   { icon: "calendar-month", label: "Calendar" },
   { icon: "payments", label: "Salary" },
-  { icon: "groups", label: "Team" },
+  { icon: "fact-check", label: "Approvals", route: "/approvalsScreen" },
   { icon: "work", label: "Apply WFH", route: "/applyWFHScreen" },
 ];
 
