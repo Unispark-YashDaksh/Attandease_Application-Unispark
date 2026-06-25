@@ -2,6 +2,7 @@
 CREATE DATABASE attendease_database;
 USE attendease_database;
 
+show tables;
 
 CREATE TABLE users(
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -34,7 +35,7 @@ employee_mobile_no VARCHAR(255),
 employee_email_id VARCHAR(100),
 employee_joining_date DATE,
 city VARCHAR(50),
-emergency_contact_no VARCHAR(255),
+emergency_contact_no VARCHAR(255),	
 employee_adhar_no VARCHAR(100),
 employee_bank_account_no VARCHAR(200),
 employee_bank_name VARCHAR(100),
@@ -61,7 +62,7 @@ FOREIGN KEY (reporting_manager_id)
 REFERENCES employee_master(id)
 );
 
-
+DESC employee_master;
 ALTER TABLE employee_master
 ADD COLUMN photo_url VARCHAR(255);
 SELECT * FROM employee_master;
@@ -123,13 +124,16 @@ REFERENCES office_locations(id)
 
 );
 
+ALTER TABLE attendance ADD INDEX idx_emp_date (employee_id, attendance_date);
+
+
 ALTER TABLE attendance
 ADD COLUMN is_late BOOLEAN DEFAULT false;
 
  
 
 DROP TABLE attendance;
-
+DELETE FROM attendance WHERE id= 4;
 SELECT * FROM attendance;
 SELECT * FROM departments;
 
@@ -202,7 +206,7 @@ CREATE TABLE office_locations (
 SELECT * FROM office_locations;
 INSERT INTO office_locations(branch_id, office_name, latitude, longitude, allowed_radius  ) VALUES(1,"Noida Office", 28.499718, 77.414824, 500);
 UPDATE office_locations
-SET latitude = 28.4997222
+SET allowed_radius = 1100
 WHERE id=1;
 
 
@@ -248,6 +252,18 @@ is_active BOOLEAN DEFAULT TRUE,
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+SELECT * FROM leave_types;
+
+INSERT INTO leave_types (leave_name, code, is_active) VALUES 
+('Sick Leave', 'SL', TRUE),
+('Casual Leave', 'CL', TRUE),
+('Earn Leave', 'EL', TRUE);
+
+INSERT INTO leave_defaults (leave_type_id, default_days, financial_year, is_Active) VALUES 
+(1, 12, '2026-27', TRUE),
+(2, 8, '2026-27', TRUE),
+(3, 18, '2026-27', TRUE);
+
 CREATE TABLE leave_defaults(
 id INT PRIMARY KEY AUTO_INCREMENT,
 leave_type_id INT NOT NULL,
@@ -259,6 +275,8 @@ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 FOREIGN KEY (leave_type_id)
 REFERENCES leave_types(id)
 );
+
+SELECT * FROM leave_defaults;
 
 CREATE TABLE employee_leave_balances(
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -277,6 +295,8 @@ REFERENCES employee_master(id),
 FOREIGN KEY (leave_type_id)
 REFERENCES leave_types(id)
 );
+
+SELECT * FROM employee_leave_balances;
 
 CREATE TABLE leave_applications(
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -302,6 +322,9 @@ REFERENCES leave_types(id),
 FOREIGN KEY (approved_by)
 REFERENCES employee_master(id)
 );
+
+SELECT * FROM leave_applications;
+DELETE FROM leave_applications WHERE id=2;
 
 CREATE TABLE leave_adjustments(
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -329,14 +352,21 @@ CREATE TABLE work_from_home_requests (
     end_date DATE NOT NULL,
     reason VARCHAR(255),
     status ENUM('PENDING', 'APPROVED', 'REJECTED') DEFAULT 'PENDING',
+    approved_by INT NULL,
+    approved_on TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
+	FOREIGN KEY (approved_by) REFERENCES employee_master(id),
     FOREIGN KEY (employee_id)
     REFERENCES employee_master(id)
     ON DELETE CASCADE
 );
 
+ALTER TABLE work_from_home_requests
+ADD COLUMN approved_by INT NULL,
+ADD COLUMN approved_on TIMESTAMP NULL,
+ADD FOREIGN KEY (approved_by) REFERENCES employee_master(id);
+DESC work_from_home_requests;
 SELECT * FROM work_from_home_requests;
 SELECT attendance_date,
        DATE(attendance_date),
@@ -346,9 +376,31 @@ WHERE employee_id = 11;
 
 SHOW COLUMNS FROM attendance;
 
+describe leave_defaults;
 
 SELECT attendance_date
 FROM attendance
 WHERE id = 7;
 
 DELETE FROM attendance WHERE id= 7;
+
+INSERT INTO leave_types (leave_name, code, is_active) VALUES 
+('Sick Leave', 'SL', TRUE),
+('Casual Leave', 'CL', TRUE),
+('Earn Leave', 'EL', TRUE);
+
+INSERT INTO leave_defaults (leave_type_id, default_days, financial_year, is_Active) VALUES 
+(1, 12, '2026-27', TRUE),
+(2, 8, '2026-27', TRUE),
+(3, 18, '2026-27', TRUE);
+
+SELECT la.*, elb.id AS balance_id, elb.remaining_days, 
+              lt.code, em.employee_name AS employee_name
+       FROM leave_applications la
+       JOIN leave_types lt ON lt.id = la.leave_type_id
+       JOIN employee_master em ON em.id = la.employee_id
+       LEFT JOIN employee_leave_balances elb 
+         ON elb.employee_id = la.employee_id 
+         AND elb.leave_type_id = la.leave_type_id
+         AND elb.financial_year = DATE_FORMAT(la.from_date, '%Y')
+       WHERE la.id = 1

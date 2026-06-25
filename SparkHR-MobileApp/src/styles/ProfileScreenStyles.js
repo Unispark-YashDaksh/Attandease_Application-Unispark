@@ -1,165 +1,198 @@
 import { StyleSheet } from "react-native";
 
-export default StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F4F5F7",
+    backgroundColor: "#f5f7fa",
   },
-
-  header: {
-    height: 70,
+  // ============================================================
+  // PROFILE HEADER GRADIENT AREA
+  // ============================================================
+  headerBg: {
+    paddingTop: 16,
+    paddingBottom: 36,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    alignItems: "center",
+  },
+  avatarWrap: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    borderWidth: 4,
+    borderColor: "#E3F2FD",
     backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
-    justifyContent: "space-between",
-    elevation: 2,
+    elevation: 4,
+    shadowColor: "#8e9bb3",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
-
-  logoSection: {
-    flexDirection: "row",
-    alignItems: "center",
+  avatarImage: {
+    width: 102,
+    height: 102,
+    borderRadius: 51,
   },
-
-  headerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-
-  logoText: {
-    fontSize: 22,
+  avatarInitials: {
+    fontSize: 36,
     fontWeight: "700",
-    color: "#003D9B",
+    color: "#1565C0",
   },
-
-  notification: {
-    fontSize: 22,
-  },
-
-  profileSection: {
-    alignItems: "center",
-    padding: 25,
-  },
-
-  profileImage: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-  },
-
   employeeName: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "700",
-    marginTop: 15,
+    color: "#1a1a2e",
+    marginTop: 14,
   },
-
   designation: {
+    fontSize: 14,
     color: "#666",
-    marginTop: 5,
+    marginTop: 4,
   },
-
-  actionContainer: {
+  codeBadge: {
     flexDirection: "row",
-    marginTop: 20,
+    alignItems: "center",
+    backgroundColor: "#E3F2FD",
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: 20,
+    marginTop: 10,
+    gap: 5,
   },
-
-  messageBtn: {
-    backgroundColor: "#DDE7FF",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 30,
-    marginRight: 10,
-  },
-
-  editBtn: {
-    backgroundColor: "#003D9B",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 30,
-  },
-
-  messageText: {
-    color: "#003D9B",
+  codeBadgeText: {
+    fontSize: 12,
     fontWeight: "600",
+    color: "#1565C0",
   },
-
-  editText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-
+  // ============================================================
+  // SECTION TITLES
+  // ============================================================
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
+    color: "#1a1a2e",
     marginHorizontal: 20,
+    marginTop: 22,
     marginBottom: 10,
   },
-
+  // ============================================================
+  // CARDS
+  // ============================================================
   card: {
     backgroundColor: "#fff",
     marginHorizontal: 20,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    elevation: 3,
+    borderRadius: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    marginBottom: 4,
+    elevation: 2,
+    shadowColor: "#091e42",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
   },
-
   infoRow: {
-    marginBottom: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eef0f4",
   },
-
+  infoRowLast: {
+    borderBottomWidth: 0,
+  },
+  infoIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 14,
+  },
+  infoContent: {
+    flex: 1,
+  },
   infoLabel: {
-    color: "#666",
     fontSize: 12,
+    color: "#888",
+    marginBottom: 2,
   },
-
   infoValue: {
     fontSize: 15,
     fontWeight: "600",
-    marginTop: 3,
+    color: "#1a1a2e",
   },
-
+  // ============================================================
+  // SETTINGS ROW
+  // ============================================================
   settingRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 15,
+    alignItems: "center",
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eef0f4",
   },
-
-  settingText: {
-    fontSize: 15,
+  settingRowLast: {
+    borderBottomWidth: 0,
   },
-
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    backgroundColor: "#fff",
+  settingIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 14,
+  },
+  settingContent: {
+    flex: 1,
     flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 12,
-    elevation: 10,
-  },
-
-  navItem: {
+    justifyContent: "space-between",
     alignItems: "center",
   },
-
-  navIcon: {
-    fontSize: 20,
+  settingText: {
+    fontSize: 15,
+    color: "#1a1a2e",
+    fontWeight: "500",
   },
-
-  navLabel: {
-    fontSize: 12,
-    marginTop: 4,
+  settingArrow: {
+    color: "#ccc",
   },
-
-  logout: {
-    color: "#003D9B",
+  // ============================================================
+  // LOGOUT
+  // ============================================================
+  logoutRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
   },
-  activeNav: {
-    color: "#003D9B",
-    fontWeight: "700",
+  logoutIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#FFEBEE",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 14,
+  },
+  logoutText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#C62828",
+  },
+  // ============================================================
+  // EMPTY / LOADING
+  // ============================================================
+  loader: {
+    paddingTop: 60,
+  },
+  // ============================================================
+  // LAST CARD WRAPPER (groups the settings card)
+  // ============================================================
+  lastCard: {
+    marginBottom: 20,
   },
 });
+
+export default styles;

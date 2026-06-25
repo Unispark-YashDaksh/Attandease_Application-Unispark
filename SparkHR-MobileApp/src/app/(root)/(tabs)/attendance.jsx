@@ -13,6 +13,7 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -21,6 +22,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import AnimatedScreen from "../../../components/AnimatedScreen";
 import SelfieCameraModal from "../../../components/SelfieCameraModal";
+import usePullToRefresh from "../../../hooks/usePullToRefresh";
 import {
   VITE_BACKEND_URL,
   GEO_FENCING_RADIUS,
@@ -178,6 +180,16 @@ export default function AttendanceScreen() {
       }
     }, [loggedInEmployeeId]),
   );
+
+  // ---- Pull to Refresh ----
+  const { refreshing, onRefresh } = usePullToRefresh(async () => {
+    if (!loggedInEmployeeId) return;
+    await Promise.all([
+      checkAttendanceStatus(loggedInEmployeeId),
+      fetchLocationAndOffice(loggedInEmployeeId),
+      fetchMonthlyAttendance(loggedInEmployeeId, todayMonth, todayYear),
+    ]);
+  });
 
   // ---- Attendance State ----
   const [canPunchIn, setCanPunchIn] = useState(false);
@@ -385,16 +397,6 @@ export default function AttendanceScreen() {
         setDistance(Math.round(dist));
         console.log(`Distance from office: ${Math.round(dist)} meters`);
       }
-
-      // Check WFH status
-      const wfhRes = await axios.get(`${API_BASE}/wfh-status/${employeeId}`);
-      if (wfhRes.data.success) {
-        setIsWFH(wfhRes.data.isWFH);
-        console.log(
-          "WFH Status:",
-          wfhRes.data.isWFH ? "WFH Approved" : "Office Mode",
-        );
-      }
     } catch (err) {
       console.log("Location/Office Fetch Error:", err);
     }
@@ -441,16 +443,29 @@ export default function AttendanceScreen() {
         return;
       }
 
-      // STEP 2: Fetch GPS coordinates
-      const currentLocation = await Location.getCurrentPositionAsync({
-        accuracy: GPS_ACCURACY_MAP[GPS_ACCURACY] || Location.Accuracy.Balanced,
-      });
-      const userCoords = {
+      // Use cached GPS from initializeScreen if available, otherwise fetch fresh
+      const getGps = async () => {
+        if (gpsLocation) return null;
+        return await Location.getCurrentPositionAsync({
+          accuracy:
+            GPS_ACCURACY_MAP[GPS_ACCURACY] || Location.Accuracy.Balanced,
+        });
+      };
+
+      const [currentLocation, wfhRes, officeRes] = await Promise.all([
+        getGps(),
+        axios.get(`${API_BASE}/wfh-status/${loggedInEmployeeId}`),
+        axios.get(`${API_BASE}/office-location/${loggedInEmployeeId}`),
+      ]);
+
+      const userCoords = gpsLocation || {
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
       };
-      setGpsLocation(userCoords);
-      console.log("GPS Fetched:", userCoords);
+      if (!gpsLocation) {
+        setGpsLocation(userCoords);
+        console.log("GPS Fetched:", userCoords);
+      }
 
       // STEP 3: Reverse geocode → human readable address
       let readableAddress = "";
@@ -466,10 +481,10 @@ export default function AttendanceScreen() {
         console.log("Reverse Geocode Error:", geoErr);
       }
 
-      // STEP 4: Check WFH status FIRST
-      const wfhRes = await axios.get(
-        `${API_BASE}/wfh-status/${loggedInEmployeeId}`,
-      );
+      // // STEP 4: Check WFH status FIRST
+      // const wfhRes = await axios.get(
+      //   `${API_BASE}/wfh-status/${loggedInEmployeeId}`,
+      // );
       const wfhApproved = wfhRes.data.success && wfhRes.data.isWFH;
       setIsWFH(wfhApproved);
 
@@ -492,7 +507,7 @@ export default function AttendanceScreen() {
         officeLoc = officeRes.data.officeLocation;
         setOfficeLocation(officeLoc);
 
-        // STEP 6: Calculate distance using Haversine formula
+        // Calculate distance using Haversine formula
         const officeCoords = {
           latitude: parseFloat(officeLoc.latitude),
           longitude: parseFloat(officeLoc.longitude),
@@ -501,7 +516,7 @@ export default function AttendanceScreen() {
         setDistance(Math.round(distInMeters));
         console.log(`Distance: ${Math.round(distInMeters)}m`);
 
-        // STEP 7: Geo-fencing validation
+        // Geo-fencing validation
         const allowedRadius =
           officeLoc.allowed_radius || parseInt(GEO_FENCING_RADIUS, 10) || 500;
         if (distInMeters > allowedRadius) {

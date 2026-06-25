@@ -1,158 +1,245 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, View, Text, Image, TouchableOpacity } from "react-native";
+import {
+  ScrollView,
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-import styles from "../../../styles/ProfileScreenStyles";
-import Header from "../../../components/Header";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import AnimatedScreen from "../../../components/AnimatedScreen";
+import { LinearGradient } from "expo-linear-gradient";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import axios from "axios";
-import { VITE_BACKEND_URL } from "@env";
+import { VITE_API } from "@env";
+import Header from "../../../components/Header";
+import AnimatedScreen from "../../../components/AnimatedScreen";
+import usePullToRefresh from "../../../hooks/usePullToRefresh";
+import styles from "../../../styles/ProfileScreenStyles";
+
+// Icon and color config for info rows
+const PROFILE_FIELDS = {
+  employee_code: { icon: "badge", label: "Employee ID", bg: "#E3F2FD", color: "#1565C0" },
+  employee_department: { icon: "business", label: "Department", bg: "#E8F5E9", color: "#2E7D32" },
+  employee_joining_date: { icon: "calendar-month", label: "Joining Date", bg: "#FFF3E0", color: "#E65100" },
+};
+
+const PERSONAL_FIELDS = {
+  employee_email_id: { icon: "email", label: "Email", bg: "#F3E5F5", color: "#7B1FA2" },
+  employee_mobile_no: { icon: "phone", label: "Phone", bg: "#E0F7FA", color: "#00695C" },
+  city: { icon: "location-on", label: "Location", bg: "#FFEBEE", color: "#C62828" },
+};
+
+const SETTINGS_ITEMS = [
+  { icon: "lock", label: "Privacy & Security", bg: "#E3F2FD", color: "#1565C0" },
+  { icon: "notifications", label: "Notifications", bg: "#FFF3E0", color: "#E65100" },
+  { icon: "language", label: "Language", bg: "#F3E5F5", color: "#7B1FA2" },
+];
 
 export default function Profile() {
-  const [loggedInEmployee, setLoggedInEmployee] = useState(null);
   const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const handleFetchProfile = async (employeeId) => {
+    try {
+      const response = await axios.get(`${VITE_API}/profile/${employeeId}`);
+      setProfileData(response.data.data);
+    } catch (err) {
+      console.log("Profile Fetch Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const getEmployeeId = async () => {
-      const Id = await AsyncStorage.getItem("employee_id");
-      console.log("Stored Employee Id:-->", Id);
-
-      setLoggedInEmployee(Id);
-
-      if (Id) {
-        handleFetchProfile(Id);
-      }
+      const id = await AsyncStorage.getItem("employee_id");
+      if (id) handleFetchProfile(id);
     };
     getEmployeeId();
   }, []);
 
-  const handleFetchProfile = async (employeeId) => {
-    const response = await axios.get(
-      `${VITE_BACKEND_URL}/profile/${employeeId}`,
+  const { refreshing, onRefresh } = usePullToRefresh(async () => {
+    const id = await AsyncStorage.getItem("employee_id");
+    if (id) await handleFetchProfile(id);
+  });
+
+  const handleLogout = () => {
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          await AsyncStorage.removeItem("employee_id");
+          router.replace("/auth/login");
+        },
+      },
+    ]);
+  };
+
+  if (loading) {
+    return (
+      <AnimatedScreen>
+        <SafeAreaView style={styles.container}>
+          <Header showBack onBackPress={() => router.back()} />
+          <ActivityIndicator size="large" color="#1565C0" style={styles.loader} />
+        </SafeAreaView>
+      </AnimatedScreen>
     );
+  }
 
-    setProfileData(response.data.data);
-  };
-  const handleLogout = async () => {
-    console.log("Clicked Handle Logout Function");
-    try {
-      await AsyncStorage.removeItem("employee_id");
-
-      router.replace("/auth/login");
-    } catch (err) {
-      console.log("Logout Error:---> ", err);
-    }
-  };
   return (
     <AnimatedScreen>
       <SafeAreaView style={styles.container}>
         <Header showBack onBackPress={() => router.back()} />
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Profile */}
 
-          <View style={styles.profileSection}>
-            {/* <Image
-            source={{
-              uri: "https://i.pravatar.cc/500",
-            }}
-            style={styles.profileImage}
-          /> */}
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+        >
+          {/* ─── Profile Header Gradient Area ─── */}
+          <LinearGradient
+            colors={["#E8F0FE", "#F5F7FA"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.headerBg}
+          >
+            {/* Avatar */}
+            <View style={styles.avatarWrap}>
+              {profileData?.photo_url ? (
+                <Image
+                  source={{
+                    uri: profileData.photo_url.startsWith("http")
+                      ? profileData.photo_url
+                      : `${VITE_API}${profileData.photo_url}`,
+                  }}
+                  style={styles.avatarImage}
+                />
+              ) : (
+                <View style={{ alignItems: "center" }}>
+                  <MaterialIcons name="person" size={40} color="#1565C0" />
+                  <Text style={{ fontSize: 10, color: "#1565C0", fontWeight: "600", marginTop: 2 }}>
+                    No Profile Photo
+                  </Text>
+                </View>
+              )}
+            </View>
 
+            {/* Name & Designation */}
             <Text style={styles.employeeName}>
               {profileData?.employee_name}
             </Text>
-
             <Text style={styles.designation}>
               {profileData?.employee_designation}
             </Text>
 
-            {/* <View style={styles.actionContainer}>
-            <TouchableOpacity
-              style={styles.messageBtn}
-            >
-              <Text style={styles.messageText}>
-                Message
+            {/* Employee Code Badge */}
+            <View style={styles.codeBadge}>
+              <MaterialIcons name="badge" size={14} color="#1565C0" />
+              <Text style={styles.codeBadgeText}>
+                {profileData?.employee_code}
               </Text>
-            </TouchableOpacity>
+            </View>
+          </LinearGradient>
 
-            <TouchableOpacity
-              style={styles.editBtn}
-            >
-              <Text style={styles.editText}>
-                Edit Profile
-              </Text>
-            </TouchableOpacity>
-          </View> */}
-          </View>
-
-          {/* Professional Info */}
-
+          {/* ─── Professional Info ─── */}
           <Text style={styles.sectionTitle}>Professional Info</Text>
-
           <View style={styles.card}>
-            <InfoRow label="Employee ID" value={profileData?.employee_code} />
-
-            <InfoRow
-              label="Department"
-              value={profileData?.employee_department}
-            />
-
-            <InfoRow
-              label="Joining Date"
-              value={profileData?.employee_joining_date}
-            />
+            {Object.entries(PROFILE_FIELDS).map(([key, cfg], index, arr) => {
+              const value = profileData?.[key];
+              const isLast = index === arr.length - 1;
+              return (
+                <View
+                  key={key}
+                  style={[styles.infoRow, isLast && styles.infoRowLast]}
+                >
+                  <View style={[styles.infoIcon, { backgroundColor: cfg.bg }]}>
+                    <MaterialIcons name={cfg.icon} size={18} color={cfg.color} />
+                  </View>
+                  <View style={styles.infoContent}>
+                    <Text style={styles.infoLabel}>{cfg.label}</Text>
+                    <Text style={styles.infoValue}>{value || "—"}</Text>
+                  </View>
+                </View>
+              );
+            })}
           </View>
 
-          {/* Personal Info */}
-
+          {/* ─── Personal Info ─── */}
           <Text style={styles.sectionTitle}>Personal Info</Text>
-
           <View style={styles.card}>
-            <InfoRow label="Email" value={profileData?.employee_email_id} />
-
-            <InfoRow label="Phone" value={profileData?.employee_mobile_no} />
-
-            <InfoRow label="Location" value={profileData?.city} />
+            {Object.entries(PERSONAL_FIELDS).map(([key, cfg], index, arr) => {
+              const value = profileData?.[key];
+              const isLast = index === arr.length - 1;
+              return (
+                <View
+                  key={key}
+                  style={[styles.infoRow, isLast && styles.infoRowLast]}
+                >
+                  <View style={[styles.infoIcon, { backgroundColor: cfg.bg }]}>
+                    <MaterialIcons name={cfg.icon} size={18} color={cfg.color} />
+                  </View>
+                  <View style={styles.infoContent}>
+                    <Text style={styles.infoLabel}>{cfg.label}</Text>
+                    <Text style={styles.infoValue}>{value || "—"}</Text>
+                  </View>
+                </View>
+              );
+            })}
           </View>
 
-          {/* Settings */}
-
+          {/* ─── Settings ─── */}
           <Text style={styles.sectionTitle}>Settings</Text>
+          <View style={[styles.card, styles.lastCard]}>
+            {SETTINGS_ITEMS.map((item, index, arr) => {
+              const isLast = index === arr.length - 1;
+              return (
+                <View
+                  key={item.label}
+                  style={[styles.settingRow, isLast && styles.settingRowLast]}
+                >
+                  <View
+                    style={[styles.settingIcon, { backgroundColor: item.bg }]}
+                  >
+                    <MaterialIcons
+                      name={item.icon}
+                      size={18}
+                      color={item.color}
+                    />
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={styles.settingText}>{item.label}</Text>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={20}
+                      style={styles.settingArrow}
+                    />
+                  </View>
+                </View>
+              );
+            })}
 
-          <View style={styles.card}>
-            <SettingRow title="Privacy & Security" />
-            <SettingRow title="Notifications" />
-            <SettingRow title="Language" />
-            <SettingRow
-              style={styles.logout}
-              title="Logout"
-              onPress={handleLogout}
-            />
+            {/* Logout */}
+            <TouchableOpacity onPress={handleLogout} activeOpacity={0.7}>
+              <View style={styles.logoutRow}>
+                <View style={styles.logoutIconWrap}>
+                  <MaterialIcons name="logout" size={18} color="#C62828" />
+                </View>
+                <Text style={styles.logoutText}>Logout</Text>
+              </View>
+            </TouchableOpacity>
           </View>
 
-          <View style={{ height: 100 }} />
+          <View style={{ height: 40 }} />
         </ScrollView>
       </SafeAreaView>
     </AnimatedScreen>
-  );
-}
-
-function InfoRow({ label, value }) {
-  return (
-    <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-
-      <Text style={styles.infoValue}>{value}</Text>
-    </View>
-  );
-}
-
-function SettingRow({ title, onPress }) {
-  return (
-    <TouchableOpacity style={styles.settingRow} onPress={onPress}>
-      <Text style={styles.settingText}>{title}</Text>
-    </TouchableOpacity>
   );
 }
