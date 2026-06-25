@@ -84,8 +84,13 @@ const employeePhotoStorage = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
-app.get("/health", (req, res) => {
-  const sql = `SELECT * FROM employee_master`;
+app.get("/health",(req ,res)=>{
+  const sql= `
+      SELECT * 
+      FROM employee_master 
+      ORDER BY created_at ASC 
+      LIMIT 1;
+    `;
 
   pool.query(sql, (err, result) => {
     if (err) {
