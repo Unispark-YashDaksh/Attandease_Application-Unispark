@@ -342,7 +342,12 @@ function AddNewEmployeeForm({
           {(photoPreview || addEmployeeForm.photo_url) && (
             <img
               className="employee-photo-preview"
-              src={photoPreview || `${apiUrl}${addEmployeeForm.photo_url}`}
+              src={
+                photoPreview ||
+                (addEmployeeForm.photo_url?.startsWith("http")
+                  ? addEmployeeForm.photo_url
+                  : `${apiUrl}${addEmployeeForm.photo_url}`)
+              }
               alt="Employee preview"
             />
           )}

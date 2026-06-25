@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Attandease_Application-Unispark.iml" filepath="$PROJECT_DIR$/.idea/Attandease_Application-Unispark.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/AttandanceManagementSystem.iml" filepath="$PROJECT_DIR$/.idea/AttandanceManagementSystem.iml" />
     </modules>
   </component>
 </project>

@@ -324,24 +324,15 @@ function EmployeeMaster() {
                       <td>
                         <div className="role-cell">
                           {item.photo_url ? (
-                            <>
-                              <img
-                                className="employee-photo"
-                                src={`${apiUrl}${item.photo_url}`}
-                                alt={item.employee_name}
-                                onError={(event) => {
-                                  event.currentTarget.style.display = "none";
-                                  event.currentTarget.nextElementSibling.style.display =
-                                    "inline-block";
-                                }}
-                              />
-                              <span
-                                className="material-symbols-outlined"
-                                style={{ display: "none" }}
-                              >
-                                person
-                              </span>
-                            </>
+                            <img
+                              className="employee-photo"
+                              src={
+                                item.photo_url?.startsWith("http")
+                                  ? item.photo_url
+                                  : `${apiUrl}${item.photo_url}`
+                              }
+                              alt={item.employee_name}
+                            />
                           ) : (
                             <span className="material-symbols-outlined">
                               person
