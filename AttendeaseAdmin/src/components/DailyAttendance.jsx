@@ -287,6 +287,16 @@ function DailyAttendance() {
 
             <tbody>
               {paginatedAttendance.map((item) => {
+                // Why: Format raw minutes into "X hour(s) Y minute(s)" for readability
+                const formatLateMinutes = (mins) => {
+                  const m = Number(mins);
+                  if (!m || m <= 0) return "";
+                  const hours = Math.floor(m / 60);
+                  const minutes = m % 60;
+                  if (hours > 0 && minutes > 0) return `${hours} hour ${minutes} minutes`;
+                  if (hours > 0) return `${hours} hour`;
+                  return `${minutes} minutes`;
+                };
                 const isLate = Number(item.late_minutes) > 0;
                 const statusClass = item.status?.toLowerCase() || "present";
                 const modeClass =
@@ -331,7 +341,7 @@ function DailyAttendance() {
                     <td>
                       {isLate ? (
                         <span className="late-text">
-                          {item.late_minutes} Mins Late
+                          {formatLateMinutes(item.late_minutes)} Late
                         </span>
                       ) : (
                         <span className="on-time">On Time</span>
