@@ -2,6 +2,7 @@
 CREATE DATABASE attendease_database;
 USE attendease_database;
 
+show tables;
 
 CREATE TABLE users(
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -346,9 +347,20 @@ WHERE employee_id = 11;
 
 SHOW COLUMNS FROM attendance;
 
+describe leave_defaults;
 
 SELECT attendance_date
 FROM attendance
 WHERE id = 7;
 
 DELETE FROM attendance WHERE id= 7;
+
+INSERT INTO leave_types (leave_name, code, is_active) VALUES 
+('Sick Leave', 'SL', TRUE),
+('Casual Leave', 'CL', TRUE),
+('Earn Leave', 'EL', TRUE);
+
+INSERT INTO leave_defaults (leave_type_id, default_days, financial_year, is_Active) VALUES 
+(1, 12, '2026-27', TRUE),
+(2, 8, '2026-27', TRUE),
+(3, 18, '2026-27', TRUE);
