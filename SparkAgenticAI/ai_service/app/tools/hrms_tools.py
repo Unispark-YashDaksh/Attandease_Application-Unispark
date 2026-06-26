@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 from typing import Any
 from agents import function_tool
 from app.service import hrms_client
 
 @function_tool
 async def fetch_employee_profile(employee_id: str) -> dict[str, Any]:
-  return await hrms_client.get_employee_profile(employee_id)
+  result = await hrms_client.get_employee_profile(employee_id)
+  return result.model_dump()
 
 @function_tool
 async def fetch_leave_balance(employee_id: str) ->dict[str, Any]:
-  return await hrms_client.get_leave_balance(employee_id)
+  result = await hrms_client.get_leave_balance(employee_id)
+  return result.model_dump()
 
 @function_tool
 async def create_hrms_employee_profile(
@@ -38,4 +42,5 @@ async def create_hrms_employee_profile(
     "role_id": role_id,
     "employeement_status": "ACTIVE",
   }
-  return await hrms_client.create_employee_profile(payload)
+  result = await hrms_client.create_employee_profile(payload)
+  return result.model_dump()

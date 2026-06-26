@@ -104,7 +104,7 @@ async def advance_workflow(
             req = WorkflowUpdateRequest(
                 current_step=state.current_step,
                 status=state.status,
-                steps=[s.model_dump(mode="json") for s in state.steps],
+                steps=state.steps,
                 failed_step=state.failed_step,
                 payload=state.payload,
             )

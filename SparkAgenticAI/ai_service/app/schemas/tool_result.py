@@ -8,4 +8,4 @@ class ToolResult(BaseModel):
   tool_name: str
   data: dict[str, Any] | None = None
   error: str | None = None
-  next_section: str | None = None
+  next_action: str | None = None
