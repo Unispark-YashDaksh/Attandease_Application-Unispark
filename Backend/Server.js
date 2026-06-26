@@ -1522,8 +1522,6 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
     }
 
     const shift = shiftData[0];
-
-    const shift = shiftData[0];
     /*Debug */
     console.log("========== SERVER DEBUG ==========");
     console.log("Current server time:", new Date());
