@@ -1542,6 +1542,8 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
     let late_minutes = 0;
 
     const punchInTime = new Date();
+    console.log("Punch In Time:", punchInTime);
+
     if (shift.late_after) {
       const [lateHour, lateMinute] = shift.late_after.split(":");
       const lateThreshold = new Date();
@@ -1572,6 +1574,13 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
     }
 
     const selfiePath = `/uploads/${req.file.filename}`;
+
+    console.log("Calculated Values:");
+    console.log({
+      status,
+      is_late,
+      late_minutes,
+    });
 
     const [result] = await promisePool.query(
       `INSERT INTO attendance
