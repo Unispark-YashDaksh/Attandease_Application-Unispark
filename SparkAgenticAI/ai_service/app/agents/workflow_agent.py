@@ -1,5 +1,6 @@
-from agents import Agent, Runner
+from __future__ import annotations
 
+from agents import Agent, Runner
 from app.tools.hrms_tools import (
     create_hrms_employee_profile,
     fetch_employee_profile,
