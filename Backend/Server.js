@@ -1531,7 +1531,7 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
     console.log("Offset:", new Date().getTimezoneOffset());
 
     console.log("Shift Data:", shift);
-    console.log("==================================");
+    console.log("===================================");
 
     /*
      * Why: Determine if employee is late by comparing actual punch-in time
