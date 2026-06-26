@@ -1564,8 +1564,7 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
       const [halfHour, halfMinute] = shift.half_day_after
         .split(":")
         .map(Number);
-      const halfDayThreshold = halfHour * 60 + halfMinute;
-      halfDayThreshold.setHours(parseInt(halfHour), parseInt(halfMinute), 0, 0);
+      const halfDayThresholdMinutes = halfHour * 60 + halfMinute;
 
       if (currentMinutes >= halfDayThresholdMinutes) {
         status = "HALF DAY";
