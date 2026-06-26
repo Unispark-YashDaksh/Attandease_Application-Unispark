@@ -1541,34 +1541,33 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
     let is_late = false;
     let late_minutes = 0;
 
-    const punchInTime = new Date();
-    console.log("Punch In Time:", punchInTime);
+    const nowIST = new Date(
+      new Date().toLocaleString("en-us", { timeZone: "Asia/Kolkata" }),
+    );
+    const currentMinutes = nowIST.getHours() * 60 + nowIST.getMinutes();
 
     if (shift.late_after) {
-      const [lateHour, lateMinute] = shift.late_after.split(":");
-      const lateThreshold = new Date();
-      lateThreshold.setHours(parseInt(lateHour), parseInt(lateMinute), 0, 0);
+      const [lateHour, lateMinute] = shift.late_after.split(":").map(Number);
+      const lateThresholdMinutes = lateHour * 60 + lateMinute;
 
-      if (punchInTime > lateThreshold) {
+      if (currentMinutes > lateThresholdMinutes) {
         is_late = true;
-        // Why: Store total minutes late relative to shift start (not late_after)
-        // so admin can display "X hours Y minutes" or "Z mins late".
-        if (shift.start_time) {
-          const [startHour, startMinute] = shift.start_time.split(":");
-          const shiftStart = new Date();
-          shiftStart.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
-          late_minutes = Math.round((punchInTime - shiftStart) / 60000);
-        }
+        const [startHour, startMinute] = shift.start_time
+          .split(":")
+          .map(Number);
+        late_minutes = currentMinutes - (startHour * 60 + startMinute);
       }
     }
 
     // Why: If punch-in is at or after half_day_after time, mark as HALF DAY
     if (shift.half_day_after) {
-      const [halfHour, halfMinute] = shift.half_day_after.split(":");
-      const halfDayThreshold = new Date();
+      const [halfHour, halfMinute] = shift.half_day_after
+        .split(":")
+        .map(Number);
+      const halfDayThreshold = halfHour * 60 + halfMinute;
       halfDayThreshold.setHours(parseInt(halfHour), parseInt(halfMinute), 0, 0);
 
-      if (punchInTime >= halfDayThreshold) {
+      if (currentMinutes >= halfDayThresholdMinutes) {
         status = "HALF DAY";
       }
     }
