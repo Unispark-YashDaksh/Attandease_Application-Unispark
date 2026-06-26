@@ -84,8 +84,8 @@ const employeePhotoStorage = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
-app.get("/health",(req ,res)=>{
-  const sql= `
+app.get("/health", (req, res) => {
+  const sql = `
       SELECT * 
       FROM employee_master 
       ORDER BY created_at ASC 
@@ -1522,6 +1522,17 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
     }
 
     const shift = shiftData[0];
+
+    const shift = shiftData[0];
+    /*Debug */
+    console.log("========== SERVER DEBUG ==========");
+    console.log("Current server time:", new Date());
+    console.log("Timezone:", Intl.DateTimeFormat().resolvedOptions().timeZone);
+    console.log("Offset:", new Date().getTimezoneOffset());
+
+    console.log("Shift Data:", shift);
+    console.log("==================================");
+
     /*
      * Why: Determine if employee is late by comparing actual punch-in time
      * against the shift's late_after threshold (e.g. 09:15).
