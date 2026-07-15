@@ -21,6 +21,6 @@
     "multer-storage-cloudinary": "^4.0.0",
     "mysql2": "^3.22.3",
     "nodemon": "^3.1.14",
-    "redis": "^6.0.0"
+    "redis": "^6.1.0"
   }
 }

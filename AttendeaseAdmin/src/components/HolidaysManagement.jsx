@@ -7,12 +7,8 @@ import "../css/HolidayManagement.css";
 import * as XLSX from "xlsx";
 import { useEffect } from "react";
 import axios from "axios";
-<<<<<<< HEAD
-const apiUrl= import.meta.env.VITE_BACKEND_URL;
-=======
 import LoadingSpinner from "./LoadingSpinner";
 const apiUrl= import.meta.env.VITE_API;
->>>>>>> 51d748e4522335e037c426f69d626570dd4e6455
 
 function HolidaysManagement() {
   const [loading, setLoading] = useState(false);
