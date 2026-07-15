@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../../css/designation.css";
+import LoadingSpinner from "../LoadingSpinner";
 const apiUrl= import.meta.env.VITE_API;
 
 function Roles() {
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [roleName, setRoleName] = useState("");
   const [description, setDescription] = useState("");
@@ -38,12 +40,15 @@ function Roles() {
 
     async function loadRoles() {
       try {
+        setLoading(true);
         const roles = await getRoles(statusFilter);
         if (!ignore) {
           setAllRoles(roles);
         }
       } catch (error) {
         console.error(error);
+      } finally {
+        if (!ignore) setLoading(false);
       }
     }
 
@@ -82,6 +87,7 @@ function Roles() {
     event.preventDefault();
 
     try {
+      setLoading(true);
       if (editingId) {
         await axios.put(`http://localhost:7000/updateRole/${editingId}`, {
           RoleName: roleName,
@@ -95,21 +101,26 @@ function Roles() {
       }
 
       closeModal();
-      refreshRoles();
+      await refreshRoles();
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   async function handleDeactivateRole(role) {
     const nextStatus = role.status === "Active" ? "Inactive" : "Active";
     try {
+      setLoading(true);
       await axios.put(`http://localhost:7000/updateRoleStatus/${role.id}`, {
         status: nextStatus,
       });
-      refreshRoles();
+      await refreshRoles();
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -162,6 +173,7 @@ function Roles() {
 
   return (
     <div className="designation-page">
+      {loading && <LoadingSpinner />}
       <main className="designation-main">
         <div className="designation-header">
           <div>

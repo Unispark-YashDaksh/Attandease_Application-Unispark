@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../../css/designation.css";
+import LoadingSpinner from "../LoadingSpinner";
 const apiUrl= import.meta.env.VITE_API;
 
 function Branches() {
+  const [loading, setLoading] = useState(false);
   const [branchName, setBranchName] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
@@ -41,6 +43,7 @@ function Branches() {
 
     async function loadBranches() {
       try {
+        setLoading(true);
         const branches = await getBranches(statusFilter);
 
         if (!ignore) {
@@ -48,6 +51,8 @@ function Branches() {
         }
       } catch (error) {
         console.error(error);
+      } finally {
+        if (!ignore) setLoading(false);
       }
     }
 
@@ -92,6 +97,7 @@ function Branches() {
     event.preventDefault();
 
     try {
+      setLoading(true);
       if (editingId) {
         await axios.put(`${apiUrl}/updateBranch/${editingId}`, {
           branchName,
@@ -111,9 +117,11 @@ function Branches() {
       }
 
       closeModal();
-      refreshBranches();
+      await refreshBranches();
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -121,6 +129,7 @@ function Branches() {
     const nextStatus = branch.status === "Active" ? "Inactive" : "Active";
 
     try {
+      setLoading(true);
       await axios.put(`${apiUrl}/updateBranchStatus/${branch.id}`, {
         branchName: branch.branch_name,
         address: branch.address,
@@ -129,9 +138,11 @@ function Branches() {
         pincode: branch.pincode,
         status: nextStatus,
       });
-      refreshBranches();
+      await refreshBranches();
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -192,6 +203,7 @@ function Branches() {
 
   return (
     <div className="designation-page">
+      {loading && <LoadingSpinner message={loading ? "Processing..." : ""} />}
       <main className="designation-main">
         <div className="designation-header">
           <div>

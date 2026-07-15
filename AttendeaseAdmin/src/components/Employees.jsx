@@ -3,10 +3,12 @@ import AddNewEmployeeForm from "./AddNewEmployeeForm";
 import axios from "axios";
 import "../css/designation.css";
 import "../css/Employees.css";
+import LoadingSpinner from "./LoadingSpinner";
 const apiUrl= import.meta.env.VITE_API;
 console.log(apiUrl)
 
 function EmployeeMaster() {
+  const [loading, setLoading] = useState(false);
   const [showModal, setshowModal] = useState(false);
   const [allEmployees, setAllEmployees] = useState([]);
   const [totalEmployees, setTotalEmployees] = useState(0);
@@ -38,6 +40,7 @@ function EmployeeMaster() {
   };
 
   const fetchEmployees = async () => {
+    setLoading(true);
     try {
       const employeeData = await getEmployees(currentPage, statusFilter);
 
@@ -49,6 +52,8 @@ function EmployeeMaster() {
       setAllEmployees([]);
       setTotalEmployees(0);
       setActiveEmployees(0);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,6 +61,7 @@ function EmployeeMaster() {
     let ignore = false;
 
     async function loadEmployees() {
+      setLoading(true);
       try {
         const employeeData = await getEmployees(currentPage, statusFilter);
 
@@ -72,6 +78,8 @@ function EmployeeMaster() {
           setTotalEmployees(0);
           setActiveEmployees(0);
         }
+      } finally {
+        if (!ignore) setLoading(false);
       }
     }
 
@@ -188,6 +196,8 @@ function EmployeeMaster() {
   const showingTo = Math.min(endIndex, totalEmployees);
 
   return (
+    <>
+      {loading && <LoadingSpinner message="Loading employees..." />}
     <div className="designation-page">
       <main className="designation-main">
         <div className="designation-header">
@@ -306,8 +316,10 @@ function EmployeeMaster() {
                   <th>Department</th>
                   <th>Designation</th>
                   <th>Branch</th>
-                  <th>Status</th>
                   <th>Joining Date</th>
+                  <th>Status</th>
+                  <th>Created At</th>
+                  
                   <th className="actions-heading">Actions</th>
                 </tr>
               </thead>
@@ -351,6 +363,7 @@ function EmployeeMaster() {
                       <td>{item.department_name || "-"}</td>
                       <td>{item.designation_name || "-"}</td>
                       <td>{item.branch_name || "-"}</td>
+                      <td>{formatDate(item.employee_joining_date)}</td>
                       <td>
                         <span
                           className={
@@ -362,7 +375,7 @@ function EmployeeMaster() {
                           {item.employeement_status}
                         </span>
                       </td>
-                      <td>{formatDate(item.employee_joining_date)}</td>
+                      <td>{item.created_at}</td>
                       <td>
                         <div className="action-buttons">
                           <button
@@ -643,6 +656,7 @@ function EmployeeMaster() {
         )}
       </main>
     </div>
+    </>
   );
 }
 

@@ -8,7 +8,7 @@ const { error } = require("console");
 const redisClient= require("./config/redis");
 
 const {storage}= require("./cloudConfig");
-const upload= multer({storage})
+const upload= multer({storage});
 
 const app = express();
 const { url } = require("inspector");
@@ -35,7 +35,7 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME || "attendease_database",
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 150,
   queueLimit: 0,
 });
 
@@ -45,7 +45,7 @@ const promisePool = pool.promise();
 // Multer config for selfie uploads //local storage for attendance
 const localDiskStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, "uploads/");xl
   },
   filename: (req, file, cb) => {
     const uniqueName = `selfie_${Date.now()}_${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
@@ -105,6 +105,16 @@ app.post("/addDepartmentName", (req, res) => {
     });
   });
 });
+
+
+//---------- Fetch Users API---------------------------------------------------
+
+app.get("/fetch-user",async(req, res)=>{
+  const employeeId= req.body.employee_id;
+
+  const [rows]= promisePool.query(`SELECT * FROM users`);
+  
+})
 
 app.get("/fetch-departments", (req, res) => {
   const status = req.query.status;
@@ -277,7 +287,7 @@ app.get("/fetch-designation", (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Fetching Successful",
+      message: "Fetching Successfully",
       result,
     });
   });
@@ -305,7 +315,7 @@ app.get("/designationStatus", (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Fetching Successful",
+      message: "Fetching Successfully",
       result,
     });
   });

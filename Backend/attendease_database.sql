@@ -41,6 +41,7 @@ employee_bank_name VARCHAR(100),
 employee_bank_ifsc_code VARCHAR(100),
 employee_uan_no VARCHAR(100),
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
 FOREIGN KEY (role_id)
 REFERENCES roles(id),
@@ -61,6 +62,9 @@ FOREIGN KEY (reporting_manager_id)
 REFERENCES employee_master(id)
 );
 
+
+DELETE FROM employee_master WHERE id>6;
+
 DESC employee_master;
 ALTER TABLE employee_master
 ADD COLUMN photo_url VARCHAR(255);
@@ -68,6 +72,8 @@ SELECT * FROM employee_master;
 DELETE FROM employee_master WHERE id= 2;
 ALTER  TABLE employee_master
 MODIFY employee_mobile_no varchar(255);
+
+
 
 CREATE TABLE departments (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -132,7 +138,7 @@ ADD COLUMN is_late BOOLEAN DEFAULT false;
  
 
 DROP TABLE attendance;
-DELETE FROM attendance WHERE id= 4;
+DELETE FROM attendance WHERE id= 10;
 SELECT * FROM attendance;
 SELECT * FROM departments;
 
@@ -360,7 +366,7 @@ CREATE TABLE work_from_home_requests (
     REFERENCES employee_master(id)
     ON DELETE CASCADE
 );
-
+DELETE FROM work_from_home_requests WHERE id= "1";
 ALTER TABLE work_from_home_requests
 ADD COLUMN approved_by INT NULL,
 ADD COLUMN approved_on TIMESTAMP NULL,

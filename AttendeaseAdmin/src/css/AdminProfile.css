@@ -1,0 +1,88 @@
+.profile-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 0;
+}
+
+/* ── Profile Header ── */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #e0e0e0;
+  overflow: hidden;
+}
+
+.profile-avatar img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.profile-title h1 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  color: #191b22;
+}
+
+.profile-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: #e8f0fe;
+  color: #003c90;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* ── Profile Card ── */
+.profile-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.profile-card h2 {
+  margin: 0 0 20px;
+  font-size: 16px;
+  color: #191b22;
+  font-weight: 600;
+}
+
+/* ── Form Grid ── */
+.profile-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+
+.profile-form-grid .form-group {
+  margin-bottom: 0;
+}
+
+.profile-form-grid .form-group:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+/* ── Actions ── */
+.profile-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+}

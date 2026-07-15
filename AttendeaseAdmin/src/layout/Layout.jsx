@@ -1,10 +1,14 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigation } from "react-router-dom";
 import SideBar from "../components/SideBar";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const Layout = () => {
+  const navigation = useNavigation();
+  const isNavigating = navigation.state === "loading";
+
   return (
     <div>
-      {/* this class purpose of use because need sidebar in fixed position and other div will take a full width. */}
+      {isNavigating && <LoadingSpinner message="Loading page..." />}
       <SideBar />
 
       <div style={{ marginLeft: "15rem", minHeight: "100vh" }}>

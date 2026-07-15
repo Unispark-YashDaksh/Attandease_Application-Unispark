@@ -34,7 +34,7 @@ export default function Home() {
     const getProfile= async()=>{
       try{
         const saveId= await AsyncStorage.getItem("employee_id");
-        console.log("🔍 [Check 1] Got Employee id from asysncstiirage:", saveId);
+        console.log("[Check 1] Got Employee id from asysncstiirage:", saveId);
 
         if(saveId){
           const response = await axios.get(`${VITE_API}/profile/${saveId}`);

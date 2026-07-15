@@ -10,6 +10,7 @@ import {
 } from "../services/leaveApi";
 import "../css/designation.css";
 import "../css/Employees.css";
+import LoadingSpinner from "./LoadingSpinner";
 
 const apiUrl = import.meta.env.VITE_API;
 
@@ -180,6 +181,8 @@ function LeaveManagement() {
   ];
 
   return (
+    <>
+      {loading && <LoadingSpinner message="Processing..." />}
     <div className="designation-page">
       <div className="designation-main">
         <div className="breadcrumb-container">
@@ -376,7 +379,7 @@ function LeaveManagement() {
             </div>
             <div style={{ padding: 24 }}>
               {approvals.length === 0 && !loading && <p style={{ color: "#737784", textAlign: "center", padding: 20 }}>No pending applications. Click "Load Pending" to fetch.</p>}
-              {loading && <p style={{ color: "#737784", textAlign: "center", padding: 20 }}>Loading...</p>}
+              {/* Loading handled by overlay spinner above */}
               {approvals.length > 0 && (
                 <div className="table-scroll"><table className="designation-table">
                   <thead><tr><th>Employee</th><th>Leave Type</th><th>Dates</th><th>Days</th><th>Reason</th><th>Actions</th></tr></thead>
@@ -472,6 +475,7 @@ function LeaveManagement() {
         )}
       </div>
     </div>
+    </>
   );
 }
 

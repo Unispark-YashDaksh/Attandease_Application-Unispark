@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import "../css/AttendanceDashboard.css";
 import axios from "axios";
+import LoadingSpinner from "./LoadingSpinner";
 const apiUrl= import.meta.env.VITE_API;
 
 function getTodayDate() {
@@ -12,6 +13,7 @@ function getTodayDate() {
 
 function DailyAttendance() {
   const [dailyAttendance, setDailyAttendance] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const todayDate = getTodayDate();
 
@@ -33,8 +35,15 @@ function DailyAttendance() {
   const itemsPerPage = 10;
 
   const handleFetchDailyAttendance = async () => {
-    const response = await axios.get(`${apiUrl}/fetchAttendance`);
-    setDailyAttendance(response.data.result);
+    setLoading(true);
+    try {
+      const response = await axios.get(`${apiUrl}/fetchAttendance`);
+      setDailyAttendance(response.data.result);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -132,6 +141,8 @@ function DailyAttendance() {
   ).length;
 
   return (
+    <>
+      {loading && <LoadingSpinner message="Loading attendance..." />}
     <main className="attendance-page">
       <div className="attendance-header">
         <h2>Attendance Dashboard</h2>
@@ -404,6 +415,7 @@ function DailyAttendance() {
         </div>
       </div>
     </main>
+    </>
   );
 }
 
