@@ -1752,7 +1752,7 @@ app.get("/attendance/report/:employeeId/:month/:year", async (req, res) => {
 
     // 2. Get all attendance records for this employee in the given month
     const [attRows] = await promisePool.query(
-      `SELECT attendance_date, punch_in, punch_out, status
+      `SELECT attendance_date, punch_in, punch_out, gps_location, status
        FROM attendance 
        WHERE employee_id = ? 
          AND MONTH(attendance_date) = ? 
@@ -1861,6 +1861,7 @@ app.get("/attendance/report/:employeeId/:month/:year", async (req, res) => {
         day_name: dayName,
         punch_in: attRecord ? attRecord.punch_in : null,
         punch_out: attRecord ? attRecord.punch_out : null,
+        gps_location: attRecord? attRecord.gps_location: null,
         status,
         reason,
         is_sunday: isSunday,
