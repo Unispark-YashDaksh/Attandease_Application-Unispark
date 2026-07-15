@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from "react";
 import "../css/AttendanceDashboard.css";
 import axios from "axios";
-const apiUrl= import.meta.env.VITE_BACKEND_URL;
+import LoadingSpinner from "./LoadingSpinner";
+const apiUrl= import.meta.env.VITE_API;
 
 function getTodayDate() {
   const today = new Date();
@@ -12,6 +13,7 @@ function getTodayDate() {
 
 function DailyAttendance() {
   const [dailyAttendance, setDailyAttendance] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const todayDate = getTodayDate();
 
@@ -33,8 +35,15 @@ function DailyAttendance() {
   const itemsPerPage = 10;
 
   const handleFetchDailyAttendance = async () => {
-    const response = await axios.get(`${apiUrl}/fetchAttendance`);
-    setDailyAttendance(response.data.result);
+    setLoading(true);
+    try {
+      const response = await axios.get(`${apiUrl}/fetchAttendance`);
+      setDailyAttendance(response.data.result);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -132,6 +141,8 @@ function DailyAttendance() {
   ).length;
 
   return (
+    <>
+      {loading && <LoadingSpinner message="Loading attendance..." />}
     <main className="attendance-page">
       <div className="attendance-header">
         <h2>Attendance Dashboard</h2>
@@ -287,6 +298,16 @@ function DailyAttendance() {
 
             <tbody>
               {paginatedAttendance.map((item) => {
+                // Why: Format raw minutes into "X hour(s) Y minute(s)" for readability
+                const formatLateMinutes = (mins) => {
+                  const m = Number(mins);
+                  if (!m || m <= 0) return "";
+                  const hours = Math.floor(m / 60);
+                  const minutes = m % 60;
+                  if (hours > 0 && minutes > 0) return `${hours} hour ${minutes} minutes`;
+                  if (hours > 0) return `${hours} hour`;
+                  return `${minutes} minutes`;
+                };
                 const isLate = Number(item.late_minutes) > 0;
                 const statusClass = item.status?.toLowerCase() || "present";
                 const modeClass =
@@ -331,7 +352,7 @@ function DailyAttendance() {
                     <td>
                       {isLate ? (
                         <span className="late-text">
-                          {item.late_minutes} Mins Late
+                          {formatLateMinutes(item.late_minutes)} Late
                         </span>
                       ) : (
                         <span className="on-time">On Time</span>
@@ -394,6 +415,7 @@ function DailyAttendance() {
         </div>
       </div>
     </main>
+    </>
   );
 }
 

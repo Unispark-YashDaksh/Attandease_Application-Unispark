@@ -7,6 +7,7 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -15,6 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import AnimatedScreen from "../../../components/AnimatedScreen";
 import SelfieCameraModal from "../../../components/SelfieCameraModal";
+import usePullToRefresh from "../../../hooks/usePullToRefresh";
 import {
   VITE_API,
   GEO_FENCING_RADIUS,
@@ -162,6 +164,16 @@ export default function AttendanceScreen() {
       }
     }, [loggedInEmployeeId])
   );
+
+  // ---- Pull to Refresh ----
+  const { refreshing, onRefresh } = usePullToRefresh(async () => {
+    if (!loggedInEmployeeId) return;
+    await Promise.all([
+      checkAttendanceStatus(loggedInEmployeeId),
+      fetchLocationAndOffice(loggedInEmployeeId),
+      fetchMonthlyAttendance(loggedInEmployeeId, todayMonth, todayYear),
+    ]);
+  });
 
   // ---- Attendance State ----
   const [canPunchIn, setCanPunchIn] = useState(false);
@@ -429,35 +441,43 @@ export default function AttendanceScreen() {
         return;
       }
 
-      // STEP 2: Fetch GPS coordinates
-      const currentLocation = await Location.getCurrentPositionAsync({
-        accuracy: GPS_ACCURACY_MAP[GPS_ACCURACY] || Location.Accuracy.Balanced,
-      });
-      const userCoords = {
+      // Use cached GPS from initializeScreen if available, otherwise fetch fresh
+      const getGps = async () => {
+        if (gpsLocation) return null;
+        return await Location.getCurrentPositionAsync({
+          accuracy: GPS_ACCURACY_MAP[GPS_ACCURACY] || Location.Accuracy.Balanced,
+        });
+      };
+
+      const [currentLocation, wfhRes, officeRes] = await Promise.all([
+        getGps(),
+        axios.get(`${API_BASE}/wfh-status/${loggedInEmployeeId}`),
+        axios.get(`${API_BASE}/office-location/${loggedInEmployeeId}`),
+      ]);
+
+      const userCoords = gpsLocation || {
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
       };
-      setGpsLocation(userCoords);
-      console.log("GPS Fetched:", userCoords);
-
-      // STEP 3: Reverse geocode → human readable address
-      let readableAddress = "";
-      try {
-        const geoCode = await Location.reverseGeocodeAsync(userCoords);
-        if (geoCode.length > 0) {
-          const addr = geoCode[0];
-          // Use formattedAddress for complete location string
-          readableAddress = addr.formattedAddress
-          setCurrentAddress(readableAddress);
-        }
-      } catch (geoErr) {
-        console.log("Reverse Geocode Error:", geoErr);
+      if (!gpsLocation) {
+        setGpsLocation(userCoords);
+        console.log("GPS Fetched:", userCoords);
       }
 
-      // STEP 4: Check WFH status FIRST
-      const wfhRes = await axios.get(
-        `${API_BASE}/wfh-status/${loggedInEmployeeId}`
-      );
+      // Reverse geocode → human readable address (skip if already cached)
+      let readableAddress = currentAddress;
+      if (!readableAddress) {
+        try {
+          const geoCode = await Location.reverseGeocodeAsync(userCoords);
+          if (geoCode.length > 0) {
+            readableAddress = geoCode[0].formattedAddress;
+            setCurrentAddress(readableAddress);
+          }
+        } catch (geoErr) {
+          console.log("Reverse Geocode Error:", geoErr);
+        }
+      }
+
       const wfhApproved = wfhRes.data.success && wfhRes.data.isWFH;
       setIsWFH(wfhApproved);
 
@@ -465,10 +485,6 @@ export default function AttendanceScreen() {
       let distInMeters = null;
 
       if (!wfhApproved) {
-        // STEP 5: Fetch office coordinates (only for non-WFH)
-        const officeRes = await axios.get(
-          `${API_BASE}/office-location/${loggedInEmployeeId}`
-        );
         if (!officeRes.data.success) {
           Alert.alert(
             "Error",
@@ -480,7 +496,7 @@ export default function AttendanceScreen() {
         officeLoc = officeRes.data.officeLocation;
         setOfficeLocation(officeLoc);
 
-        // STEP 6: Calculate distance using Haversine formula
+        // Calculate distance using Haversine formula
         const officeCoords = {
           latitude: parseFloat(officeLoc.latitude),
           longitude: parseFloat(officeLoc.longitude),
@@ -489,7 +505,7 @@ export default function AttendanceScreen() {
         setDistance(Math.round(distInMeters));
         console.log(`Distance: ${Math.round(distInMeters)}m`);
 
-        // STEP 7: Geo-fencing validation
+        // Geo-fencing validation
         const allowedRadius =
           officeLoc.allowed_radius || parseInt(GEO_FENCING_RADIUS, 10) || 500;
         if (distInMeters > allowedRadius) {
@@ -645,11 +661,14 @@ export default function AttendanceScreen() {
     <AnimatedScreen>
     <SafeAreaView style={styles.container}>
       <Header onProfilePress={() => router.navigate("profile")} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16 }}
+      >
 
         {/* ========== TITLE + CLOCK ========== */}
         <View className="mt-5">
-          <Text style={styles.title}>Attendance</Text>
           <View style={styles.dateRow}>
             <MaterialIcons name="calendar-month" size={18} color="#666" />
             <Text style={styles.dateText}>{formatClockDate(currentTime)}</Text>
@@ -778,12 +797,13 @@ export default function AttendanceScreen() {
               {MONTHS[calendarMonth]} {calendarYear}
             </Text>
             <View style={styles.calendarNav}>
-              <TouchableOpacity onPress={goPrevMonth}>
+              {/* ** Hide Calender Shift Button */}
+              {/* <TouchableOpacity onPress={goPrevMonth}>
                 <MaterialIcons name="chevron-left" size={24} color="#333" />
               </TouchableOpacity>
               <TouchableOpacity onPress={goNextMonth}>
                 <MaterialIcons name="chevron-right" size={24} color="#333" />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
 

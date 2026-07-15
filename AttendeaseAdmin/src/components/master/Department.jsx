@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../../css/designation.css";
-const apiUrl = import.meta.env.VITE_BACKEND_URL
+import LoadingSpinner from "../LoadingSpinner";
+const apiUrl = import.meta.env.VITE_API
 
 function Department() {
+  const [loading, setLoading] = useState(false);
   const [departmentName, setDepartmentName] = useState("");
   const [departments, setDepartments] = useState([]);
   const [statusFilter, setStatusFilter] = useState("Active");
@@ -37,6 +39,7 @@ function Department() {
 
     async function loadDepartments() {
       try {
+        setLoading(true);
         const departmentData = await getDepartments(statusFilter);
 
         if (!ignore) {
@@ -48,6 +51,8 @@ function Department() {
         if (!ignore) {
           setDepartments([]);
         }
+      } finally {
+        if (!ignore) setLoading(false);
       }
     }
 
@@ -80,6 +85,7 @@ function Department() {
     event.preventDefault();
 
     try {
+      setLoading(true);
       if (editingId) {
         await axios.put(`${apiUrl}/updateDepartment/${editingId}`, {
           departmentName,
@@ -94,6 +100,8 @@ function Department() {
       closeModal();
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,15 +109,18 @@ function Department() {
     const nextStatus = department.status === "Active" ? "Inactive" : "Active";
 
     try {
+      setLoading(true);
       await axios.put(
         `${apiUrl}/updateDepartmentStatus/${department.id}`,
         {
           status: nextStatus,
         },
       );
-      fetchDepartments();
+      await fetchDepartments();
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -158,6 +169,7 @@ function Department() {
 
   return (
     <div className="designation-page">
+      {loading && <LoadingSpinner />}
       <main className="designation-main">
         <div className="designation-header">
           <div>

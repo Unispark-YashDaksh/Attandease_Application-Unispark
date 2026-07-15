@@ -1,9 +1,11 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import "../../css/designation.css";
+import LoadingSpinner from "../LoadingSpinner";
 const apiUrl= import.meta.env.VITE_API;
 
 function Shifts() {
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [shiftName, setShiftName] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -178,6 +180,8 @@ function Shifts() {
   const showingTo = Math.min(endIndex, filteredShifts.length);
 
   return (
+    <>
+      {loading && <LoadingSpinner message="Processing..." />}
     <div className="designation-page">
       <main className="designation-main">
         <div className="designation-header">
@@ -485,6 +489,7 @@ function Shifts() {
         )}
       </main>
     </div>
+    </>
   );
 }
 

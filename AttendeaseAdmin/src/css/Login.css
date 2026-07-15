@@ -1,0 +1,221 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+  padding: 20px;
+}
+
+.login-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.login-logo {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.login-title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #191b22;
+}
+
+.login-subtitle {
+  margin: 0 0 28px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.login-form {
+  text-align: left;
+}
+
+.login-field {
+  margin-bottom: 18px;
+}
+
+.login-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.login-field input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #191b22;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.login-field input:focus {
+  border-color: #003c90;
+  box-shadow: 0 0 0 3px rgba(0, 60, 144, 0.1);
+}
+
+.login-field input::placeholder {
+  color: #9ca3af;
+}
+
+.login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.login-remember {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.login-remember input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #003c90;
+}
+
+.login-forgot {
+  font-size: 13px;
+  color: #003c90;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-forgot:hover {
+  text-decoration: underline;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #003c90;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.login-btn:hover {
+  background: #002d6e;
+}
+
+.login-btn:active {
+  background: #001f4d;
+}
+
+.login-footer {
+  margin: 24px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.login-footer a {
+  color: #003c90;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-footer a:hover {
+  text-decoration: underline;
+}
+
+@media (prefers-color-scheme: dark) {
+  .login-page {
+    background: #111318;
+  }
+
+  .login-card {
+    background: #1f2028;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  .login-title {
+    color: #f3f4f6;
+  }
+
+  .login-subtitle {
+    color: #9ca3af;
+  }
+
+  .login-field label {
+    color: #d1d5db;
+  }
+
+  .login-field input {
+    background: #2a2b35;
+    border-color: #3a3b45;
+    color: #f3f4f6;
+  }
+
+  .login-field input:focus {
+    border-color: #c084fc;
+    box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.15);
+  }
+
+  .login-field input::placeholder {
+    color: #6b7280;
+  }
+
+  .login-remember {
+    color: #9ca3af;
+  }
+
+  .login-remember input[type="checkbox"] {
+    accent-color: #c084fc;
+  }
+
+  .login-forgot {
+    color: #c084fc;
+  }
+
+  .login-btn {
+    background: #c084fc;
+    color: #111318;
+  }
+
+  .login-btn:hover {
+    background: #a855f7;
+  }
+
+  .login-footer {
+    color: #9ca3af;
+  }
+
+  .login-footer a {
+    color: #c084fc;
+  }
+}

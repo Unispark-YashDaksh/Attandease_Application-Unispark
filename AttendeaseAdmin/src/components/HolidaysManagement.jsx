@@ -7,9 +7,15 @@ import "../css/HolidayManagement.css";
 import * as XLSX from "xlsx";
 import { useEffect } from "react";
 import axios from "axios";
+<<<<<<< HEAD
 const apiUrl= import.meta.env.VITE_BACKEND_URL;
+=======
+import LoadingSpinner from "./LoadingSpinner";
+const apiUrl= import.meta.env.VITE_API;
+>>>>>>> 51d748e4522335e037c426f69d626570dd4e6455
 
 function HolidaysManagement() {
+  const [loading, setLoading] = useState(false);
   const [date, setDate] = useState(new Date()); // Selected Date stored
   const [holidays, setHolidays] = useState({}); // All Object stored in array
   const [holidayList, setHolidayList] = useState([]); //
@@ -128,7 +134,9 @@ function HolidaysManagement() {
     return item.date >= today;
   });
   return (
-    <div className="main-container">
+    <>
+      {loading && <LoadingSpinner message="Processing holidays..." />}
+      <div className="main-container">
       <h1 className="title">Upload Holidays</h1>
 
       {/* Upload Section */}
@@ -175,6 +183,7 @@ function HolidaysManagement() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

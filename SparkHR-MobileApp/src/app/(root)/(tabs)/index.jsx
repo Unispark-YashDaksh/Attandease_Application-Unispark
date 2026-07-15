@@ -1,38 +1,71 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import styles from "../../../styles/homeStyles";
 import Header from "../../../components/Header";
 import AnimatedScreen from "../../../components/AnimatedScreen";
-import useTodayLogs from "../../../hooks/useTodayLogs"; // Today logs fuctionality main file
+import useTodayLogs from "../../../hooks/useTodayLogs";
+import usePullToRefresh from "../../../hooks/usePullToRefresh";
 import { useState } from "react";
+import { useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import {
+  VITE_API,
+} from "@env";
 
 const QUICK_ACTIONS = [
   { icon: "event-busy", label: "Leaves", route: "/applyleaveScreen"},
   { icon: "history", label: "History", route: "/leaveHistoryScreen" },
   { icon: "calendar-month", label: "Calendar" },
   { icon: "payments", label: "Salary" },
-  { icon: "groups", label: "Team" },
-  { icon: "work", label: "Apply WFH" },
+  { icon: "fact-check", label: "Approvals", route: "/approvalsScreen" },
+  { icon: "work", label: "Apply WFH", route: "/applyWFHScreen" },
 ];
 
 export default function Home() {
-  const { todayRecords, loading } = useTodayLogs();
+  const [employeeName, setEmployeeName]= useState("User");
+  const { todayRecords, loading, refetch } = useTodayLogs();
+  const { refreshing, onRefresh } = usePullToRefresh(refetch);
+
+  useEffect(()=>{
+    const getProfile= async()=>{
+      try{
+        const saveId= await AsyncStorage.getItem("employee_id");
+        console.log("[Check 1] Got Employee id from asysncstiirage:", saveId);
+
+        if(saveId){
+          const response = await axios.get(`${VITE_API}/profile/${saveId}`);
+          console.log("Hitting API")
+
+          if(response.data.success){
+            console.log("[Check 4] Target Name:", response.data.data?.employee_name);
+            setEmployeeName(response.data.data?.employee_name)
+          }
+        }
+      }catch(error){
+        console.error("Home Profile Fetch Error", error)
+      }
+    }
+    getProfile();
+  },[])
+
   return (
     <AnimatedScreen>
     <SafeAreaView style={styles.container} edges={["top"]}>
       <Header onProfilePress={() => router.navigate("profile")} />
 
       <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.content}>
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.greeting}>Good Morning, Yash</Text>
+            <Text style={styles.greeting}>Hi,{employeeName}</Text>
             <View style={styles.dateTimeRow}>
             </View>
           </View>

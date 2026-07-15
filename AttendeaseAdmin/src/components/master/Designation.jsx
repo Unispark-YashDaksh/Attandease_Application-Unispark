@@ -1,8 +1,7 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Loader2 } from "lucide-react";
 import "../../css/designation.css";
+import LoadingSpinner from "../LoadingSpinner";
 const apiUrl= import.meta.env.VITE_API;
 
 // to be moved to .env file in for better security and configurability
@@ -38,6 +37,8 @@ function Designation() {
   const itemsPerPage = 10; // defined a constant for the number of items to display per page in the pagination
 
   const [editingId, setEditingId] = useState(null); // created a state variable to hold the ID of the designation being edited (null when adding a new designation)
+
+  const [loading, setLoading] = useState(false);
 
   // created a state variable to indicate whether the designations are currently being loaded from the server
   const [departmentsLoading, setDepartmentsLoading] = useState(false);
@@ -121,17 +122,22 @@ function Designation() {
 
   // to fetch the list of designations from the server when the component mounts, and to handle loading and error states during the fetch operation
   async function getDesignations(filter) {
-    const response = await axios.get(`${Fetch_API_URL}?status=${filter}`);
+    try {
+      const response = await axios.get(`${Fetch_API_URL}?status=${filter}`);
 
-    const data = Array.isArray(response.data)
-      ? response.data
-      : response.data.designations ||
-        response.data.data ||
-        response.data.result ||
-        [];
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data.designations ||
+          response.data.data ||
+          response.data.result ||
+          [];
 
-    return data;
-  }
+      return data;
+    } catch (error) {
+      console.error("Error fetching designations:", error);
+      return [];
+    }
+  };
 
   async function refreshDesignations() {
     try {
@@ -233,13 +239,14 @@ function Designation() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setLoading(true);
       if (editingId) {
         await axios.put(`${PUT_API_URL}/${editingId}`, formData); // making a PUT request to uspdate an existing designation
       } else {
         await axios.post(Post_API_URL, formData);
       }
 
-      refreshDesignations(); // Refresh the list of designations after sucessfull adding/editing
+      await refreshDesignations(); // Refresh the list of designations after sucessfull adding/editing
       setShowModal(false); // Close the modal after successful submission
       setError(null); // Clear any previous error messages on successful submission
     } catch (error) {
@@ -247,29 +254,35 @@ function Designation() {
       setError(
         "An error occurred while submitting the form. Please try again.",
       );
+    } finally {
+      setLoading(false);
     }
   };
 
-  // to handle the deactivation of a designation.
-  const handleDeactivate = async (designation) => {
+  async function handleDeactivate(designation) {
     const nextStatus = designation.status === "Active" ? "Inactive" : "Active";
 
     try {
+      setLoading(true);
       await axios.put(`${PUT_API_URL}/${designation.id}`, {
         designation_name: designation.designation_name,
         department_id: designation.department_id,
         status: nextStatus,
       });
 
-      refreshDesignations();
+      await refreshDesignations();
       setError(null);
     } catch (error) {
-      console.error("Error deleting designation:", error);
+      console.error("Error deactivating designation:", error);
       setError(
         "An error occurred while deactivating the designation. Please try again.",
       );
+    } finally {
+      setLoading(false);
     }
   };
+
+  // to format the created date of a designation in a more readable format for display in the table and summary cards.
 
   // to format the created date of a designation in a more readable format for display in the table and summary cards.
   const formatDate = (date) => {
@@ -396,17 +409,7 @@ function Designation() {
   };
 
   if (departmentsLoading || designationsLoading) {
-    return (
-      <div className="loader-container">
-        <Loader2
-          className="animate-spin"
-          color="#003c90"
-          height={50}
-          width={50}
-        />
-        <p>Loading...</p>
-      </div>
-    );
+    return <LoadingSpinner message="Loading designations..." />;
   }
 
   return (

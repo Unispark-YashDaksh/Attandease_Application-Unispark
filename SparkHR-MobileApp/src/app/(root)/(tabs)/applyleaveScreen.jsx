@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from "expo-router";
@@ -18,6 +19,7 @@ import fetchHolidays from "../../../api/holidayApi"
 import Header from "../../../components/Header";
 import AnimatedScreen from "../../../components/AnimatedScreen";
 import { fetchLeaveBalance, applyLeave } from "../../../services/leaveApi";
+import usePullToRefresh from "../../../hooks/usePullToRefresh";
 
 import styles from "../../../styles/applyLeaveStyles";
 
@@ -62,6 +64,13 @@ export default function ApplyLeaveScreen() {
       }
     });
   }, []);
+
+  // ---- Pull to Refresh ----
+  const { refreshing, onRefresh } = usePullToRefresh(async () => {
+    await loadHolidays();
+    const id = await AsyncStorage.getItem("employee_id");
+    if (id) loadBalances(id);
+  });
 
   const getLeaveTypeId = (typeName) => {
     const code = LEAVE_TYPE_MAP[typeName];
@@ -132,7 +141,11 @@ export default function ApplyLeaveScreen() {
     <AnimatedScreen>
     <SafeAreaView style={styles.container}>
       <Header onProfilePress={() => router.navigate("profile")} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16 }}
+      >
 
         {/* Leave Balance Cards */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>

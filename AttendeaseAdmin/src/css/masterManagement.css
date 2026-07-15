@@ -1,34 +1,165 @@
+.master-management {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .master-management .navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: none;
+  transition: all 200ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  margin-bottom: 16px;
+}
+
+
+
+
+.master-management .navbar-tabs {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  padding: 0;
+  width: 100%;
+  justify-content: center;
 }
 
 .master-management .master-tab {
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
-  margin-right: 6px;
-  padding: 8px 14px;
-  transition:
-    background-color 160ms ease,
-    color 160ms ease,
-    box-shadow 160ms ease,
-    transform 160ms ease;
+  margin-right: 2px;
+  padding: 8px 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 13px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+
+.master-management .master-tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.master-management .master-tab:hover::before {
+  left: 100%;
 }
 
 .master-management .master-tab:hover {
-  background-color: #e8f1ff;
-  color: #0d6efd;
+  color: #4f46e5;
   transform: translateY(-1px);
 }
 
 .master-management .master-tab.active {
-  background-color: #0d6efd;
-  box-shadow: 0 6px 14px rgba(13, 110, 253, 0.24);
+  background: #3b82f6;
+  border-color: #2563eb;
   color: #ffffff;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+  font-weight: 600;
+  transform: translateY(-1px);
 }
 
-.master-management .master-tab.active:hover {
-  background-color: #0b5ed7;
+.master-management .navbar-logo {
+  display: none;
+}
+
+.master-management .master-management-title {
+  padding: 4px 0;
+  color: #111827;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+
+.master-management .master-subtitle {
+  color: #6b7280;
+  font-size: 13px;
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+@media (prefers-color-scheme: dark) {
+  .master-management .master-subtitle {
+    color: #9ca3af;
+  }
+}
+
+.master-management .navbar-brand-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.master-management .navbar-brand-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #ffffff;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.master-management .navbar-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.master-management .navbar-action-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.master-management .navbar-action-btn:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+@media (prefers-color-scheme: dark) {
+  .master-management .navbar-action-btn {
+    border-color: #374151;
+    color: #9ca3af;
+  }
+  
+  .master-management .navbar-action-btn:hover {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #f3f4f6;
+  }
 }

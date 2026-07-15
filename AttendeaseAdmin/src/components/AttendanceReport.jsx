@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../css/AttendanceReport.css";
+import LoadingSpinner from "./LoadingSpinner";
 
 const apiUrl = import.meta.env.VITE_API;
 const ITEMS_PER_PAGE = 15;
@@ -136,7 +137,7 @@ export default function AttendanceReport() {
         </button>
       </div>
 
-      {loading && <p className="report-loading">Loading report...</p>}
+      {loading && <LoadingSpinner fullPage={false} message="Loading report..." />}
       {error && <p className="report-error">{error}</p>}
 
       {report && (

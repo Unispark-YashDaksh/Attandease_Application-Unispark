@@ -7,6 +7,7 @@ import {
   MdHolidayVillage,
   MdAssessment,
   MdStorage,
+  MdPerson,
   MdSettings,
   MdLogout,
 } from "react-icons/md";
@@ -17,8 +18,13 @@ function SideBar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h2>Spark HRMS Admin</h2>
-        <p>Enterprise Suite</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <img src="/screen.svg" className="animate-spin" alt="Logo" style={{ width: 40, height: 40 }} />
+          <h4 style={{ margin: 0 }}>Spark HRMS Admin
+            <p>Enterprise Suite</p>
+          </h4>
+        </div>
+        
       </div>
 
       <nav className="sidebar-menu">
@@ -53,6 +59,11 @@ function SideBar() {
         </NavLink>
 
         <div className="sidebar-bottom">
+          <NavLink to="/profile" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+            <MdPerson size={22} />
+            <span>Profile</span>
+          </NavLink>
+
           <NavLink to="/settings" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
             <MdSettings size={22} />
             <span>Settings</span>

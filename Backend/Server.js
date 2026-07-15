@@ -1,13 +1,18 @@
+require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const { error } = require("console");
-require("dotenv").config();
+const redisClient= require("./config/redis");
+
+const {storage}= require("./cloudConfig");
+const upload= multer({storage});
 
 const app = express();
-const port = process.env.PORT || 7000;
+const { url } = require("inspector");
+const port = 7000;
 
 app.use(
   cors({
@@ -32,7 +37,7 @@ const pool = mysql.createPool({
   database: process.env.DATABASE || process.env.DB_NAME || "attendease_database",
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 150,
   queueLimit: 0,
 });
 
@@ -49,19 +54,20 @@ pool.on("connection", (connection) => {
 // Convert pool to promise-based (was missing - caused async/await crash)
 const promisePool = pool.promise();
 
-// Multer config for selfie uploads
-const storage = multer.diskStorage({
+// Multer config for selfie uploads //local storage for attendance
+const localDiskStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, "uploads/");xl
   },
   filename: (req, file, cb) => {
     const uniqueName = `selfie_${Date.now()}_${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
     cb(null, uniqueName);
   },
 });
+console.log(process.env.VITE_API)
 
-const upload = multer({
-  storage,
+const SelfieUpload = multer({
+  storage: localDiskStorage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif|webp/;
@@ -71,48 +77,26 @@ const upload = multer({
     cb(new Error("Only image files allowed"));
   },
 });
-
-const employeePhotoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/employee_photos/");
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `employee_${Date.now()}_${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  },
+// upload image particular image
+const employeePhotoStorage = multer({
+  storage: storage,
+  limits: {fileSize: 5*1024*1024}, // 5MB limit
 });
 
 app.get("/health",(req ,res)=>{
-  const sql= `SELECT * FROM employee_master`;
-
-  pool.query(sql, (err, result) => {
-    if(err){
-      return res.send({
-        success: false,
-        message: "DB Connection Failed",
-      })
-    }
-    res.json({
-      success: true,
-      result:  result
-    })
-  })
+  console.log("Health Checked...Backend Run Properly");
 })
 
 const employeePhotoUpload = multer({
-  storage: employeePhotoStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|gif|webp/;
-    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-    const mime = allowed.test(file.mimetype);
-    if (ext && mime) {
-      return cb(null, true);
-    }
-    cb(new Error("Only image files allowed"));
-  },
+  storage: storage,
+  limits: {fileSize: 5 * 1024*1024}
 });
 
+
+module.exports={
+  SelfieUpload,
+  employeePhotoUpload
+}
 app.post("/addDepartmentName", (req, res) => {
   console.log(req.body);
   const departmentName = req.body.departmentName;
@@ -133,6 +117,16 @@ app.post("/addDepartmentName", (req, res) => {
     });
   });
 });
+
+
+//---------- Fetch Users API---------------------------------------------------
+
+app.get("/fetch-user",async(req, res)=>{
+  const employeeId= req.body.employee_id;
+
+  const [rows]= promisePool.query(`SELECT * FROM users`);
+  
+})
 
 app.get("/fetch-departments", (req, res) => {
   const status = req.query.status;
@@ -305,7 +299,7 @@ app.get("/fetch-designation", (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Fetching Successful",
+      message: "Fetching Successfully",
       result,
     });
   });
@@ -333,7 +327,7 @@ app.get("/designationStatus", (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Fetching Successful",
+      message: "Fetching Successfully",
       result,
     });
   });
@@ -742,11 +736,12 @@ app.put("/updateRoleStatus/:id", (req, res) => {
 
 app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
   console.log(req.body);
+  console.log(req.file);//this will show cloudinaryuploads details
 
   const employeeForm = req.body;
-  const photoUrl = req.file
-    ? `/uploads/employee_photos/${req.file.filename}`
-    : null;
+  const cloudinaryUrl = req.file ? req.file.path: null;
+
+
 
   const sql = `
     INSERT INTO employee_master(
@@ -807,7 +802,7 @@ app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
       employeeForm.employee_bank_name,
       employeeForm.employee_bank_ifsc_code,
       employeeForm.employee_uan_no,
-      photoUrl,
+      cloudinaryUrl,
     ],
 
     (err, result) => {
@@ -825,6 +820,7 @@ app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
       res.status(200).json({
         success: true,
         message: "Data Added Successfully",
+        url: cloudinaryUrl
       });
     },
   );
@@ -856,7 +852,7 @@ app.put(
     const employeeIFSCCode = req.body.employee_bank_ifsc_code;
     const employeeUANNo = req.body.employee_uan_no;
     const photoUrl = req.file
-      ? `/uploads/employee_photos/${req.file.filename}`
+      ? req.file.path
       : req.body.photo_url || null;
 
     const sql = `
@@ -1139,10 +1135,11 @@ app.post("/attendance", async (req, res) => {
         .json({ success: false, message: "Employee ID Missing" });
     }
 
-    // BUG FIXED: column name is `attendance` not `attendance_date`
+    
+
     // Also use promisePool.query for async/await
     const [rows] = await promisePool.query(
-      `SELECT * FROM attendance WHERE employee_id = ? AND DATE(attendance_date) = CURDATE() ORDER BY id DESC LIMIT 1`,
+      `SELECT * FROM attendance WHERE employee_id = ? AND attendance_date >= CURDATE() AND attendance_date < CURDATE() + INTERVAL 1 DAY ORDER BY id DESC LIMIT 1`,
       [employeeId],
     );
 
@@ -1276,6 +1273,200 @@ app.get("/wfh-status/:employeeId", async (req, res) => {
   }
 });
 
+// ============================================
+// POST /wfh-request — Submit a Work From Home request
+// Why: Employee applies for WFH from the mobile app.
+// Body: { employee_id, start_date, end_date, reason }
+// Flow: Validates fields → inserts into work_from_home_requests table → returns success
+// ============================================
+app.post("/wfh-request", async (req, res) => {
+  try {
+    const { employee_id, start_date, end_date, reason } = req.body;
+
+    // ---- Validation ----
+    if (!employee_id || !start_date || !end_date) {
+      return res.status(400).json({
+        success: false,
+        error: "employee_id, start_date, and end_date are required",
+      });
+    }
+
+    // Insert the WFH request with status = 'PENDING' by default
+    const [result] = await promisePool.query(
+      `INSERT INTO work_from_home_requests (employee_id, start_date, end_date, reason)
+       VALUES (?, ?, ?, ?)`,
+      [employee_id, start_date, end_date, reason || null],
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "WFH request submitted successfully",
+      requestId: result.insertId,
+    });
+  } catch (err) {
+    console.error("WFH Request Error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ============================================
+// GET /pending-approvals/:managerId
+// Why: Returns all pending WFH + Leave requests from employees
+//      whose reporting_manager_id matches the given manager.
+// Flow: Manager opens Approvals screen → app calls this endpoint →
+//       backend queries both work_from_home_requests and
+//       leave_applications where status = 'PENDING' and the
+//       employee's reporting_manager = this manager.
+// Returns: Array of requests with a "type" field ('WFH' or 'LEAVE')
+// ============================================
+app.get("/pending-approvals/:managerId", async (req, res) => {
+  try {
+    const { managerId } = req.params;
+
+    // Fetch pending WFH requests from subordinates
+    const [wfhRequests] = await promisePool.query(
+      `SELECT wfr.id, wfr.employee_id, wfr.start_date, wfr.end_date,
+              wfr.reason, wfr.status, wfr.created_at,
+              em.employee_name, em.employee_code
+       FROM work_from_home_requests wfr
+       JOIN employee_master em ON em.id = wfr.employee_id
+       WHERE em.reporting_manager_id = ?
+         AND wfr.status = 'PENDING'
+       ORDER BY wfr.created_at DESC`,
+      [managerId],
+    );
+
+    // Fetch pending Leave requests from subordinates
+    const [leaveRequests] = await promisePool.query(
+      `SELECT la.id, la.employee_id, la.from_date AS start_date,
+              la.to_date AS end_date, la.reason, la.status, la.created_at,
+              em.employee_name, em.employee_code,
+              lt.leave_name AS leave_type_name
+       FROM leave_applications la
+       JOIN employee_master em ON em.id = la.employee_id
+       JOIN leave_types lt ON lt.id = la.leave_type_id
+       WHERE em.reporting_manager_id = ?
+         AND la.status = 'PENDING'
+       ORDER BY la.created_at DESC`,
+      [managerId],
+    );
+
+    // Tag each request with its type so frontend can distinguish them
+    const taggedWfh = wfhRequests.map((r) => ({ ...r, requestType: "WFH" }));
+    const taggedLeave = leaveRequests.map((r) => ({
+      ...r,
+      requestType: "LEAVE",
+    }));
+
+    // Combine both arrays into a single response
+    const allPending = [...taggedWfh, ...taggedLeave];
+
+    // Sort by created_at descending (newest first)
+    allPending.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    return res.json({
+      success: true,
+      count: allPending.length,
+      requests: allPending,
+    });
+  } catch (err) {
+    console.error("Pending Approvals Error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ============================================
+// PUT /wfh-request/:id/approve
+// Why: Manager approves or rejects a WFH request.
+// Body: { status: "APPROVED" | "REJECTED", approved_by: <manager_employee_id> }
+// Flow: Frontend sends status + manager's ID → backend verifies
+//       the manager IS the reporting manager of the requesting employee →
+//       updates the request status, approved_by, and approved_on.
+// ============================================
+app.put("/wfh-request/:id/approve", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, approved_by } = req.body; // "APPROVED" or "REJECTED"
+
+    // ---- Validate status ----
+    if (!["APPROVED", "REJECTED"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: "Status must be APPROVED or REJECTED",
+      });
+    }
+
+    // ---- Validate approved_by ----
+    if (!approved_by) {
+      return res.status(400).json({
+        success: false,
+        error: "approved_by (manager employee ID) is required",
+      });
+    }
+
+    // ---- Fetch the WFH request along with the employee's reporting manager ----
+    const [requests] = await promisePool.query(
+      `SELECT wfr.*, em.reporting_manager_id, em.employee_name AS employee_name
+       FROM work_from_home_requests wfr
+       JOIN employee_master em ON em.id = wfr.employee_id
+       WHERE wfr.id = ?`,
+      [id],
+    );
+
+    if (requests.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "WFH request not found",
+      });
+    }
+
+    const request = requests[0];
+
+    // ---- Check if already processed ----
+    if (request.status !== "PENDING") {
+      return res.status(400).json({
+        success: false,
+        error: `This request is already ${request.status.toLowerCase()}`,
+      });
+    }
+
+    // ---- Hierarchy check: only the reporting manager can approve ----
+    if (request.reporting_manager_id !== parseInt(approved_by)) {
+      return res.status(403).json({
+        success: false,
+        error: "You are not authorized to approve this request",
+      });
+    }
+
+    // ---- Update the request ----
+    await promisePool.query(
+      `UPDATE work_from_home_requests
+       SET status = ?, approved_by = ?, approved_on = NOW()
+       WHERE id = ?`,
+      [status, approved_by, id],
+    );
+
+    // ---- Fetch the updated record to return ----
+    const [updated] = await promisePool.query(
+      `SELECT wfr.*, em.employee_name, ap.employee_name AS approved_by_name
+       FROM work_from_home_requests wfr
+       JOIN employee_master em ON em.id = wfr.employee_id
+       LEFT JOIN employee_master ap ON ap.id = wfr.approved_by
+       WHERE wfr.id = ?`,
+      [id],
+    );
+
+    return res.json({
+      success: true,
+      message: `WFH request ${status.toLowerCase()} successfully`,
+      data: updated[0],
+    });
+  } catch (err) {
+    console.error("WFH Approve Error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Why: The main Punch In API.
 // Flow: Frontend validates everything (permissions, GPS, distance, selfie),
 // then sends all data here for storage.
@@ -1309,7 +1500,7 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
 
     // Double-check: ensure no duplicate punch in for today
     const [existing] = await promisePool.query(
-      `SELECT * FROM attendance WHERE employee_id = ? AND attendance_date = CURDATE()`,
+      `SELECT * FROM attendance WHERE employee_id = ? AND attendance_date >= CURDATE() AND attendance_date < CURDATE() + INTERVAL 1 DAY`,
       [employee_id],
     );
 
@@ -1321,34 +1512,62 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
         .status(400)
         .json({ success: false, message: "Already punched in today" });
     }
-    // const shiftSQL=  `SELECT s.late_after, s.half_day_after FROM employee_master e JOIN shift_master s ON e.shift_id= s.id WHERE e.id=?`
-    // const [shiftData]= await promisePool.query(shiftSQL, [employee_id]);
-    // if(shiftData.length===0){
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Shift not assigned to employee"
-    //   })
-    // }
+    const shiftSQL=  `SELECT s.start_time, s.late_after, s.half_day_after FROM employee_master e JOIN shift_master s ON e.shift_id= s.id WHERE e.id=?`
+    const [shiftData]= await promisePool.query(shiftSQL, [employee_id]);
+    if(shiftData.length===0){
+      return res.status(400).json({
+        success: false,
+        message: "Shift not assigned to employee"
+      })
+    }
 
-    // const punchInTime= new Date();
-    // const shift= shiftData[0];
-    // let status= "PRESENT";
-    // let is_late= false;
-    // let late_minutes=0;
+    const shift= shiftData[0];
+    /*
+     * Why: Determine if employee is late by comparing actual punch-in time
+     * against the shift's late_after threshold (e.g. 09:15).
+     * If punch-in > late_after → is_late=true, late_minutes = minutes past start_time.
+     * If punch-in >= half_day_after → status = "HALF DAY".
+     */
+    let status= "PRESENT";
+    let is_late= false;
+    let late_minutes= 0;
 
-    // const [lateHour, lateMinute]= shift.late_after.split(":");
-    // const [halfHour, halfMinute]= shift.half_day_after.split(":");
+    const punchInTime= new Date();
+    if (shift.late_after) {
+      const [lateHour, lateMinute]= shift.late_after.split(":");
+      const lateThreshold= new Date();
+      lateThreshold.setHours(parseInt(lateHour), parseInt(lateMinute), 0, 0);
 
-    // // took current date and current date to convert string to int after that
-    // const lateAfterDate= new Date();
-    // lateAfterDate.setHours(parseInt(lateHour),parseInt(lateMinute), 0,0);
+      if (punchInTime > lateThreshold) {
+        is_late= true;
+        // Why: Store total minutes late relative to shift start (not late_after)
+        // so admin can display "X hours Y minutes" or "Z mins late".
+        if (shift.start_time) {
+          const [startHour, startMinute]= shift.start_time.split(":");
+          const shiftStart= new Date();
+          shiftStart.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
+          late_minutes= Math.round((punchInTime - shiftStart) / 60000);
+        }
+      }
+    }
+
+    // Why: If punch-in is at or after half_day_after time, mark as HALF DAY
+    if (shift.half_day_after) {
+      const [halfHour, halfMinute]= shift.half_day_after.split(":");
+      const halfDayThreshold= new Date();
+      halfDayThreshold.setHours(parseInt(halfHour), parseInt(halfMinute), 0, 0);
+
+      if (punchInTime >= halfDayThreshold) {
+        status= "HALF DAY";
+      }
+    }
 
     const selfiePath = `/uploads/${req.file.filename}`;
 
     const [result] = await promisePool.query(
       `INSERT INTO attendance
-       (employee_id, attendance_date, punch_in, punch_in_selfie, punch_in_latitude, punch_in_longitude, gps_location, attendance_mode, office_location_id, status)
-       VALUES (?, CURDATE(), CURTIME(), ?, ?, ?, ?, ?, ?, 'PRESENT')`,
+       (employee_id, attendance_date, punch_in, punch_in_selfie, punch_in_latitude, punch_in_longitude, gps_location, attendance_mode, office_location_id, status, late_minutes, is_late)
+       VALUES (?, CURDATE(), CURTIME(), ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         employee_id,
         selfiePath,
@@ -1357,6 +1576,9 @@ app.post("/punch-in", upload.single("selfie"), async (req, res) => {
         readable_address || "",
         attendance_mode || "OFFICE",
         office_location_id || null,
+        status,
+        late_minutes,
+        is_late,
       ],
     );
 
@@ -1474,13 +1696,14 @@ app.get("/attendance/:employeeId/:month/:year", async (req, res) => {
   const { employeeId, month, year } = req.params;
   try {
     // Fetch distinct attendance dates for the given employee in the given month/year
+    const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
     const [rows] = await promisePool.query(
       `SELECT DISTINCT DAY(attendance_date) AS day 
        FROM attendance 
        WHERE employee_id = ? 
-         AND MONTH(attendance_date) = ? 
-         AND YEAR(attendance_date) = ?`,
-      [employeeId, parseInt(month), parseInt(year)]
+         AND attendance_date >= ? 
+         AND attendance_date < DATE_ADD(?, INTERVAL 1 MONTH)`,
+      [employeeId, monthStart, monthStart]
     );
     // Fetch joining date to avoid marking dates before joining as absent
     const [empRows] = await promisePool.query(
@@ -1784,6 +2007,8 @@ app.get("/profile/:employeeId", async (req, res) => {
     employee_master.employee_email_id,
     employee_master.employee_mobile_no,
     employee_master.city,
+    employee_master.photo_url,
+    employee_master.gender,
 
     designations.designation_name AS employee_designation,
 
