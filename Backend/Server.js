@@ -83,26 +83,29 @@ const employeePhotoStorage = multer({
   limits: {fileSize: 5*1024*1024}, // 5MB limit
 });
 
-  
-app.get("/health",(req, res)=>{
+// Health check API
+app.get("/health", (req, res) => {
   const sql = `
-    SELLECT * FROM employee_master
-    LIMIT 2;
-  `
+      SELECT *
+      FROM employee_master
+      ORDER BY created_at ASC
+      LIMIT 1;
+    `;
+ 
   pool.query(sql, (err, result) => {
     if (err) {
-      console.log("SQL error:", err.sqlMessage)
-      return res.status(500).json({
+      return res.send({
         success: false,
-        error: err.sqlMessaage
-      })
-  }
-  return res.status(200).json({
-    success: true,
-    message: "Employee Data Successfully fetched"
-  })
-  console.log("Health Checked...Backend Run Properly");
-})
+        message: "DB Connection Failed",
+      });
+    }
+    res.json({
+      success: true,
+      result: result,
+    });
+  });
+});
+ 
 
 const employeePhotoUpload = multer({
   storage: storage,
