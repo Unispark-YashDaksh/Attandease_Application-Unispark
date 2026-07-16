@@ -95,7 +95,7 @@ app.get("/health",(req ,res)=>{
         success: false,
         error: err.sqlMessaage
       })
-      retun res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: "Employee Data Successfully fetched"
       })
