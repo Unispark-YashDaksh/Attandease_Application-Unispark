@@ -90,7 +90,7 @@ app.get("/health",(req ,res)=>{
   `
   pool.query(sql, (err, result) => {
     if (err) {
-      console.log("SQL error:" err.sqlMessage)
+      console.log("SQL error:", err.sqlMessage)
       return res.status(500).json({
         success: false,
         error: err.sqlMessaage
