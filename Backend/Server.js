@@ -83,7 +83,8 @@ const employeePhotoStorage = multer({
   limits: {fileSize: 5*1024*1024}, // 5MB limit
 });
 
-app.get("/health",(req ,res)=>{
+  
+app.get("/health",(req, res)=>{
   const sql = `
     SELLECT * FROM employee_master
     LIMIT 2;
@@ -95,11 +96,11 @@ app.get("/health",(req ,res)=>{
         success: false,
         error: err.sqlMessaage
       })
-      return res.status(200).json({
-        success: true,
-        message: "Employee Data Successfully fetched"
-      })
   }
+  return res.status(200).json({
+    success: true,
+    message: "Employee Data Successfully fetched"
+  })
   console.log("Health Checked...Backend Run Properly");
 })
 
