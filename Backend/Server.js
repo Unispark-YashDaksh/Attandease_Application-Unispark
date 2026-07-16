@@ -5,7 +5,7 @@ const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const { error } = require("console");
-const redisClient= require("./config/redis");
+// const redisClient= require("./config/redis");
 
 const {storage}= require("./cloudConfig");
 const upload= multer({storage});
@@ -84,6 +84,22 @@ const employeePhotoStorage = multer({
 });
 
 app.get("/health",(req ,res)=>{
+  const sql = `
+    SELLECT * FROM employee_master
+    LIMIT 2;
+  `
+  pool.query(sql, (err, result) => {
+    if (err) {
+      console.log(""SQL error:" err.sqlMessage)
+      return res.status(500).json({
+        success: false,
+        error: err.sqlMessaage
+      })
+      retun res.status(200).json({
+        success: true,
+        message: "Employee Data Successfully fetched"
+      })
+  }
   console.log("Health Checked...Backend Run Properly");
 })
 
