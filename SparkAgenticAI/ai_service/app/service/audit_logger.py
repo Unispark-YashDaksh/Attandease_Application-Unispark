@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any
 
 import httpx
@@ -43,9 +43,15 @@ async def log_audit_entry(
 
     try:
         async with httpx.AsyncClient(timeout=5) as client:
+            payload = entry.model_dump(mode="json")
+
+            if isinstance(payload.get("timestamp"), str):
+                payload["timestamp"] = (
+                    payload["timestamp"].replace("T", " ").split(".")[0]
+                )
             await client.post(
                 f"{settings.hrms_api_base_url}/api/audit-logs",
-                json=entry.model_dump(mode="json"),
+                json=payload,
             )
 
     except Exception as e:

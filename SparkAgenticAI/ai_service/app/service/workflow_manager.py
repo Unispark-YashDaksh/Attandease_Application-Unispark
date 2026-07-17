@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Literal
@@ -15,9 +16,15 @@ from app.schemas.workflow import (
 
 _active_workflows: dict[str, WorkflowState] = {}
 
+WorkflowType = Literal["onboarding", "onboarding_v2"]
+
+StepStatus = Literal[
+    "pending", "in_progress", "completed", "failed", "waiting_for_input"
+]
+
 
 async def create_workflow(
-    workflow_type: Literal["onboarding"],
+    workflow_type: WorkflowType,
     created_by: str,
     payload: dict[str, Any],
     steps: list[str],
@@ -53,14 +60,6 @@ async def create_workflow(
     return state
 
 
-StepStatus = Literal[
-    "pending",
-    "in_progress",
-    "completed",
-    "failed",
-]
-
-
 async def advance_workflow(
     workflow_id: str,
     step_name: str,
@@ -87,7 +86,7 @@ async def advance_workflow(
     state.failed_step = step_name if step_status == "failed" else state.failed_step
     state.updated_at = now
     if payload:
-        state.payload = payload
+        state.payload = {**(state.payload or {}), **payload}
 
     current_idx = -1
     for i, s in enumerate(state.steps):
@@ -109,11 +108,70 @@ async def advance_workflow(
                 payload=state.payload,
             )
             await client.put(
-                f"{settings.hrms_api_base_url}/api/workflow/{workflow_id}",
+                f"{settings.hrms_api_base_url}/api/updateWorkflow/{workflow_id}",
                 json=req.model_dump(mode="json"),
             )
     except Exception:
         pass
+
+    return state
+
+
+async def save_workflow_conversation(
+    workflow_id: str,
+    pending_question: str,
+    conversation: list[dict[str, Any]],
+) -> WorkflowState | None:
+    state = _active_workflows.get(workflow_id)
+    if not state:
+        return None
+    now = datetime.now(timezone.utc)
+    state.pending_question = pending_question
+    state.agent_conversation = conversation
+    state.status = "in_progress"
+    state.updated_at = now
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            await client.put(
+                f"{settings.hrms_api_base_url}/api/updateWorkflow/{workflow_id}",
+                json={
+                    "current_step": state.current_step,
+                    "status": state.status,
+                    "failed_step": None,
+                    "payload": state.payload,
+                    "pending_question": pending_question,
+                    "agent_conversation": json.dumps(conversation),
+                },
+            )
+    except Exception:
+        pass
+    return state
+
+
+async def resume_workflow(
+    workflow_id: str,
+    admin_reply: str,
+) -> WorkflowState | None:
+    state = _active_workflows.get(workflow_id)
+    if not state:
+        try:
+            async with httpx.AsyncClient(timeout=5) as client:
+                resp = await client.get(
+                    f"{settings.hrms_api_base_url}/api/workflows/{workflow_id}"
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    state = WorkflowState(**data)
+                    _active_workflows[workflow_id] = state
+        except Exception:
+            pass
+
+    if not state:
+        return None
+
+    state.pending_question = None
+    state.status = "in_progress"
+    state.updated_at = datetime.now(timezone.utc)
 
     return state
 
@@ -126,7 +184,7 @@ async def get_workflow(workflow_id: str) -> WorkflowState | None:
     try:
         async with httpx.AsyncClient(timeout=5) as client:
             resp = await client.get(
-                f"{settings.hrms_api_base_url}/api/workflow/{workflow_id}"
+                f"{settings.hrms_api_base_url}/api/workflows/{workflow_id}"
             )
             if resp.status_code == 200:
                 data = resp.json()

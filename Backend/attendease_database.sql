@@ -30,7 +30,7 @@ shift_id INT,
 role_id INT,
 photo_url VARCHAR(255),
 reporting_manager_id INT NULL,
-employeement_status ENUM('ACTIVE', 'RESIGNED') DEFAULT 'ACTIVE',
+employment_status ENUM('ACTIVE', 'RESIGNED') DEFAULT 'ACTIVE',
 employee_mobile_no VARCHAR(255),
 employee_email_id VARCHAR(100),
 employee_joining_date DATE,
@@ -362,6 +362,8 @@ CREATE TABLE work_from_home_requests (
     ON DELETE CASCADE
 );
 
+ALTER TABLE attendance ADD INDEX idx_emp_date (employee_id, attendance_date);
+
 ALTER TABLE work_from_home_requests
 ADD COLUMN approved_by INT NULL,
 ADD COLUMN approved_on TIMESTAMP NULL,
@@ -403,4 +405,79 @@ SELECT la.*, elb.id AS balance_id, elb.remaining_days,
          ON elb.employee_id = la.employee_id 
          AND elb.leave_type_id = la.leave_type_id
          AND elb.financial_year = DATE_FORMAT(la.from_date, '%Y')
-       WHERE la.id = 1
+       WHERE la.id = 1;
+	
+    
+create table if not exists audit_logs (
+	id int auto_increment primary key,
+    who varchar(100) not null,
+    what text not null,
+    tool varchar(100) not null,
+    action varchar(50) not null,
+    changed tinyint default 0,
+    success tinyint default 1,
+    error text default null,
+    data json default null,
+    timestamp datetime not null,
+    created_at timestamp default current_timestamp,
+    index idx_who (who),
+    index idx_tool (tool),
+    index idx_timestamp (timestamp)
+);
+
+drop table audit_logs;
+
+create table if not exists workflow_states (
+	id int auto_increment primary key,
+    workflow_id varchar(64) not null unique,
+    workflow_type varchar(50) not null  default 'onboarding',
+    current_step varchar(100) not null,
+    status ENUM("in_progress", "completed", "failed") not null default "in_progress",
+    failed_step varchar(100) default null,
+    created_by varchar(100) not null,
+    payload JSON default null,
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp on update current_timestamp,
+    index idx_workflow_id (workflow_id),
+    index idx_status (status),
+    index idx_created_by (created_by)
+);
+
+select * from designations;
+
+select * from departments;
+
+select * from roles;
+
+select * from branches;
+
+select * from shift_master;
+
+select * from users;
+
+select * from employee_master;
+-- where role_id = 4;
+
+select * from workflow_states;
+
+select * from audit_logs;
+
+SELECT 
+  u.id AS user_id,
+  u.employee_id,
+  em.role_id,
+  r.role_name
+FROM users u
+LEFT JOIN employee_master em ON em.id = u.employee_id
+LEFT JOIN roles r ON r.id = em.role_id
+WHERE u.employee_id = 6;
+
+select * from workflow_states;
+-- where id = "9efd17a1-89b9-4b39-9a6b-14803698eaee";
+
+select * from audit_logs;
+
+ALTER TABLE workflow_states
+  ADD COLUMN steps JSON DEFAULT NULL AFTER payload,
+  ADD COLUMN pending_question TEXT DEFAULT NULL AFTER steps,
+  ADD COLUMN agent_conversation JSON DEFAULT NULL AFTER pending_question;

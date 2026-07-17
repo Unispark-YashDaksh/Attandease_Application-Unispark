@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Any, Literal
 from pydantic import BaseModel, Field
 
-
 RouteName = Literal[
     "leave_balance",
     "employee_profile",
     "attendance_query",
     "onboarding_workflow",
+    "kb_query",
     "unsupported",
 ]
 ToolName = Literal[
@@ -16,19 +16,25 @@ ToolName = Literal[
     "fetch_leave_balance",
     "create_hrms_employee_profile",
     "fetch_attendance",
+    "create_m365_account",
+    "schedule_joining_meeting",
+    "order_laptop",
+    "order_id_card",
+    "query_knowledge_base",
     "none",
 ]
 
+
 class VerifiedUserContext(BaseModel):
-    user_id: str
     employee_id: str
     role: Literal["employee", "admin"]
     permissions: list[ToolName]
 
+
 class ChatRequest(BaseModel):
-    user_id: str
     message: str = Field(min_length=2)
-    employee_id: str | None = None
+    employee_id: str
+    workflow_id: str | None = None
 
 
 class ChatResponse(BaseModel):
@@ -36,6 +42,7 @@ class ChatResponse(BaseModel):
     route: RouteName
     answer: str
     data: dict[str, Any] | None = None
+    workflow_id: str | None = None
 
 
 class OnboardingRequest(BaseModel):
@@ -45,8 +52,9 @@ class OnboardingRequest(BaseModel):
     employee_code: str
     employee_joining_date: str | None = None
     gender: str | None = None
-    designation_id: int | None = None
-    department_id: int | None = None
-    branch_id: int | None = None
-    shift_id: int | None = None
-    role_id: int | None = None
+    designation: str | None = None
+    department: str | None = None
+    branch: str | None = None
+    shift: str | None = None
+    role: str | None = None
+    reporting_manager: str | None = None

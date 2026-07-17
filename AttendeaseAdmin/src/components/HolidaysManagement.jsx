@@ -7,7 +7,7 @@ import "../css/HolidayManagement.css";
 import * as XLSX from "xlsx";
 import { useEffect } from "react";
 import axios from "axios";
-const apiUrl= import.meta.env.VITE_BACKEND_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 function HolidaysManagement() {
   const [date, setDate] = useState(new Date()); // Selected Date stored
@@ -109,7 +109,9 @@ function HolidaysManagement() {
               holidayName: name,
             });
           } catch (err) {
-            console.log(`Skipping ${formattedDate} - ${name}: ${err.response?.data?.message || err.message}`);
+            console.log(
+              `Skipping ${formattedDate} - ${name}: ${err.response?.data?.message || err.message}`,
+            );
           }
         }
       }

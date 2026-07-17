@@ -4,13 +4,15 @@ from typing import Literal
 from app.schemas.chat import RouteName
 
 
-def classify_message(message: str, role: str) -> RouteName:
+def classify_message(
+    message: str,
+) -> RouteName:
     normalized = message.lower()
-    onboarding_keyboards = [
+    onboarding_keywords = [
         "onboard",
         "create employee",
         "add employee",
-        "new hier",
+        "new heir",
     ]
     leave_keywords = [
         "leave_balance",
@@ -25,7 +27,7 @@ def classify_message(message: str, role: str) -> RouteName:
         "my info",
         "employee info",
     ]
-    attendance_keyords = [
+    attendance_keywords = [
         "attendance",
         "punch",
         "present",
@@ -33,14 +35,27 @@ def classify_message(message: str, role: str) -> RouteName:
         "work from home",
         "wfh",
     ]
+    kb_keywords = [
+        "policy",
+        "policies",
+        "hr policies",
+        "company rule",
+        "compliance",
+        "employee manual",
+        "sop",
+        "procedure",
+        "knowledge base",
+        "kb",
+    ]
 
-    if any(term in normalized for term in onboarding_keyboards):
+    if any(term in normalized for term in onboarding_keywords):
         return "onboarding_workflow"
-
     if any(term in normalized for term in leave_keywords):
         return "leave_balance"
     if any(term in normalized for term in profile_keywords):
         return "employee_profile"
-    if any(term in normalized for term in attendance_keyords):
+    if any(term in normalized for term in attendance_keywords):
         return "attendance_query"
+    if any(term in normalized for term in kb_keywords):
+        return "kb_query"
     return "unsupported"

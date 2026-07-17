@@ -3,7 +3,7 @@ import AddNewEmployeeForm from "./AddNewEmployeeForm";
 import axios from "axios";
 import "../css/designation.css";
 import "../css/Employees.css";
-const apiUrl= import.meta.env.VITE_BACKEND_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 function EmployeeMaster() {
   const [showModal, setshowModal] = useState(false);
@@ -101,12 +101,9 @@ function EmployeeMaster() {
       employee.employeement_status === "ACTIVE" ? "RESIGNED" : "ACTIVE";
 
     try {
-      await axios.put(
-        `${apiUrl}/updateEmployeeStatus/${employee.id}`,
-        {
-          status: nextStatus,
-        },
-      );
+      await axios.put(`${apiUrl}/updateEmployeeStatus/${employee.id}`, {
+        status: nextStatus,
+      });
 
       fetchEmployees();
     } catch (error) {

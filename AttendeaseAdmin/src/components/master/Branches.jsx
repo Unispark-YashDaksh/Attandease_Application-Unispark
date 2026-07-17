@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../../css/designation.css";
-const apiUrl= import.meta.env.VITE_BACKEND_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 function Branches() {
   const [branchName, setBranchName] = useState("");

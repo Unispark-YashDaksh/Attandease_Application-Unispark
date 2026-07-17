@@ -4,14 +4,25 @@ const mysql = require("mysql2");
 const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
-const { error } = require("console");
-const redisClient = require("./config/redis");
+const { error, table } = require("console");
+// const redisClient = require("./config/redis");
+const GraphService = require("./services/GraphService");
 
 const { storage } = require("./cloudConfig");
+const { rejects } = require("assert");
+const { AsyncLocalStorage } = require("async_hooks");
 const upload = multer({ storage });
 
 const app = express();
 const port = 7000;
+
+const graphService = new GraphService({
+  tenantId: process.env.M365_TENANT_ID,
+  clientId: process.env.M365_CLIENT_ID,
+  clientSecret: process.env.M365_CLIENT_SECRET,
+  siteId: process.env.SHAREPOINT_SITE_ID,
+  ticketsListId: process.env.TICKETS_LIST_ID,
+});
 
 app.use(
   cors({
@@ -111,10 +122,6 @@ const employeePhotoUpload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-module.exports = {
-  SelfieUpload,
-  employeePhotoUpload,
-};
 app.post("/addDepartmentName", (req, res) => {
   console.log(req.body);
   const departmentName = req.body.departmentName;
@@ -1712,7 +1719,7 @@ app.get("/fetchAttendance", async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch attendance",
-      error: error.message,
+      error: err.message,
     });
   }
 });
@@ -1951,7 +1958,7 @@ app.post("/register", async (req, res) => {
     if (checkRecordRows.length === 0) {
       return res.send({
         success: false,
-        message: "Employee Record Not found. Pleae contact HR",
+        message: "Employee Record Not found. Please contact HR",
       });
     }
 
@@ -2203,7 +2210,7 @@ app.get("/employees/:id/leave-balance", async (req, res) => {
     res.status(200).json({
       employee: employee[0].name,
       financial_year: currentFY,
-      total: balances.reduce((sum, b) => sum * b.remaining_days, 0),
+      total: balances.reduce((sum, b) => sum + b.remaining_days, 0),
       leaves: balances,
     });
   } catch (error) {
@@ -2665,6 +2672,658 @@ app.post("/carry-forward", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+app.post("/api/m365/users", async (req, res) => {
+  try {
+    const {
+      displayName,
+      givenName,
+      surname,
+      userPrincipalName,
+      mailNickname,
+      password,
+      department,
+      jobTitle,
+      manager,
+    } = req.body;
+
+    if (
+      !displayName ||
+      !givenName ||
+      !surname ||
+      !userPrincipalName ||
+      !mailNickname ||
+      !password
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing Required Fields",
+      });
+    }
+    const user = await graphService.createUser({
+      displayName,
+      givenName,
+      surname,
+      userPrincipalName,
+      mailNickname,
+      password,
+      department,
+      jobTitle,
+      manager,
+    });
+    res.status(201).json({
+      success: true,
+      data: user,
+      message: "User created successfully",
+    });
+  } catch (err) {
+    console.error("POST /api/m365/users error:", err.message);
+    res.status(err.status || 500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+});
+
+app.post("/api/calendar/events", async (req, res) => {
+  try {
+    const {
+      subject,
+      startDateTime,
+      endDateTime,
+      attendees,
+      body,
+      location,
+      timeZone,
+      organizerId,
+    } = req.body;
+
+    if (!subject || !startDateTime || !endDateTime) {
+      return res.status(400).json({
+        success: false,
+        error: "subject, startDateTime, endDateTime required",
+      });
+    }
+
+    const event = await graphService.scheduleEvent({
+      subject,
+      startDateTime,
+      endDateTime,
+      attendees: attendees || [],
+      body,
+      location,
+      timeZone,
+      organizerId,
+    });
+    res.status(201).json({
+      success: true,
+      data: event,
+      message: "Event Created Successfully",
+    });
+  } catch (error) {
+    console.error("POST /api/calendar/events error:", error.message);
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+app.post("/api/mail/send", async (req, res) => {
+  try {
+    const { subject, body, to, fromId } = req.body;
+    if (!subject || !body || !to || !Array.isArray(to) || to.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "subject, body, and to (array) required",
+      });
+    }
+    const mail = await graphService.sendEmail({
+      subject,
+      body,
+      to,
+      fromId,
+    });
+    res.status(201).json({
+      success: true,
+      data: mail,
+      message: "Email sent successfully",
+    });
+  } catch (error) {
+    console.error("POST /api/mail/send error", error.message);
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+app.post("/api/addTicket", async (req, res) => {
+  try {
+    const {
+      category,
+      Title,
+      IssueDescription,
+      Subcategory,
+      Requester,
+      RequestedByEmail,
+    } = req.body;
+
+    if (!category || !Title) {
+      return res.status(400).json({
+        success: false,
+        error: "category and Title required",
+      });
+    }
+    const ticket = await graphService.createTicket(category, {
+      Title,
+      IssueDescription,
+      Subcategory,
+      Requester,
+      RequestedByEmail,
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: ticket,
+    });
+  } catch (error) {
+    console.error("POST /api/addTicket error:", error.message);
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+app.get("/api/tickets", async (req, res) => {
+  try {
+    const tickets = await graphService.getTickets();
+    return res.status(201).json({
+      success: true,
+      data: tickets,
+    });
+  } catch (error) {
+    console.error("GET /api/tickets error:", error.message);
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+app.get("/api/ticket/:itemId", async (req, res) => {
+  try {
+    const ticket = await graphService.getTicketById(req.params.itemId);
+    return res.status(201).json({
+      success: true,
+      data: ticket,
+    });
+  } catch (error) {
+    if (error.status === 404) {
+      return res.status(404).json({
+        success: false,
+        message: "Ticket not found",
+      });
+    }
+    console.error(`GET /api/ticket/${req.params.itemId} error:`, error.message);
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+app.patch("/api/updateTicket/:itemId", async (req, res) => {
+  try {
+    const { category, ...fields } = req.body;
+    if (!category) {
+      return res.status(400).json({
+        success: false,
+        error: "category is required",
+      });
+    }
+    const updateTicket = await graphService.upDateTicket(
+      category,
+      req.params.itemId,
+      fields,
+    );
+    return res.status(201).json({
+      success: true,
+      message: "Ticket Updated",
+    });
+  } catch (error) {
+    console.error(
+      `PATCH /api/updateTicket/${req.params.itemId} error`,
+      error.message,
+    );
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+app.delete("/api/deleteTicket/:itemId", async (req, res) => {
+  try {
+    const { category } = req.body;
+    if (!category) {
+      return res.status(400).json({
+        success: false,
+        error: "category is required",
+      });
+    }
+    const deleteTicket = await graphService.deleteTicket(
+      category,
+      req.params.itemId,
+    );
+    return res.status(201).json({
+      success: true,
+      message: "Ticket deleted",
+    });
+  } catch (error) {
+    console.error(
+      `DELETE /api/deleteTicket/${req.params.itemId} error:`,
+      error.message,
+    );
+    return res.status(error.status || 500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// ======================================
+// AI SERVICE
+// ======================================
+
+const AI_SERVICE_BASE_URL =
+  process.env.AI_SERVICE_BASE_URL || "http://localhost:8002";
+
+async function getVerifiedUserContext(req) {
+  const employeeId = req.headers["employee-id"];
+  if (!employeeId) {
+    return { error: "Missing employee-id header", status: 401 };
+  }
+
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT em.id AS employee_id, em.employee_email_id, r.role_name
+      FROM employee_master em
+      LEFT JOIN roles r ON r.id = em.role_id
+      WHERE em.id = ?
+    `;
+    pool.query(sql, [employeeId], (err, results) => {
+      if (err) {
+        return resolve({ error: "Database error", status: 500 });
+      }
+      if (results.length === 0) {
+        return resolve({ error: "User not found", status: 401 });
+      }
+      const user = results[0];
+      const roleName = (user.role_name || "").trim().toLowerCase();
+      const aiRole =
+        roleName === "admin" || roleName === "hr" ? "admin" : "employee";
+      resolve({
+        employee_id: String(user.employee_id),
+        employee_email: user.employee_email_id || null,
+        role: aiRole,
+        status: 200,
+      });
+    });
+  });
+}
+
+app.post("/api/resolve-onboarding-refs", async (req, res) => {
+  try {
+    const {
+      department_id,
+      designation_id,
+      branch_id,
+      shift_id,
+      role_id,
+      department_name,
+      designation_name,
+      branch_name,
+      shift_name,
+      role_name,
+    } = req.body;
+
+    const resolveOne = (table, idColumn, nameColumn, idValue, nameValue) => {
+      return new Promise((resolve, reject) => {
+        if (idValue) return resolve(Number(idValue));
+        if (!nameValue) return resolve(null);
+        const sql = `
+          SELECT ${idColumn} AS id
+          FROM ${table}
+          WHERE LOWER(${nameColumn}) = LOWER(?)
+          LIMIT 1
+        `;
+
+        pool.query(sql, [nameValue.trim()], (err, rows) => {
+          if (err) return reject(err);
+          resolve(rows.length ? rows[0].id : null);
+        });
+      });
+    };
+
+    const resolvedDepartmentId = await resolveOne(
+      "departments",
+      "id",
+      "department_name",
+      department_id,
+      department_name,
+    );
+
+    const resolvedDesignationId = await resolveOne(
+      "designations",
+      "id",
+      "designation_name",
+      designation_id,
+      designation_name,
+    );
+
+    const resolvedBranchId = await resolveOne(
+      "branches",
+      "id",
+      "branch_name",
+      branch_id,
+      branch_name,
+    );
+
+    const resolvedShiftId = await resolveOne(
+      "shift_master",
+      "id",
+      "shift_name",
+      shift_id,
+      shift_name,
+    );
+
+    const resolvedRoleId = await resolveOne(
+      "roles",
+      "id",
+      "role_name",
+      role_id,
+      role_name,
+    );
+
+    res.json({
+      success: true,
+      data: {
+        department_id: resolvedDepartmentId,
+        designation_id: resolvedDesignationId,
+        branch_id: resolvedBranchId,
+        shift_id: resolvedShiftId,
+        role_id: resolvedRoleId,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+});
+
+app.post("/ai/chat", async (req, res) => {
+  try {
+    const ctx = await getVerifiedUserContext(req);
+    if (ctx.error) {
+      return res.status(ctx.status).json({ error: ctx.error });
+    }
+    const { message, employee_id, workflow_id } = req.body;
+    if (!message || message.length < 2) {
+      return res
+        .status(400)
+        .json({ error: "Message must be at least 2 characters" });
+    }
+
+    const enrichedMessage = ctx.employee_email
+      ? `[Admin: ${ctx.employee_email}] ${message}`
+      : message;
+
+    const aiResponse = await fetch(`${AI_SERVICE_BASE_URL}/ai/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Employee-Id": ctx.employee_id,
+        "X-Role": ctx.role,
+      },
+      body: JSON.stringify({
+        message: enrichedMessage,
+        employee_id: String(employee_id || ctx.employee_id),
+        workflow_id: workflow_id || undefined,
+      }),
+    });
+    const data = await aiResponse.json();
+    res.status(aiResponse.status).json(data);
+  } catch (err) {
+    console.error("AI proxy error:", err);
+    res.status(502).json({
+      status: "error",
+      route: "unsupported",
+      answer:
+        "The AI service is currently unavailable. Please try again later.",
+    });
+  }
+});
+
+app.post("/ai/workflow/onboarding", async (req, res) => {
+  try {
+    const ctx = await getVerifiedUserContext(req);
+    if (ctx.error) {
+      return res.status(403).json({ error: ctx.error });
+    }
+    if (ctx.role !== "admin") {
+      return res.status(403).json({
+        status: "blocked",
+        route: "unsupported",
+        answer: "Only admins can onboard employees.",
+      });
+    }
+    const aiResponse = await fetch(
+      `${AI_SERVICE_BASE_URL}/ai/workflows/onboarding`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Employee-Id": ctx.employee_id,
+          "X-Role": ctx.role,
+        },
+        body: JSON.stringify(req.body),
+      },
+    );
+    const data = await aiResponse.json();
+    res.status(aiResponse.status).json(data);
+  } catch (err) {
+    console.error("AI onboarding proxy error:", err);
+    res.status(502).json({
+      status: "error",
+      route: "unsupported",
+      answer: "The AI service is currently unavailable.",
+    });
+  }
+});
+
+app.get("/ai/health", async (req, res) => {
+  try {
+    const aiResponse = await fetch(`${AI_SERVICE_BASE_URL}/health`);
+    const data = await aiResponse.json();
+    res.json({
+      ...data,
+      proxy: "active",
+    });
+  } catch (error) {
+    res.status(502).json({
+      status: "error",
+      proxy: "unreachable",
+    });
+  }
+});
+
+app.post("/api/audit-logs", (req, res) => {
+  const { who, what, tool, action, changed, success, error, data, timestamp } =
+    req.body;
+
+  const sql = `
+    INSERT INTO audit_logs (who, what, tool, action, changed, success, error, data, timestamp)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  pool.query(
+    sql,
+    [
+      who || "",
+      what || "",
+      tool || "",
+      action || "",
+      changed ? 1 : 0,
+      success ? 1 : 0,
+      error || null,
+      data ? JSON.stringify(data) : null,
+      timestamp
+        ? timestamp
+        : new Date()
+            .toISOString()
+            .replace("T", " ")
+            .replace(/\.\d+Z$/, ""),
+    ],
+    (err) => {
+      if (err) {
+        console.error("Audit log insert error:", err);
+        return res.status(500).json({
+          error: "Failed to store audit log",
+        });
+      }
+      res.status(201).json({ status: "logged" });
+    },
+  );
+});
+
+app.post("/api/workflows", (req, res) => {
+  const { workflow_type, created_by, payload } = req.body;
+  const workflowId = req.body.workflowId || require("crypto").randomUUID();
+
+  const sql = `
+    INSERT INTO workflow_states (workflow_id, workflow_type, current_step, status, created_by, payload, steps, pending_question, agent_conversation)
+    VALUES (?, ?, ?, 'in_progress', ?, ?, ?, Null, Null)
+  `;
+
+  const stepsJson = JSON.stringify(
+    (req.body.steps || []).map((s) => ({
+      step_name: s,
+      status: "pending",
+    })),
+  );
+  pool.query(
+    sql,
+    [
+      workflowId,
+      workflow_type || "onboarding",
+      "validate_input",
+      created_by || "",
+      payload ? JSON.stringify(payload) : null,
+      stepsJson,
+    ],
+    (err) => {
+      if (err) {
+        console.error("Workflow create error:", err);
+        return res.status(500).json({
+          error: "Failed to create workflow",
+        });
+      }
+      res.status(201).json({
+        workflow_id: workflowId,
+        status: "created",
+      });
+    },
+  );
+});
+
+app.put("/api/updateWorkflow/:id", (req, res) => {
+  const { id } = req.params;
+  const {
+    current_step,
+    status,
+    failed_step,
+    payload,
+    steps,
+    pending_question,
+    agent_conversation,
+  } = req.body;
+
+  const sql = `
+    UPDATE workflow_states
+    SET current_step = ?, status = ?, failed_step = ?, payload = ?, steps = ?, pending_question = ?, agent_conversation = ?, updated_at = NOW()
+    WHERE workflow_id = ?
+  `;
+  pool.query(
+    sql,
+    [
+      current_step || "",
+      status || "in_progress",
+      failed_step || null,
+      payload ? JSON.stringify(payload) : null,
+      steps ? JSON.stringify(steps) : null,
+      pending_question || null,
+      agent_conversation || null,
+      id,
+    ],
+    (err) => {
+      if (err) {
+        console.error("Workflow update error:", err);
+        return res.status(500).json({
+          error: "Failed to update workflow",
+        });
+      }
+      res.json({
+        status: "updated",
+      });
+    },
+  );
+});
+
+app.get("/api/workflows/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql = `
+    SELECT * FROM workflow_states
+    WHERE workflow_id = ?
+  `;
+  pool.query(sql, [id], (err, results) => {
+    if (err) {
+      return res.status(500).json({
+        error: "Database error",
+      });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({
+        error: "Workflow not found",
+      });
+    }
+    const row = results[0];
+    res.json({
+      workflow_id: row.workflow_id,
+      workflow_type: row.workflow_type,
+      current_step: row.current_step,
+      steps: row.steps ? JSON.parse(row.steps) : [],
+      status: row.status,
+      failed_step: row.failed_step,
+      created_by: row.created_by,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      payload: row.payload ? JSON.parse(row.payload) : null,
+      pending_question: row.pending_question || null,
+      agent_conversation: row.agent_conversation
+        ? JSON.parse(row.agent_conversation)
+        : null,
+    });
+  });
+});
+
+module.exports = {
+  SelfieUpload,
+  employeePhotoUpload,
+};
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server Listening Port ${port}`);

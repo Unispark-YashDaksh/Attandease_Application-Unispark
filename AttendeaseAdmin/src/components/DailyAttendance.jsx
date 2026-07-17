@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import "../css/AttendanceDashboard.css";
 import axios from "axios";
-const apiUrl= import.meta.env.VITE_BACKEND_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 function getTodayDate() {
   const today = new Date();
@@ -180,7 +180,7 @@ function DailyAttendance() {
           <div className="metric-top">
             <span className="material-symbols-outlined metric-icon warning">
               schedule
-            </span> 
+            </span>
             <span className="metric-label">LATE</span>
           </div>
           <h3 className="warning-text">{lateCount}</h3>
@@ -293,7 +293,8 @@ function DailyAttendance() {
                   if (!m || m <= 0) return "";
                   const hours = Math.floor(m / 60);
                   const minutes = m % 60;
-                  if (hours > 0 && minutes > 0) return `${hours} hour ${minutes} minutes`;
+                  if (hours > 0 && minutes > 0)
+                    return `${hours} hour ${minutes} minutes`;
                   if (hours > 0) return `${hours} hour`;
                   return `${minutes} minutes`;
                 };

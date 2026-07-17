@@ -44,7 +44,9 @@ function MasterManagement() {
               <li className="nav-item">
                 <a
                   className={getTabClassName("designation")}
-                  aria-current={activeTab === "designation" ? "page" : undefined}
+                  aria-current={
+                    activeTab === "designation" ? "page" : undefined
+                  }
                   onClick={() => {
                     setActiveTab("designation");
                   }}

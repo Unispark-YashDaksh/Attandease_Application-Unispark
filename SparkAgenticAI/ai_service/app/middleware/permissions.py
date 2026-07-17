@@ -14,9 +14,9 @@ def require_permission(ctx: VerifiedUserContext, tool: ToolName) -> None:
         )
 
 
-def require_role(ctx: VerifiedUserContext, requried_role: str) -> None:
-    if ctx.role != require_role:
+def require_role(ctx: VerifiedUserContext, required_role: str) -> None:
+    if ctx.role != required_role:
         raise HTTPException(
             status_code=403,
-            detail=f"Required role '{requried_role}', got '{ctx.role}'",
+            detail=f"Required role '{required_role}', got '{ctx.role}'",
         )

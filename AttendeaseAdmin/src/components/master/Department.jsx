@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../../css/designation.css";
-const apiUrl = import.meta.env.VITE_BACKEND_URL
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 function Department() {
   const [departmentName, setDepartmentName] = useState("");
@@ -101,12 +101,9 @@ function Department() {
     const nextStatus = department.status === "Active" ? "Inactive" : "Active";
 
     try {
-      await axios.put(
-        `${apiUrl}/updateDepartmentStatus/${department.id}`,
-        {
-          status: nextStatus,
-        },
-      );
+      await axios.put(`${apiUrl}/updateDepartmentStatus/${department.id}`, {
+        status: nextStatus,
+      });
       fetchDepartments();
     } catch (error) {
       console.log(error);
