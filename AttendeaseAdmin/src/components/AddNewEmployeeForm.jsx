@@ -232,6 +232,7 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.employee_code}
               onChange={handleChange}
             />
+            <p>Last Generated Emp Code: </p>
           </label>
 
           <label>
@@ -320,9 +321,7 @@ function AddNewEmployeeForm({
               className="employee-photo-preview"
               src={
                 photoPreview ||
-                (addEmployeeForm.photo_url?.startsWith("http")
-                  ? addEmployeeForm.photo_url
-                  : `${apiUrl}${addEmployeeForm.photo_url}`)
+                `${apiUrl}${addEmployeeForm.photo_url}`
               }
               alt="Employee preview"
             />
@@ -334,8 +333,8 @@ function AddNewEmployeeForm({
         <div className="employee-section-heading">
           <span className="material-symbols-outlined">account_tree</span>
           <div>
-            <h3>Organization Details</h3>
-            <p>Map this employee to teams, access, and reporting lines.</p>
+            <h3>Organization</h3>
+            <p>Map this employee to teams, access, and reporting lines.</p>git
           </div>
         </div>
 
