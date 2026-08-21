@@ -234,6 +234,7 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.employee_code}
               onChange={handleChange}
             />
+            <p>Last Generated Emp Code: </p>
           </label>
 
           <label>
