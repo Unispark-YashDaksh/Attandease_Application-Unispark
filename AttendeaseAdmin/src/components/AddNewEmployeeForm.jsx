@@ -2,7 +2,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import "../css/Employees.css";
-const apiUrl= import.meta.env.VITE_API;
+const apiUrl = import.meta.env.VITE_API;
 
 function AddNewEmployeeForm({
   setshowModal,
@@ -319,10 +319,7 @@ function AddNewEmployeeForm({
           {(photoPreview || addEmployeeForm.photo_url) && (
             <img
               className="employee-photo-preview"
-              src={
-                photoPreview ||
-                `${apiUrl}${addEmployeeForm.photo_url}`
-              }
+              src={photoPreview || `${addEmployeeForm.photo_url}`}
               alt="Employee preview"
             />
           )}
