@@ -242,3 +242,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+.error-message{
+  color: red;
+}

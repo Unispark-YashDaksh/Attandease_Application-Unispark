@@ -745,6 +745,38 @@ app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
   const cloudinaryUrl = req.file ? req.file.path: null;
 
 
+  // this fields check form fields
+  const requiredFields={
+    employee_code: "Employee Code",
+    employee_name: "Employee Name",
+    gender: "Gender",
+    designation_id: "Designation",
+    department_id: "Deparment",
+    shift_id: "Shift",
+    branch_id: "Branch",
+    role_id:"Role",
+    employee_mobile_no: "Employee Mobile No",
+    employee_email_id: "Email ID",
+    employee_joining_date: "Joining Date",
+  }
+
+
+console.log("Required Fields:", requiredFields);
+
+  for(const field in requiredFields){
+    // debugging and checking are every fields
+    console.log("Checking:", field, "Value", employeeForm[field])
+
+    if(!employeeForm[field] || employeeForm[field].trim()=== ""){
+      console.log("Missing Field:", field);
+      return res.status(400).json({
+        success: false,
+        field: field,
+        message: `${requiredFields[field]} is required`
+      })
+    }
+  }
+
 
   const sql = `
     INSERT INTO employee_master(
@@ -812,11 +844,23 @@ app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
       // VERY IMPORTANT
       if (err) {
         console.log(err);
-
+        // check 
+         // this check only check duplicate entry from database
+        if(err.code=== "ER_DUP_ENTRY"){
+          if(err.sqlMessage.includes("employee_code")){
+            return res.status(409).json({
+              success: false,
+              field: "employee_code",
+              message: `Employee code ${employeeForm.employee_code} has already been assigned to another employee`
+              
+            })
+          }
+         
+        }
+        console.log(err);
         return res.status(500).json({
           success: false,
-          message: err.sqlMessage,
-          fullError: err,
+          message: "Database Error occured",
         });
       }
 
@@ -928,6 +972,32 @@ app.put(
     );
   },
 );
+
+//fetch latest employee_code api
+app.get("/fetch-last-employee-code", (req, res)=>{
+
+  const sql= `SELECT employee_code FROM employee_master ORDER BY id DESC LIMIT 1`;
+
+  pool.query(sql,(err, result)=>{
+    if(err){
+      return res.status(404).json({
+        success: false,
+        message: "DB Error"
+      })
+    }
+    console.log(`Fetch Last Generated Employee ${result[0].employee_code}`);
+    return res.status(200).json({
+      success: true,
+      employee_code: result[0].employee_code
+    });
+  })
+});
+
+// check employee exists or not api
+app.post("/fetch-employee-code",(req, res)=>{
+  const empployee_code= req.body.em
+})
+
 
 app.put("/updateEmployeeStatus/:id", (req, res) => {
   const id = req.params.id;
