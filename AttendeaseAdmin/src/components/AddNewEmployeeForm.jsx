@@ -16,6 +16,9 @@ function AddNewEmployeeForm({
   const [showRoles, setShowRoles] = useState([]);
   const [showDesignation, setShowDesignation] = useState([]);
   const [reportingManagers, setReportingManagers] = useState([]);
+  const [fetchLastGenratedEmployeeCode, setFetchLastGenratedEmployeeCode]= useState([]);
+  const [fieldErrors , setFieldErrors]= useState({});
+
   const employeeForm = {
     employee_name: "",
     employee_code: "",
@@ -66,6 +69,9 @@ function AddNewEmployeeForm({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    //clear old error
+    setFieldErrors({});
+
     const formData = new FormData();
 
     Object.entries(addEmployeeForm).forEach(([key, value]) => {
@@ -91,6 +97,13 @@ function AddNewEmployeeForm({
       setEditingEmployee(null);
     } catch (err) {
       console.log(err);
+      if(err.response?.data?.field){
+        setFieldErrors({
+          [err.response.data.field]: err.response.data.message
+        })
+      }else{
+        setEditingEmployee("Something went wrong. Please Try again");
+      }
     }
   };
   const fetchDepartments = async () => {
@@ -137,6 +150,12 @@ function AddNewEmployeeForm({
     setShowDesignation(response.data.result);
   };
 
+  const fetchLastGenratedEmployee= async()=>{
+    const response= await axios.get(`${apiUrl}/fetch-last-employee-code`);
+    setFetchLastGenratedEmployeeCode(response.data.employee_code);
+    console.log(response.data.employee_code)
+  }
+
   const designationsForDropdown =
     selectedEmployee &&
     selectedEmployee.designation_id &&
@@ -162,6 +181,7 @@ function AddNewEmployeeForm({
     fetchRoles();
     fetchDesignation();
     fetchReportingManagers();
+    fetchLastGenratedEmployee();
     if (selectedEmployee) {
       setAddEmployeeForm({
         employee_name: selectedEmployee.employee_name || "",
@@ -232,7 +252,10 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.employee_code}
               onChange={handleChange}
             />
-            <p>Last Generated Emp Code: </p>
+             <p>Last Generated Emp Code: {fetchLastGenratedEmployeeCode} </p>
+             {fieldErrors.employee_code &&(
+              <p className="error-message">{fieldErrors.employee_code}</p>
+             )}
           </label>
 
           <label>
@@ -244,6 +267,11 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.employee_name}
               onChange={handleChange}
             />
+             {fieldErrors.employee_name && (
+              <p className="error-message">{fieldErrors.employee_name}</p>
+             )
+
+             }
           </label>
 
           <label>
@@ -257,6 +285,9 @@ function AddNewEmployeeForm({
               <option value="Male">Male</option>
               <option value="Female">Female</option>
             </select>
+             {fieldErrors.gender && (
+              <p className="error-message">{fieldErrors.gender}</p>
+             )}
           </label>
 
           <label>
@@ -268,6 +299,9 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.employee_mobile_no}
               onChange={handleChange}
             />
+            {fieldErrors.employee_mobile_no && (
+               <p className="error-message">{fieldErrors.employee_mobile_no}</p>
+            )}
           </label>
 
           <label>
@@ -279,6 +313,9 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.employee_email_id}
               onChange={handleChange}
             />
+             {fieldErrors.employee_email_id && (
+              <p className="error-message">{fieldErrors.employee_email_id}</p>
+             )}
           </label>
 
           <label>
@@ -289,6 +326,9 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.employee_joining_date}
               onChange={handleChange}
             />
+             {fieldErrors.employee_joining_date && (
+              <p className="error-message">{fieldErrors.employee_joining_date}</p>
+             )}
           </label>
 
           <label>
@@ -311,6 +351,9 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.emergency_contact_no}
               onChange={handleChange}
             />
+             {fieldErrors.emergency_contact_no && (
+              <p className="error-message">{fieldErrors.emergency_contact_no}</p>
+             )}
           </label>
           <label>
             <span>Employee Photo (limit 5MB)</span>
@@ -334,7 +377,7 @@ function AddNewEmployeeForm({
           <span className="material-symbols-outlined">account_tree</span>
           <div>
             <h3>Organization</h3>
-            <p>Map this employee to teams, access, and reporting lines.</p>git
+            <p>Map this employee to teams, access, and reporting lines.</p>
           </div>
         </div>
 
@@ -354,6 +397,9 @@ function AddNewEmployeeForm({
                 </option>
               ))}
             </select>
+            {fieldErrors.department_id && (
+              <p className="error-message">{fieldErrors.department_id}</p>
+            )}
           </label>
 
           <label>
@@ -371,6 +417,9 @@ function AddNewEmployeeForm({
                 </option>
               ))}
             </select>
+            {fieldErrors.designation_id && (
+               <p className="error-message">{fieldErrors.designation_id}</p>
+            )}
           </label>
 
           <label>
@@ -388,6 +437,9 @@ function AddNewEmployeeForm({
                 </option>
               ))}
             </select>
+            {fieldErrors.branch_id && (
+               <p className="error-message">{fieldErrors.branch_id}</p>
+            )}
           </label>
 
           <label>
@@ -405,6 +457,9 @@ function AddNewEmployeeForm({
                 </option>
               ))}
             </select>
+             {fieldErrors.shift_id && (
+              <p className="error-message">{fieldErrors.shift_id}</p>
+             )}
           </label>
 
           <label>
@@ -422,6 +477,9 @@ function AddNewEmployeeForm({
                 </option>
               ))}
             </select>
+            {fieldErrors.role_id && (
+               <p className="error-message">{fieldErrors.role_id}</p>
+            )}
           </label>
 
           <label>
@@ -463,6 +521,9 @@ function AddNewEmployeeForm({
               value={addEmployeeForm.employee_adhar_no}
               onChange={handleChange}
             />
+            {fieldErrors.employee_adhar_no && (
+               <p className="error-message">{fieldErrors.employee_adhar_no}</p>
+            )}
           </label>
 
           <label>
