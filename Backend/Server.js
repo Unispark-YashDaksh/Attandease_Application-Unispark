@@ -31,12 +31,24 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 //Multiple Connections, Faste, Production Standard, Handles Many Requests
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME || "attendease_database",
+  database: process.env.DATABASE || process.env.DB_NAME || "attendease_database",
+  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
   waitForConnections: true,
   connectionLimit: 150,
   queueLimit: 0,
+});
+
+const dbTimezone = process.env.DB_TIMEZONE || "+05:30";
+
+pool.on("connection", (connection) => {
+  connection.query("SET time_zone = ?", [dbTimezone], (err) => {
+    if (err) {
+      console.error("Failed to set DB timezone:", err.message);
+    }
+  });
 });
 
 // Convert pool to promise-based (was missing - caused async/await crash)
@@ -218,6 +230,9 @@ app.post("/addDesignation", (req, res) => {
     });
   });
 });
+
+app.post("/fetch-latest-empl")
+
 
 app.put("/updateDesignation/:id", (req, res) => {
   const id = req.params.id;

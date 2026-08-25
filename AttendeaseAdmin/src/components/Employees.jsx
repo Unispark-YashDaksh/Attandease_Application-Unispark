@@ -482,9 +482,7 @@ function EmployeeMaster() {
                 }}
               >
                 <div className="form-group">
-                  <label htmlFor="employee_department_filter">
-                    Department
-                  </label>
+                  <label htmlFor="employee_department_filter">Department</label>
                   <select
                     id="employee_department_filter"
                     value={departmentFilter}

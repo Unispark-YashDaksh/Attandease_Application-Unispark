@@ -89,12 +89,12 @@ function Roles() {
     try {
       setLoading(true);
       if (editingId) {
-        await axios.put(`http://localhost:7000/updateRole/${editingId}`, {
+        await axios.put(`${apiUrl}/updateRole/${editingId}`, {
           RoleName: roleName,
           Desc: description,
         });
       } else {
-        await axios.post("http://localhost:7000/addRole", {
+        await axios.post(`${apiUrl}/addRole`, {
           RoleName: roleName,
           Desc: description,
         });
@@ -112,8 +112,7 @@ function Roles() {
   async function handleDeactivateRole(role) {
     const nextStatus = role.status === "Active" ? "Inactive" : "Active";
     try {
-      setLoading(true);
-      await axios.put(`http://localhost:7000/updateRoleStatus/${role.id}`, {
+      await axios.put(`${apiUrl}/updateRoleStatus/${role.id}`, {
         status: nextStatus,
       });
       await refreshRoles();
