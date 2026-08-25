@@ -231,7 +231,6 @@ app.post("/addDesignation", (req, res) => {
   });
 });
 
-app.post("/fetch-latest-empl")
 
 
 app.put("/updateDesignation/:id", (req, res) => {
