@@ -1,29 +1,30 @@
-import axios from "axios";
-const apiUrl = import.meta.env.VITE_API;
+import api from "./api";
 
 export const autoAssignLeaveBalance = async (employeeId, payload = {}) => {
-  const res = await axios.post(`${apiUrl}/employees/${employeeId}/leave-balance`, payload);
+  const res = await api.post(`/employees/${employeeId}/leave-balance`, payload);
   return res.data;
 };
 
 export const fetchLeaveBalance = async (employeeId, year) => {
   const params = year ? { year } : {};
-  const res = await axios.get(`${apiUrl}/employees/${employeeId}/leave-balance`, { params });
+  const res = await api.get(`/employees/${employeeId}/leave-balance`, {
+    params,
+  });
   return res.data;
 };
 
 export const applyLeave = async (payload) => {
-  const res = await axios.post(`${apiUrl}/leave-applications`, payload);
+  const res = await api.post(`/leave-applications`, payload);
   return res.data;
 };
 
 export const fetchLeaveApplications = async (params = {}) => {
-  const res = await axios.get(`${apiUrl}/leave-applications`, { params });
+  const res = await api.get(`/leave-applications`, { params });
   return res.data;
 };
 
 export const updateLeaveStatus = async (id, status, approvedBy) => {
-  const res = await axios.put(`${apiUrl}/leave-applications/${id}/status`, {
+  const res = await api.put(`/leave-applications/${id}/status`, {
     status,
     approved_by: approvedBy,
   });
@@ -31,12 +32,12 @@ export const updateLeaveStatus = async (id, status, approvedBy) => {
 };
 
 export const createLeaveAdjustment = async (payload) => {
-  const res = await axios.post(`${apiUrl}/leave-adjustments`, payload);
+  const res = await api.post(`/leave-adjustments`, payload);
   return res.data;
 };
 
 export const runCarryForward = async (fromYear, toYear) => {
-  const res = await axios.post(`${apiUrl}/carry-forward`, {
+  const res = await api.post(`/carry-forward`, {
     from_year: fromYear,
     to_year: toYear,
   });

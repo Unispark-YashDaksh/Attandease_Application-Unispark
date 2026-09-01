@@ -1,9 +1,40 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import "../css/Login.css";
+import api from "../services/api";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [adminId, setAdminID] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    setError("");
+    if (!adminId || !password) {
+      console.error("Admin ID or Password are required");
+      setError("Admin ID or Password are required");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await api.post(`/adminLogin`, {
+        adminId,
+        password,
+      });
+      if (res.data.success === true) {
+        localStorage.setItem("token", res.data.jwt_token);
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      console.error(error.response?.data?.message || "Something went wrong");
+      setError(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="login-page">
@@ -14,15 +45,20 @@ export default function Login() {
         <h1 className="login-title">Welcome Back</h1>
         <p className="login-subtitle">Sign in to your account to continue</p>
 
-        <div className="login-form">
+        <form
+          className="login-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleLogin();
+          }}
+        >
           <div className="login-field">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="adminId">Admin ID</label>
             <input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="adminId"
+              placeholder="123456"
+              value={adminId}
+              onChange={(e) => setAdminID(e.target.value)}
             />
           </div>
           <div className="login-field">
@@ -41,14 +77,19 @@ export default function Login() {
               <input type="checkbox" />
               <span>Remember me</span>
             </label>
-            <a href="#!" className="login-forgot">Forgot Password?</a>
+            <a href="#!" className="login-forgot">
+              Forgot Password?
+            </a>
           </div>
+          <p className="login-error">{error}</p>
 
-          <button type="button" className="login-btn">Sign In</button>
-        </div>
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading === true ? "Signing In..." : "Sign In"}
+          </button>
+        </form>
 
         <p className="login-footer">
-          Don&apos;t have an account? <a href="#!">Contact Admin</a>
+          Don't have an account? <a href="#!">Contact Admin</a>
         </p>
       </div>
     </div>

@@ -3,12 +3,16 @@ const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
 const multer = require("multer");
+const bcryptjs = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const path = require("path");
 const { error } = require("console");
-const upload = multer({ storage });
 
 const redisClient = require("./config/redis");
 const { storage } = require("./cloudConfig");
+const { verifyToken } = require("./middleware/auth");
+const upload = multer({ storage });
+
 const app = express();
 const { url } = require("inspector");
 const port = 7000;
@@ -84,7 +88,8 @@ module.exports = {
   SelfieUpload,
   employeePhotoUpload,
 };
-app.post("/addDepartmentName", (req, res) => {
+
+app.post("/addDepartmentName", verifyToken, async (req, res) => {
   console.log(req.body);
   const departmentName = req.body.departmentName;
 
@@ -105,15 +110,16 @@ app.post("/addDepartmentName", (req, res) => {
   });
 });
 
-//---------- Fetch Users API---------------------------------------------------
+//---------- For Debugging Fetching Users API---------------------------------------------------
 
-app.get("/fetch-user", async (req, res) => {
-  const employeeId = req.body.employee_id;
+// app.get("/fetch-user", async (req, res) => {
+//   const employeeId = req.body.employee_id;
 
-  const [rows] = promisePool.query(`SELECT * FROM users`);
-});
+//   const [rows] = await promisePool.query(`SELECT * FROM users`);
+// });
+//----------------------------------------------------------
 
-app.get("/fetch-departments", (req, res) => {
+app.get("/fetch-departments", verifyToken, (req, res) => {
   const status = req.query.status;
 
   let sql = `SELECT * FROM departments`;
@@ -139,7 +145,7 @@ app.get("/fetch-departments", (req, res) => {
   });
 });
 
-app.put("/updateDepartment/:id", (req, res) => {
+app.put("/updateDepartment/:id", verifyToken, (req, res) => {
   console.log(req.body);
   const id = req.params.id;
   const departmentName = req.body.departmentName;
@@ -165,7 +171,7 @@ app.put("/updateDepartment/:id", (req, res) => {
   });
 });
 
-app.put("/updateDepartmentStatus/:id", (req, res) => {
+app.put("/updateDepartmentStatus/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const status = req.body.status;
 
@@ -194,7 +200,7 @@ app.put("/updateDepartmentStatus/:id", (req, res) => {
   });
 });
 
-app.post("/addDesignation", (req, res) => {
+app.post("/addDesignation", verifyToken, (req, res) => {
   console.log(req.body);
   const designationName = req.body.designation_name;
   const department_id = req.body.department_id;
@@ -216,7 +222,7 @@ app.post("/addDesignation", (req, res) => {
   });
 });
 
-app.put("/updateDesignation/:id", (req, res) => {
+app.put("/updateDesignation/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const designationName = req.body.designation_name;
   const department_id = req.body.department_id;
@@ -251,7 +257,7 @@ app.put("/updateDesignation/:id", (req, res) => {
   );
 });
 
-app.get("/fetch-designation", (req, res) => {
+app.get("/fetch-designation", verifyToken, (req, res) => {
   const status = req.query.status;
 
   let sql = `
@@ -290,7 +296,7 @@ app.get("/fetch-designation", (req, res) => {
   });
 });
 
-app.get("/designationStatus", (req, res) => {
+app.get("/designationStatus", verifyToken, (req, res) => {
   const sql = `SELECT designations.*, 
     departments.department_name AS department
     FROM designations
@@ -318,7 +324,7 @@ app.get("/designationStatus", (req, res) => {
   });
 });
 
-app.post("/addBranch", (req, res) => {
+app.post("/addBranch", verifyToken, (req, res) => {
   console.log(req.body);
   const branchName = req.body.branchName;
   const address = req.body.address;
@@ -347,7 +353,7 @@ app.post("/addBranch", (req, res) => {
   );
 });
 
-app.get("/fetch-branches", (req, res) => {
+app.get("/fetch-branches", verifyToken, (req, res) => {
   const status = req.query.status;
   let sql = `SELECT * FROM branches;`;
 
@@ -378,7 +384,7 @@ app.get("/fetch-branches", (req, res) => {
   });
 });
 
-app.put("/updateBranch/:id", (req, res) => {
+app.put("/updateBranch/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const branchName = req.body.branchName;
   const address = req.body.address;
@@ -416,7 +422,7 @@ app.put("/updateBranch/:id", (req, res) => {
   });
 });
 
-app.put("/updateBranchStatus/:id", (req, res) => {
+app.put("/updateBranchStatus/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const status = req.body.status;
 
@@ -444,7 +450,7 @@ app.put("/updateBranchStatus/:id", (req, res) => {
   });
 });
 
-app.post("/addShift", (req, res) => {
+app.post("/addShift", verifyToken, (req, res) => {
   console.log(req.body);
   const shiftName = req.body.shiftName;
   const startTime = req.body.startTime;
@@ -475,7 +481,7 @@ app.post("/addShift", (req, res) => {
   );
 });
 
-app.get("/fetch-shifts", (req, res) => {
+app.get("/fetch-shifts", verifyToken, (req, res) => {
   const status = req.query.status;
 
   let sql = `SELECT * FROM shift_master`;
@@ -505,7 +511,7 @@ app.get("/fetch-shifts", (req, res) => {
   });
 });
 
-app.put("/updateShift/:id", (req, res) => {
+app.put("/updateShift/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const shiftName = req.body.shiftName;
   const startTime = req.body.startTime;
@@ -542,7 +548,7 @@ app.put("/updateShift/:id", (req, res) => {
   });
 });
 
-app.put("/updateShiftStatus/:id", (req, res) => {
+app.put("/updateShiftStatus/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const status = req.body.status;
 
@@ -569,7 +575,7 @@ app.put("/updateShiftStatus/:id", (req, res) => {
   });
 });
 
-app.post("/addHolidays", (req, res) => {
+app.post("/addHolidays", verifyToken, (req, res) => {
   console.log(req.body);
   const holidayDate = req.body.holidayDate;
   const holidayName = req.body.holidayName;
@@ -591,7 +597,7 @@ app.post("/addHolidays", (req, res) => {
   });
 });
 
-app.get("/fetch-holidays", (req, res) => {
+app.get("/fetch-holidays", verifyToken, (req, res) => {
   const sql = `SELECT * FROM holidays`;
 
   pool.query(sql, (err, result) => {
@@ -610,7 +616,7 @@ app.get("/fetch-holidays", (req, res) => {
   });
 });
 
-app.post("/addRole", (req, res) => {
+app.post("/addRole", verifyToken, (req, res) => {
   console.log(req.body);
   const RoleName = req.body.RoleName;
   const Desc = req.body.Desc;
@@ -633,7 +639,7 @@ app.post("/addRole", (req, res) => {
   });
 });
 
-app.get("/fetch-roles", (req, res) => {
+app.get("/fetch-roles", verifyToken, (req, res) => {
   const status = req.query.status;
 
   let sql = `SELECT * FROM roles`;
@@ -664,7 +670,7 @@ app.get("/fetch-roles", (req, res) => {
   });
 });
 
-app.put("/updateRole/:id", (req, res) => {
+app.put("/updateRole/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const RoleName = req.body.RoleName;
   const Desc = req.body.Desc;
@@ -693,7 +699,7 @@ app.put("/updateRole/:id", (req, res) => {
   });
 });
 
-app.put("/updateRoleStatus/:id", (req, res) => {
+app.put("/updateRoleStatus/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const status = req.body.status;
 
@@ -719,14 +725,18 @@ app.put("/updateRoleStatus/:id", (req, res) => {
   });
 });
 
-app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
-  console.log(req.body);
-  console.log(req.file); //this will show cloudinaryuploads details
+app.post(
+  "/addNewEmployee",
+  verifyToken,
+  employeePhotoUpload.single("photo"),
+  (req, res) => {
+    console.log(req.body);
+    console.log(req.file); //this will show cloudinaryuploads details
 
-  const employeeForm = req.body;
-  const cloudinaryUrl = req.file ? req.file.path : null;
+    const employeeForm = req.body;
+    const cloudinaryUrl = req.file ? req.file.path : null;
 
-  const sql = `
+    const sql = `
     INSERT INTO employee_master(
       employee_code,
       employee_name,
@@ -754,63 +764,65 @@ app.post("/addNewEmployee", employeePhotoUpload.single("photo"), (req, res) => {
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `;
 
-  pool.query(
-    sql,
-    [
-      employeeForm.employee_code,
-      employeeForm.employee_name,
-      employeeForm.gender,
-      employeeForm.designation_id,
-      employeeForm.department_id,
-      employeeForm.branch_id,
-      employeeForm.shift_id,
-      employeeForm.role_id,
+    pool.query(
+      sql,
+      [
+        employeeForm.employee_code,
+        employeeForm.employee_name,
+        employeeForm.gender,
+        employeeForm.designation_id,
+        employeeForm.department_id,
+        employeeForm.branch_id,
+        employeeForm.shift_id,
+        employeeForm.role_id,
 
-      // if empty then store NULL
-      employeeForm.reporting_manager_id || null,
+        // if empty then store NULL
+        employeeForm.reporting_manager_id || null,
 
-      // if empty then ACTIVE
-      employeeForm.employeement_status || "ACTIVE",
+        // if empty then ACTIVE
+        employeeForm.employeement_status || "ACTIVE",
 
-      employeeForm.employee_mobile_no,
-      employeeForm.employee_email_id,
+        employeeForm.employee_mobile_no,
+        employeeForm.employee_email_id,
 
-      // if empty then NULL
-      employeeForm.employee_joining_date || null,
+        // if empty then NULL
+        employeeForm.employee_joining_date || null,
 
-      employeeForm.city,
-      employeeForm.emergency_contact_no,
-      employeeForm.employee_adhar_no,
-      employeeForm.employee_bank_account_no,
-      employeeForm.employee_bank_name,
-      employeeForm.employee_bank_ifsc_code,
-      employeeForm.employee_uan_no,
-      cloudinaryUrl,
-    ],
+        employeeForm.city,
+        employeeForm.emergency_contact_no,
+        employeeForm.employee_adhar_no,
+        employeeForm.employee_bank_account_no,
+        employeeForm.employee_bank_name,
+        employeeForm.employee_bank_ifsc_code,
+        employeeForm.employee_uan_no,
+        cloudinaryUrl,
+      ],
 
-    (err, result) => {
-      // VERY IMPORTANT
-      if (err) {
-        console.log(err);
+      (err, result) => {
+        // VERY IMPORTANT
+        if (err) {
+          console.log(err);
 
-        return res.status(500).json({
-          success: false,
-          message: err.sqlMessage,
-          fullError: err,
+          return res.status(500).json({
+            success: false,
+            message: err.sqlMessage,
+            fullError: err,
+          });
+        }
+
+        res.status(200).json({
+          success: true,
+          message: "Data Added Successfully",
+          url: cloudinaryUrl,
         });
-      }
-
-      res.status(200).json({
-        success: true,
-        message: "Data Added Successfully",
-        url: cloudinaryUrl,
-      });
-    },
-  );
-});
+      },
+    );
+  },
+);
 
 app.put(
   "/updateEmployee/:id",
+  verifyToken,
   employeePhotoUpload.single("photo"),
   (req, res) => {
     const id = req.params.id;
@@ -907,7 +919,7 @@ app.put(
   },
 );
 
-app.put("/updateEmployeeStatus/:id", (req, res) => {
+app.put("/updateEmployeeStatus/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const status = req.body.status;
 
@@ -936,7 +948,7 @@ app.put("/updateEmployeeStatus/:id", (req, res) => {
 });
 
 // This API fetch All employees from database
-app.get("/fetch-employees", (req, res) => {
+app.get("/fetch-employees", verifyToken, (req, res) => {
   const status = req.query.status;
 
   //pagnition fuctioanlity logic
@@ -1039,7 +1051,7 @@ app.get("/fetch-employees", (req, res) => {
   });
 });
 
-app.get("/fetchOneEmployee/:id", (req, res) => {
+app.get("/fetchOneEmployee/:id", verifyToken, (req, res) => {
   const id = req.params.id;
 
   const sql = `
@@ -1076,7 +1088,7 @@ app.get("/fetchOneEmployee/:id", (req, res) => {
 });
 
 //This api checks employee Active or not
-app.get("/activeEmployee", (req, res) => {
+app.get("/activeEmployee", verifyToken, (req, res) => {
   const sql = `
     SELECT id, employee_name, employee_code
     FROM employee_master
@@ -1101,7 +1113,63 @@ app.get("/activeEmployee", (req, res) => {
   });
 });
 
-// ==================== ADMIN register/Login ========================
+// ==================== ADMIN Login ========================
+app.post("/adminLogin", async (req, res) => {
+  try {
+    const { adminId, password } = req.body;
+    if (!adminId || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Admin ID and Password are required",
+      });
+    }
+    const [admin] = await promisePool.query(
+      `
+      SELECT *
+      FROM admins
+      WHERE admin_id = ?
+    `,
+      [adminId],
+    );
+    if (admin.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid Admin ID",
+      });
+    }
+    const hashedPassword = admin[0].password;
+    const isMatch = bcryptjs.compareSync(password, hashedPassword);
+    if (!isMatch) {
+      return res.status(500).json({
+        success: false,
+        message: "Password does not match. Try Again!",
+      });
+    }
+    const payload = {
+      id: admin[0].id,
+      admin_id: adminId,
+      employee_id: admin[0].employee_id,
+      employee_name: admin[0].employee_name,
+      employee_email: admin[0].employee_email,
+      role_id: admin[0].role_id,
+    };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "8h",
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Login Successfully",
+      admin: payload,
+      jwt_token: token,
+    });
+  } catch (error) {
+    console.error("Login API Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 
 // ==================== ATTENDANCE APIs ====================
 
@@ -1637,7 +1705,7 @@ app.post("/punch-out", upload.single("selfie"), async (req, res) => {
   }
 });
 
-app.get("/fetchAttendance", async (req, res) => {
+app.get("/fetchAttendance", verifyToken, async (req, res) => {
   try {
     const [rows] =
       await promisePool.query(`SELECT a.*, e.employee_name, e.employee_code, ds.designation_name, d.department_name FROM attendance a
@@ -1653,7 +1721,7 @@ app.get("/fetchAttendance", async (req, res) => {
         : null,
     }));
     // only for debugging purpose-- rows are coming or not and correct data coming from db.
-    console.log(formattedRows);
+    
     return res.json({
       success: true,
       message: "Attendance Fetch Successfully",
@@ -1718,171 +1786,181 @@ app.get("/attendance/:employeeId/:month/:year", async (req, res) => {
 // Date keys are formatted manually (YYYY-MM-DD) to avoid the timezone shift bug
 // where toISOString() converts local midnight to previous-day UTC.
 // ============================================
-app.get("/attendance/report/:employeeId/:month/:year", async (req, res) => {
-  const { employeeId, month, year } = req.params;
-  try {
-    // 1. Get employee info
-    const [empRows] = await promisePool.query(
-      `SELECT id, employee_name, employee_code FROM employee_master WHERE id = ?`,
-      [employeeId],
-    );
-    if (empRows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Employee not found" });
-    }
-    const employee = empRows[0];
+app.get(
+  "/attendance/report/:employeeId/:month/:year",
+  verifyToken,
+  async (req, res) => {
+    const { employeeId, month, year } = req.params;
+    try {
+      // 1. Get employee info
+      const [empRows] = await promisePool.query(
+        `SELECT id, employee_name, employee_code FROM employee_master WHERE id = ?`,
+        [employeeId],
+      );
+      if (empRows.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Employee not found" });
+      }
+      const employee = empRows[0];
 
-    // 2. Get all attendance records for this employee in the given month
-    const [attRows] = await promisePool.query(
-      `SELECT attendance_date, punch_in, punch_out, gps_location, status
+      // 2. Get all attendance records for this employee in the given month
+      const [attRows] = await promisePool.query(
+        `SELECT attendance_date, punch_in, punch_out, gps_location, status
        FROM attendance 
        WHERE employee_id = ? 
          AND MONTH(attendance_date) = ? 
          AND YEAR(attendance_date) = ?
        ORDER BY attendance_date ASC`,
-      [employeeId, parseInt(month), parseInt(year)],
-    );
+        [employeeId, parseInt(month), parseInt(year)],
+      );
 
-    // 3. Get all holidays in this month
-    const [holRows] = await promisePool.query(
-      `SELECT holiday_date, holiday_name FROM holidays
+      // 3. Get all holidays in this month
+      const [holRows] = await promisePool.query(
+        `SELECT holiday_date, holiday_name FROM holidays
        WHERE MONTH(holiday_date) = ? AND YEAR(holiday_date) = ?`,
-      [parseInt(month), parseInt(year)],
-    );
+        [parseInt(month), parseInt(year)],
+      );
 
-    // 3b. Get approved leave applications for this employee overlapping the month
-    // Used to show leave reason in the report when attendance status is "leave".
-    const firstDay = `${year}-${String(month).padStart(2, "0")}-01`;
-    const lastDay = `${year}-${String(month).padStart(2, "0")}-${new Date(parseInt(year), parseInt(month), 0).getDate()}`;
-    const [leaveRows] = await promisePool.query(
-      `SELECT from_date, to_date, reason FROM leave_applications
+      // 3b. Get approved leave applications for this employee overlapping the month
+      // Used to show leave reason in the report when attendance status is "leave".
+      const firstDay = `${year}-${String(month).padStart(2, "0")}-01`;
+      const lastDay = `${year}-${String(month).padStart(2, "0")}-${new Date(parseInt(year), parseInt(month), 0).getDate()}`;
+      const [leaveRows] = await promisePool.query(
+        `SELECT from_date, to_date, reason FROM leave_applications
        WHERE employee_id = ?
          AND status = 'APPROVED'
          AND from_date <= ? AND to_date >= ?`,
-      [employeeId, lastDay, firstDay],
-    );
+        [employeeId, lastDay, firstDay],
+      );
 
-    // Helper: format a Date object as YYYY-MM-DD using LOCAL time methods.
-    // MySQL2 returns DATE columns as Date objects created in LOCAL timezone.
-    // Using getFullYear/getMonth/getDate (local) preserves the correct calendar date,
-    // whereas toISOString() converts to UTC which can shift the day backward
-    // for timezones ahead of UTC (e.g., India UTC+5:30 → local June 17 → UTC June 16).
-    const formatDate = (dt) => {
-      const y = dt.getFullYear();
-      const m = String(dt.getMonth() + 1).padStart(2, "0");
-      const d = String(dt.getDate()).padStart(2, "0");
-      return `${y}-${m}-${d}`;
-    };
+      // Helper: format a Date object as YYYY-MM-DD using LOCAL time methods.
+      // MySQL2 returns DATE columns as Date objects created in LOCAL timezone.
+      // Using getFullYear/getMonth/getDate (local) preserves the correct calendar date,
+      // whereas toISOString() converts to UTC which can shift the day backward
+      // for timezones ahead of UTC (e.g., India UTC+5:30 → local June 17 → UTC June 16).
+      const formatDate = (dt) => {
+        const y = dt.getFullYear();
+        const m = String(dt.getMonth() + 1).padStart(2, "0");
+        const d = String(dt.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      };
 
-    // 4. Build holiday lookup using local date keys
-    const holidayMap = {};
-    for (const h of holRows) {
-      const key = formatDate(h.holiday_date);
-      holidayMap[key] = h.holiday_name;
-    }
-
-    // 5. Build attendance lookup using local date keys
-    const attMap = {};
-    for (const a of attRows) {
-      const key = formatDate(a.attendance_date);
-      attMap[key] = a;
-    }
-
-    // 5b. Build leave reason map: dateStr → leaveReason
-    // Each leave application can span multiple days (from_date → to_date),
-    // so we expand the range and map every date in between to its reason.
-    const leaveReasonMap = {};
-    for (const l of leaveRows) {
-      const from = new Date(l.from_date);
-      const to = new Date(l.to_date);
-      // Walk day-by-day from from_date to to_date (inclusive)
-      for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
-        const key = formatDate(d);
-        leaveReasonMap[key] = l.reason || "Leave";
+      // 4. Build holiday lookup using local date keys
+      const holidayMap = {};
+      for (const h of holRows) {
+        const key = formatDate(h.holiday_date);
+        holidayMap[key] = h.holiday_name;
       }
-    }
 
-    // 6. Today's local midnight (for filtering future dates)
-    const now = new Date();
-    const todayLocal = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
+      // 5. Build attendance lookup using local date keys
+      const attMap = {};
+      for (const a of attRows) {
+        const key = formatDate(a.attendance_date);
+        attMap[key] = a;
+      }
 
-    // 7. Generate only past days of the month (up to today)
-    const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
-    const dayNames = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    const days = [];
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateObj = new Date(parseInt(year), parseInt(month) - 1, d);
-      const dateStr = formatDate(dateObj);
-      const dayName = dayNames[dateObj.getDay()];
-
-      // Skip future dates — they haven't happened yet
-      if (dateObj > todayLocal) continue;
-
-      const attRecord = attMap[dateStr];
-      const holidayName = holidayMap[dateStr];
-      const isSunday = dateObj.getDay() === 0;
-
-      let status = "absent";
-      let reason = null;
-
-      if (attRecord) {
-        status = attRecord.status ? attRecord.status.toLowerCase() : "present";
-        // If attendance status is "leave", pull reason from leave application
-        if (status === "leave") {
-          reason = leaveReasonMap[dateStr] || "Leave";
+      // 5b. Build leave reason map: dateStr → leaveReason
+      // Each leave application can span multiple days (from_date → to_date),
+      // so we expand the range and map every date in between to its reason.
+      const leaveReasonMap = {};
+      for (const l of leaveRows) {
+        const from = new Date(l.from_date);
+        const to = new Date(l.to_date);
+        // Walk day-by-day from from_date to to_date (inclusive)
+        for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+          const key = formatDate(d);
+          leaveReasonMap[key] = l.reason || "Leave";
         }
-      } else if (isSunday) {
-        reason = "Sunday";
-      } else if (holidayName) {
-        reason = `Holiday: ${holidayName}`;
       }
 
-      days.push({
-        date: dateStr,
-        day_name: dayName,
-        punch_in: attRecord ? attRecord.punch_in : null,
-        punch_out: attRecord ? attRecord.punch_out : null,
-        gps_location: attRecord ? attRecord.gps_location : null,
-        status,
-        reason,
-        is_sunday: isSunday,
-        is_holiday: !!holidayName,
-      });
-    }
+      // 6. Today's local midnight (for filtering future dates)
+      const now = new Date();
+      const todayLocal = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+      );
 
-    res.json({
-      success: true,
-      employee: {
-        id: employee.id,
-        name: employee.employee_name,
-        code: employee.employee_code,
-      },
-      month: parseInt(month),
-      year: parseInt(year),
-      totalDays: days.length,
-      presentDays: attRows.length,
-      absentDays: days.length - attRows.length,
-      days,
-    });
-  } catch (error) {
-    console.log("Attendance Report Error:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+      // 7. Generate only past days of the month (up to today)
+      const daysInMonth = new Date(
+        parseInt(year),
+        parseInt(month),
+        0,
+      ).getDate();
+      const dayNames = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const days = [];
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateObj = new Date(parseInt(year), parseInt(month) - 1, d);
+        const dateStr = formatDate(dateObj);
+        const dayName = dayNames[dateObj.getDay()];
+
+        // Skip future dates — they haven't happened yet
+        if (dateObj > todayLocal) continue;
+
+        const attRecord = attMap[dateStr];
+        const holidayName = holidayMap[dateStr];
+        const isSunday = dateObj.getDay() === 0;
+
+        let status = "absent";
+        let reason = null;
+
+        if (attRecord) {
+          status = attRecord.status
+            ? attRecord.status.toLowerCase()
+            : "present";
+          // If attendance status is "leave", pull reason from leave application
+          if (status === "leave") {
+            reason = leaveReasonMap[dateStr] || "Leave";
+          }
+        } else if (isSunday) {
+          reason = "Sunday";
+        } else if (holidayName) {
+          reason = `Holiday: ${holidayName}`;
+        }
+
+        days.push({
+          date: dateStr,
+          day_name: dayName,
+          punch_in: attRecord ? attRecord.punch_in : null,
+          punch_out: attRecord ? attRecord.punch_out : null,
+          gps_location: attRecord ? attRecord.gps_location : null,
+          status,
+          reason,
+          is_sunday: isSunday,
+          is_holiday: !!holidayName,
+        });
+      }
+
+      res.json({
+        success: true,
+        employee: {
+          id: employee.id,
+          name: employee.employee_name,
+          code: employee.employee_code,
+        },
+        month: parseInt(month),
+        year: parseInt(year),
+        totalDays: days.length,
+        presentDays: attRows.length,
+        absentDays: days.length - attRows.length,
+        days,
+      });
+    } catch (error) {
+      console.log("Attendance Report Error:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  },
+);
 
 app.post("/register", async (req, res) => {
   try {
@@ -1994,7 +2072,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/profile/:employeeId", async (req, res) => {
+app.get("/profile/:employeeId", verifyToken, async (req, res) => {
   try {
     const { employeeId } = req.params;
 
@@ -2045,7 +2123,7 @@ WHERE employee_master.id = ?;`,
 
 //--------------------------------- Leaves ------------------------------------------------------------------------
 
-app.post("/employees/:id/leave-balance", async (req, res) => {
+app.post("/employees/:id/leave-balance", verifyToken, async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -2119,7 +2197,7 @@ app.post("/employees/:id/leave-balance", async (req, res) => {
 });
 
 // Fetch Leave balance
-app.get("/employees/:id/leave-balance", async (req, res) => {
+app.get("/employees/:id/leave-balance", verifyToken, async (req, res) => {
   const { id } = req.params;
   const { year } = req.query;
 
@@ -2169,7 +2247,7 @@ app.get("/employees/:id/leave-balance", async (req, res) => {
   }
 });
 
-app.post("/leave-applications", async (req, res) => {
+app.post("/leave-applications", verifyToken, async (req, res) => {
   const { employee_id, leave_type_id, from_date, to_date, reason } = req.body;
 
   try {
@@ -2275,7 +2353,7 @@ app.post("/leave-applications", async (req, res) => {
   }
 });
 
-app.get("/leave-applications", async (req, res) => {
+app.get("/leave-applications", verifyToken, async (req, res) => {
   const { employee_id, status, page = 1, limit = 20 } = req.query;
 
   try {
@@ -2333,7 +2411,7 @@ app.get("/leave-applications", async (req, res) => {
 
 // 2. PUT /leave-applications/:id/status — approve/reject (admin)
 // ============================================
-app.put("/leave-applications/:id/status", async (req, res) => {
+app.put("/leave-applications/:id/status", verifyToken, async (req, res) => {
   const { id } = req.params;
   const { status, approved_by } = req.body; // "APPROVED" or "REJECTED"
 
@@ -2428,7 +2506,7 @@ app.put("/leave-applications/:id/status", async (req, res) => {
 // ============================================
 // 3. POST /leave-adjustments — admin credit/debit override
 // ============================================
-app.post("/leave-adjustments", async (req, res) => {
+app.post("/leave-adjustments", verifyToken, async (req, res) => {
   const {
     employee_id,
     leave_type_id,
@@ -2520,7 +2598,7 @@ app.post("/leave-adjustments", async (req, res) => {
 // ============================================
 // 4. POST /carry-forward — year-end EL carry-forward
 // ============================================
-app.post("/carry-forward", async (req, res) => {
+app.post("/carry-forward", verifyToken, async (req, res) => {
   const { from_year, to_year } = req.body; // "2025-2026" → "2026-2027"
 
   try {

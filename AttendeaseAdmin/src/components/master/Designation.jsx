@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import "../../css/designation.css";
 import LoadingSpinner from "../LoadingSpinner";
-const apiUrl= import.meta.env.VITE_API;
+import api from "../../services/api";
 
 // to be moved to .env file in for better security and configurability
-const Fetch_API_URL = `${apiUrl}/fetch-designation`;
-const Post_API_URL = `${apiUrl}/addDesignation`;
-const PUT_API_URL = `${apiUrl}/updateDesignation`; // added this
-const Fetch_Dept_ID = `${apiUrl}/fetch-departments`;
+const Fetch_API_URL = `/fetch-designation`;
+const Post_API_URL = `/addDesignation`;
+const PUT_API_URL = `/updateDesignation`; // added this
+const Fetch_Dept_ID = `/fetch-departments`;
 
 const roleIcons = [
   "engineering",
@@ -38,6 +37,7 @@ function Designation() {
 
   const [editingId, setEditingId] = useState(null); // created a state variable to hold the ID of the designation being edited (null when adding a new designation)
 
+  // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(false);
 
   // created a state variable to indicate whether the designations are currently being loaded from the server
@@ -75,7 +75,7 @@ function Designation() {
     .at(-1);
 
   async function getDepartments() {
-    const response = await axios.get(`${Fetch_Dept_ID}?status=Active`);
+    const response = await api.get(`${Fetch_Dept_ID}?status=Active`);
 
     const deptData = Array.isArray(response.data)
       ? response.data
@@ -123,7 +123,7 @@ function Designation() {
   // to fetch the list of designations from the server when the component mounts, and to handle loading and error states during the fetch operation
   async function getDesignations(filter) {
     try {
-      const response = await axios.get(`${Fetch_API_URL}?status=${filter}`);
+      const response = await api.get(`${Fetch_API_URL}?status=${filter}`);
 
       const data = Array.isArray(response.data)
         ? response.data
@@ -137,7 +137,7 @@ function Designation() {
       console.error("Error fetching designations:", error);
       return [];
     }
-  };
+  }
 
   async function refreshDesignations() {
     try {
@@ -241,9 +241,9 @@ function Designation() {
     try {
       setLoading(true);
       if (editingId) {
-        await axios.put(`${PUT_API_URL}/${editingId}`, formData); // making a PUT request to uspdate an existing designation
+        await api.put(`${PUT_API_URL}/${editingId}`, formData); // making a PUT request to uspdate an existing designation
       } else {
-        await axios.post(Post_API_URL, formData);
+        await api.post(Post_API_URL, formData);
       }
 
       await refreshDesignations(); // Refresh the list of designations after sucessfull adding/editing
@@ -264,7 +264,7 @@ function Designation() {
 
     try {
       setLoading(true);
-      await axios.put(`${PUT_API_URL}/${designation.id}`, {
+      await api.put(`${PUT_API_URL}/${designation.id}`, {
         designation_name: designation.designation_name,
         department_id: designation.department_id,
         status: nextStatus,
@@ -280,7 +280,7 @@ function Designation() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   // to format the created date of a designation in a more readable format for display in the table and summary cards.
 

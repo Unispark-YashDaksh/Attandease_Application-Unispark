@@ -1,6 +1,6 @@
 require("dotenv").config();
 const bcryptjs = require("bcryptjs");
-const mysql2 = require("mysql2")
+const mysql2 = require("mysql2");
 const readline = require("readline/promises");
 const { stdin: input, stdout: output } = require("process");
 
@@ -26,7 +26,7 @@ async function addAdmin() {
         success: false,
         message: "Employee Code is required",
       });
-      return
+      return;
     }
 
     const [fetchEmployee] = await promisePool.query(
@@ -41,7 +41,7 @@ async function addAdmin() {
         success: false,
         message: "Employee Record Not found. Please contact HR",
       });
-      return
+      return;
     }
 
     const employeeId = fetchEmployee[0].id;
@@ -58,7 +58,7 @@ async function addAdmin() {
         success: false,
         message: "Account already exits. Please Login",
       });
-      return
+      return;
     }
 
     const employeeName = fetchEmployee[0].employee_name;
@@ -90,13 +90,12 @@ async function addAdmin() {
   } catch (error) {
     console.error({
       success: false,
-      message: error.message,
+      message: error,
     });
-    return
+    return;
   } finally {
-    pool.end()
+    pool.end();
   }
 }
 
-
-addAdmin()
+addAdmin();
