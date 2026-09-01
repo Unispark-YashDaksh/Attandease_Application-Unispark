@@ -294,7 +294,6 @@ function DailyAttendance() {
                   <th>ACTIONS</th>
                 </tr>
               </thead>
-
               <tbody>
                 {paginatedAttendance.map((item) => {
                   // Why: Format raw minutes into "X hour(s) Y minute(s)" for readability

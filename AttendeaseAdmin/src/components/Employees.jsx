@@ -318,7 +318,6 @@ function EmployeeMaster() {
                     <th className="actions-heading">Actions</th>
                   </tr>
                 </thead>
-
                 <tbody>
                   {filteredEmployees.length === 0 ? (
                     <tr>
