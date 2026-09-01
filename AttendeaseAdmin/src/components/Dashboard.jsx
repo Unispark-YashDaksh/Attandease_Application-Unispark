@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
+/* eslint-disable no-unused-vars */
+import React from "react";
 import { Link } from "react-router-dom";
 import "../css/designation.css";
 import "../css/Dashboard.css";
 import LoadingSpinner from "./LoadingSpinner";
+import api from "../services/api"
 
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 

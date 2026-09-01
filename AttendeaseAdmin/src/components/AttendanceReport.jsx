@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import "../css/AttendanceReport.css";
 import LoadingSpinner from "./LoadingSpinner";
+import api from "../services/api"
 
-const apiUrl = import.meta.env.VITE_API;
 const ITEMS_PER_PAGE = 15;
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -24,7 +23,7 @@ export default function AttendanceReport() {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    axios.get(`${apiUrl}/activeEmployee`).then((res) => {
+    api.get(`/activeEmployee`).then((res) => {
       if (res.data.success) setEmployees(res.data.result || []);
     }).catch(() => {});
   }, []);
@@ -39,8 +38,8 @@ export default function AttendanceReport() {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.get(
-        `${apiUrl}/attendance/report/${selectedEmp}/${reportMonth}/${reportYear}`
+      const res = await api.get(
+        `/attendance/report/${selectedEmp}/${reportMonth}/${reportYear}`
       );
       setReport(res.data);
     } catch (err) {

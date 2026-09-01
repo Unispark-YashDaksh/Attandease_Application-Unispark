@@ -2,8 +2,29 @@
 CREATE DATABASE attendease_database;
 USE attendease_database;
 
+show tables;
+create table admins(
+	id int primary key auto_increment,
+    admin_id int not null unique,
+    employee_id int not null unique,
+    employee_name varchar(100),
+    employee_email varchar(100),
+    password varchar(256),
+    role_id int,
+    created_at timestamp default current_timestamp,
+    
+    foreign key (employee_id)
+    references employee_master(id),
+    
+    foreign key (role_id)
+    references roles(id)
+);
+drop table admins;
+
+select * from admins;
 
 CREATE TABLE users(
+
 id INT PRIMARY KEY AUTO_INCREMENT,
 employee_id INT NOT NULL UNIQUE,
 employee_email VARCHAR(50),
@@ -15,7 +36,7 @@ REFERENCES employee_master(id)
 
 );
 
-SELECT * FROM users;
+SELECT * FROM employee_master;
 -- --------------------------------------Employee Master Table --------------------------------------------------------------------------------
 CREATE TABLE employee_master(
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -29,7 +50,7 @@ shift_id INT,
 role_id INT,
 photo_url VARCHAR(255),
 reporting_manager_id INT NULL,
-employeement_status ENUM('ACTIVE', 'RESIGNED') DEFAULT 'ACTIVE',
+employment_status ENUM('ACTIVE', 'RESIGNED') DEFAULT 'ACTIVE',
 employee_mobile_no VARCHAR(255),
 employee_email_id VARCHAR(100),
 employee_joining_date DATE,
@@ -41,7 +62,6 @@ employee_bank_name VARCHAR(100),
 employee_bank_ifsc_code VARCHAR(100),
 employee_uan_no VARCHAR(100),
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
 FOREIGN KEY (role_id)
 REFERENCES roles(id),
@@ -62,9 +82,6 @@ FOREIGN KEY (reporting_manager_id)
 REFERENCES employee_master(id)
 );
 
-
-DELETE FROM employee_master WHERE id>6;
-
 DESC employee_master;
 ALTER TABLE employee_master
 ADD COLUMN photo_url VARCHAR(255);
@@ -72,8 +89,6 @@ SELECT * FROM employee_master;
 DELETE FROM employee_master WHERE id= 2;
 ALTER  TABLE employee_master
 MODIFY employee_mobile_no varchar(255);
-
-
 
 CREATE TABLE departments (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -138,7 +153,7 @@ ADD COLUMN is_late BOOLEAN DEFAULT false;
  
 
 DROP TABLE attendance;
-DELETE FROM attendance WHERE id= 10;
+DELETE FROM attendance WHERE id= 4;
 SELECT * FROM attendance;
 SELECT * FROM departments;
 
@@ -366,7 +381,9 @@ CREATE TABLE work_from_home_requests (
     REFERENCES employee_master(id)
     ON DELETE CASCADE
 );
-DELETE FROM work_from_home_requests WHERE id= "1";
+
+ALTER TABLE attendance ADD INDEX idx_emp_date (employee_id, attendance_date);
+
 ALTER TABLE work_from_home_requests
 ADD COLUMN approved_by INT NULL,
 ADD COLUMN approved_on TIMESTAMP NULL,
@@ -381,6 +398,7 @@ WHERE employee_id = 11;
 
 SHOW COLUMNS FROM attendance;
 
+describe leave_defaults;
 
 SELECT attendance_date
 FROM attendance
@@ -388,6 +406,15 @@ WHERE id = 7;
 
 DELETE FROM attendance WHERE id= 7;
 
+INSERT INTO leave_types (leave_name, code, is_active) VALUES 
+('Sick Leave', 'SL', TRUE),
+('Casual Leave', 'CL', TRUE),
+('Earn Leave', 'EL', TRUE);
+
+INSERT INTO leave_defaults (leave_type_id, default_days, financial_year, is_Active) VALUES 
+(1, 12, '2026-27', TRUE),
+(2, 8, '2026-27', TRUE),
+(3, 18, '2026-27', TRUE);
 
 SELECT la.*, elb.id AS balance_id, elb.remaining_days, 
               lt.code, em.employee_name AS employee_name
@@ -398,4 +425,86 @@ SELECT la.*, elb.id AS balance_id, elb.remaining_days,
          ON elb.employee_id = la.employee_id 
          AND elb.leave_type_id = la.leave_type_id
          AND elb.financial_year = DATE_FORMAT(la.from_date, '%Y')
-       WHERE la.id = 1
+       WHERE la.id = 1;
+	
+    
+create table if not exists audit_logs (
+	id int auto_increment primary key,
+    who varchar(100) not null,
+    what text not null,
+    tool varchar(100) not null,
+    action varchar(50) not null,
+    changed tinyint default 0,
+    success tinyint default 1,
+    error text default null,
+    data json default null,
+    timestamp datetime not null,
+    created_at timestamp default current_timestamp,
+    index idx_who (who),
+    index idx_tool (tool),
+    index idx_timestamp (timestamp)
+);
+
+drop table audit_logs;
+
+create table if not exists workflow_states (
+	id int auto_increment primary key,
+    workflow_id varchar(64) not null unique,
+    workflow_type varchar(50) not null  default 'onboarding',
+    current_step varchar(100) not null,
+    status ENUM("in_progress", "completed", "failed") not null default "in_progress",
+    failed_step varchar(100) default null,
+    created_by varchar(100) not null,
+    payload JSON default null,
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp on update current_timestamp,
+    index idx_workflow_id (workflow_id),
+    index idx_status (status),
+    index idx_created_by (created_by)
+);
+
+select * from designations;
+
+select * from departments;
+
+select * from roles;
+
+select * from branches;
+
+select * from shift_master;
+
+select * from users;
+
+select * from employee_master;
+-- where role_id = 4;
+
+select * from workflow_states;
+-- where workflow_id = "3dccef82-ebbc-4936-8f55-8794e769608e";
+
+select * from audit_logs;
+
+SELECT 
+  u.id AS user_id,
+  u.employee_id,
+  em.role_id,
+  r.role_name
+FROM users u
+LEFT JOIN employee_master em ON em.id = u.employee_id
+LEFT JOIN roles r ON r.id = em.role_id
+WHERE u.employee_id = 6;
+
+select * from workflow_states
+where workflow_id = "df7caef1-32bd-4b44-9ab1-fe0d0e0d4243";
+
+select * from audit_logs;
+
+ALTER TABLE workflow_states
+  ADD COLUMN steps JSON DEFAULT NULL AFTER payload,
+  ADD COLUMN pending_question TEXT DEFAULT NULL AFTER steps,
+  ADD COLUMN agent_conversation JSON DEFAULT NULL AFTER pending_question;
+  
+DELETE FROM `attendease_database`.`employee_leave_balances` 
+WHERE `employee_id` IN ('15', '16');
+
+DELETE FROM `attendease_database`.`employee_master` 
+WHERE `id` IN ('15', '16');
