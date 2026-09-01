@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import "../../css/designation.css";
 import LoadingSpinner from "../LoadingSpinner";
-const apiUrl= import.meta.env.VITE_API;
+import api from "../../services/api";
 
 function Roles() {
   const [loading, setLoading] = useState(false);
@@ -14,14 +13,11 @@ function Roles() {
   const [statusFilter, setStatusFilter] = useState("Active");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-
   const itemsPerPage = 10;
 
   async function getRoles(filter) {
     try {
-      const response = await axios.get(
-        `${apiUrl}/fetch-roles?status=${filter}`,
-      );
+      const response = await api.get(`/fetch-roles?status=${filter}`);
 
       return Array.isArray(response.data.result) ? response.data.result : [];
     } catch (error) {
@@ -89,12 +85,12 @@ function Roles() {
     try {
       setLoading(true);
       if (editingId) {
-        await axios.put(`${apiUrl}/updateRole/${editingId}`, {
+        await api.put(`/updateRole/${editingId}`, {
           RoleName: roleName,
           Desc: description,
         });
       } else {
-        await axios.post(`${apiUrl}/addRole`, {
+        await api.post(`/addRole`, {
           RoleName: roleName,
           Desc: description,
         });
@@ -112,7 +108,8 @@ function Roles() {
   async function handleDeactivateRole(role) {
     const nextStatus = role.status === "Active" ? "Inactive" : "Active";
     try {
-      await axios.put(`${apiUrl}/updateRoleStatus/${role.id}`, {
+      setLoading(true);
+      await api.put(`/updateRoleStatus/${role.id}`, {
         status: nextStatus,
       });
       await refreshRoles();
@@ -151,7 +148,9 @@ function Roles() {
 
     return nameMatches || descriptionMatches;
   });
-  const activeRoles = allRoles.filter((role) => role.status === "Active").length;
+  const activeRoles = allRoles.filter(
+    (role) => role.status === "Active",
+  ).length;
   const documentedRoles = allRoles.filter((role) => role.description).length;
   const documentedPercent = allRoles.length
     ? Math.round((documentedRoles / allRoles.length) * 100)
@@ -196,7 +195,9 @@ function Roles() {
           <article className="summary-card">
             <div className="summary-card-top">
               <div className="summary-icon summary-icon-primary">
-                <span className="material-symbols-outlined">admin_panel_settings</span>
+                <span className="material-symbols-outlined">
+                  admin_panel_settings
+                </span>
               </div>
               <span className="summary-label">Total Roles</span>
             </div>

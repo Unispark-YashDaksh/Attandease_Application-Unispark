@@ -1,9 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import "../css/Employees.css";
-
-const apiUrl= import.meta.env.VITE_API;
+import api from "../services/api";
 
 
 function AddNewEmployeeForm({
@@ -86,12 +84,9 @@ function AddNewEmployeeForm({
 
     try {
       if (selectedEmployee) {
-        await axios.put(
-          `${apiUrl}/updateEmployee/${selectedEmployee.id}`,
-          formData,
-        );
+        await api.put(`/updateEmployee/${selectedEmployee.id}`, formData);
       } else {
-        await axios.post(`${apiUrl}/addNewEmployee`, formData);
+        await api.post(`/addNewEmployee`, formData);
       }
 
       fetchEmployees();
@@ -109,9 +104,7 @@ function AddNewEmployeeForm({
     }
   };
   const fetchDepartments = async () => {
-    const response = await axios.get(
-      `${apiUrl}/fetch-departments?status=Active`,
-    );
+    const response = await api.get(`/fetch-departments?status=Active`);
 
     setShowDepartments(response.data.result);
   };
@@ -130,24 +123,24 @@ function AddNewEmployeeForm({
       : showDepartments;
 
   const fetchBranchs = async () => {
-    const response = await axios.get(`${apiUrl}/fetch-branches`);
+    const response = await api.get(`/fetch-branches`);
 
     setShowBranchs(response.data.result);
   };
   const fetchShifts = async () => {
-    const response = await axios.get(`${apiUrl}/fetch-shifts`);
+    const response = await api.get(`/fetch-shifts`);
 
     setShowShifts(response.data.result);
   };
 
   const fetchRoles = async () => {
-    const response = await axios.get(`${apiUrl}/fetch-roles`);
+    const response = await api.get(`/fetch-roles`);
 
     setShowRoles(response.data.result);
   };
 
   const fetchDesignation = async () => {
-    const response = await axios.get(`${apiUrl}/designationStatus`);
+    const response = await api.get(`designationStatus`);
 
     setShowDesignation(response.data.result);
   };
@@ -172,7 +165,7 @@ function AddNewEmployeeForm({
       : showDesignation;
 
   const fetchReportingManagers = async () => {
-    const response = await axios.get(`${apiUrl}/activeEmployee`);
+    const response = await api.get(`/activeEmployee`);
     setReportingManagers(response.data.result);
   };
 
@@ -364,10 +357,7 @@ function AddNewEmployeeForm({
           {(photoPreview || addEmployeeForm.photo_url) && (
             <img
               className="employee-photo-preview"
-              src={
-                photoPreview ||
-                `${apiUrl}${addEmployeeForm.photo_url}`
-              }
+              src={photoPreview || `${addEmployeeForm.photo_url}`}
               alt="Employee preview"
             />
           )}

@@ -5,12 +5,12 @@ import "react-calendar/dist/Calendar.css";
 import "../css/calendar.css";
 import "../css/HolidayManagement.css";
 import * as XLSX from "xlsx";
-import { useEffect } from "react";
-import axios from "axios";
+import { useEffect } from "react"
 import LoadingSpinner from "./LoadingSpinner";
-const apiUrl= import.meta.env.VITE_API;
+import api from "../services/api"
 
 function HolidaysManagement() {
+  // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState(new Date()); // Selected Date stored
   const [holidays, setHolidays] = useState({}); // All Object stored in array
@@ -42,7 +42,7 @@ function HolidaysManagement() {
   // Fetch Holidays From DB
   const fetchHolidays = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/fetch-holidays`);
+      const response = await api.get(`/fetch-holidays`);
 
       const holidayObj = {};
       const holidayArr = [];
@@ -107,7 +107,7 @@ function HolidaysManagement() {
 
           try {
             // Save Holiday Into Database
-            await axios.post(`${apiUrl}/addHolidays`, {
+            await api.post(`/addHolidays`, {
               holidayDate: formattedDate,
               holidayName: name,
             });

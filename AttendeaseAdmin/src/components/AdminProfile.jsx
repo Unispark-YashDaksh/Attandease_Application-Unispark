@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import LoadingSpinner from "./LoadingSpinner";
 import "../css/AdminProfile.css";
-
-const apiUrl = import.meta.env.VITE_API;
+import api from "../services/api"
 
 /* ─────────────────────────────────────────────────────
  * AdminProfile — view and edit admin profile
@@ -37,7 +35,7 @@ export default function AdminProfile() {
     try {
       setLoading(true);
       setError("");
-      const response = await axios.get(`${apiUrl}/admin/profile`);
+      const response = await api.get(`/admin/profile`);
       const data = response.data.profile || response.data;
       setProfile(data);
       setOriginalProfile(data);
@@ -80,7 +78,7 @@ export default function AdminProfile() {
       setSaving(true);
       setError("");
       setSuccess("");
-      await axios.put(`${apiUrl}/admin/profile`, profile);
+      await api.put(`/admin/profile`, profile);
       setSuccess("Profile updated successfully");
       setOriginalProfile(profile);
     } catch (err) {

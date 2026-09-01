@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import "../../css/designation.css";
 import LoadingSpinner from "../LoadingSpinner";
-const apiUrl = import.meta.env.VITE_API
+import api from "../../services/api";
 
 function Department() {
   const [loading, setLoading] = useState(false);
@@ -17,9 +16,7 @@ function Department() {
   const itemsPerPage = 10;
 
   const getDepartments = async (filter) => {
-    const response = await axios.get(
-      `${apiUrl}/fetch-departments?status=${filter}`,
-    );
+    const response = await api.get(`/fetch-departments?status=${filter}`);
 
     return Array.isArray(response.data.result) ? response.data.result : [];
   };
@@ -87,11 +84,11 @@ function Department() {
     try {
       setLoading(true);
       if (editingId) {
-        await axios.put(`${apiUrl}/updateDepartment/${editingId}`, {
+        await api.put(`/updateDepartment/${editingId}`, {
           departmentName,
         });
       } else {
-        await axios.post(`${apiUrl}/addDepartmentName`, {
+        await api.post(`/addDepartmentName`, {
           departmentName,
         });
       }
@@ -110,12 +107,9 @@ function Department() {
 
     try {
       setLoading(true);
-      await axios.put(
-        `${apiUrl}/updateDepartmentStatus/${department.id}`,
-        {
-          status: nextStatus,
-        },
-      );
+      await api.put(`/updateDepartmentStatus/${department.id}`, {
+        status: nextStatus,
+      });
       await fetchDepartments();
     } catch (error) {
       console.log(error);
