@@ -10,7 +10,7 @@ module.exports = function (api) {
         "module:react-native-dotenv",
         {
           "moduleName": "@env",
-          "path": "../Backend/.env",
+          "path": ".env",
         },
       ],
     ],

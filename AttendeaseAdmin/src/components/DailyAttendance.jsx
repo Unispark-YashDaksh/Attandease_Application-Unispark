@@ -75,7 +75,7 @@ function DailyAttendance() {
     setCurrentPage(1);
   }
 
-  const filteredAttendance = dailyAttendance.filter((item) => {
+  const filteredAttendance = dailyAttendance?.filter((item) => {
     const attendanceDate = item.attendance_date?.slice(0, 10);
 
     if (appliedFilters.date && attendanceDate !== appliedFilters.date) {
@@ -110,32 +110,32 @@ function DailyAttendance() {
 
   const departmentOptions = [
     ...new Set(
-      dailyAttendance.map((item) => item.department_name).filter(Boolean),
+      dailyAttendance?.map((item) => item.department_name).filter(Boolean),
     ),
   ];
 
   const branchOptions = [
-    ...new Set(dailyAttendance.map((item) => item.branch_name).filter(Boolean)),
+    ...new Set(dailyAttendance?.map((item) => item.branch_name).filter(Boolean)),
   ];
 
-  const totalEmployees = filteredAttendance.length;
-  const totalPages = Math.ceil(filteredAttendance.length / itemsPerPage);
+  const totalEmployees = filteredAttendance?.length || 0;
+  const totalPages = Math.ceil(filteredAttendance?.length / itemsPerPage);
   const safeCurrentPage = Math.min(currentPage, totalPages || 1);
   const startIndex = (safeCurrentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedAttendance = filteredAttendance.slice(startIndex, endIndex);
-  const showingFrom = filteredAttendance.length ? startIndex + 1 : 0;
-  const showingTo = Math.min(endIndex, filteredAttendance.length);
-  const presentCount = filteredAttendance.filter(
+  const paginatedAttendance = filteredAttendance?.slice(startIndex, endIndex);
+  const showingFrom = filteredAttendance?.length ? startIndex + 1 : 0;
+  const showingTo = Math.min(endIndex, filteredAttendance?.length);
+  const presentCount = filteredAttendance?.filter(
     (item) => item.status?.toLowerCase() === "present",
   ).length;
-  const lateCount = filteredAttendance.filter(
+  const lateCount = filteredAttendance?.filter(
     (item) => Number(item.late_minutes) > 0,
   ).length;
-  const absentCount = filteredAttendance.filter(
+  const absentCount = filteredAttendance?.filter(
     (item) => item.status?.toLowerCase() === "absent",
   ).length;
-  const wfhCount = filteredAttendance.filter(
+  const wfhCount = filteredAttendance?.filter(
     (item) => item.attendance_mode?.toLowerCase() === "wfh",
   ).length;
 
