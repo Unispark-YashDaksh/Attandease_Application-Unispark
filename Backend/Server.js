@@ -37,21 +37,13 @@ const pool = mysql.createPool({
   port: Number(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD,
-  database: process.env.DATABASE || process.env.DB_NAME || "attendease_database",
-  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
+  database:
+    process.env.DATABASE || process.env.DB_NAME || "attendease_database",
+  ssl:
+    process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
   waitForConnections: true,
   connectionLimit: 150,
   queueLimit: 0,
-});
-
-const dbTimezone = process.env.DB_TIMEZONE || "+05:30";
-
-pool.on("connection", (connection) => {
-  connection.query("SET time_zone = ?", [dbTimezone], (err) => {
-    if (err) {
-      console.error("Failed to set DB timezone:", err.message);
-    }
-  });
 });
 
 // Convert pool to promise-based (was missing - caused async/await crash)
@@ -1183,6 +1175,79 @@ app.post("/adminLogin", async (req, res) => {
   }
 });
 
+app.get("/admin/profile", verifyToken, async (req, res) => {
+  try {
+    const employeeId = req.admin.employee_id;
+
+    const [rows] = await promisePool.query(
+      `SELECT
+        em.employee_name,
+        em.employee_code,
+        em.employee_email_id,
+        em.employee_mobile_no,
+        em.department_id,
+        em.role_id,
+        d.department_name,
+        r.role_name
+      FROM employee_master em
+      LEFT JOIN departments d ON em.department_id = d.id
+      LEFT JOIN roles r ON em.role_id = r.id
+      WHERE em.id = ?
+      `,
+      [employeeId],
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+
+    const em = rows[0];
+    return res.status(200).json({
+      success: true,
+      profile: {
+        name: em.employee_name,
+        email: em.employee_email_id,
+        phone: em.employee_mobile_no,
+        employee_code: em.employee_code,
+        role: em.role_name,
+        department: em.department_name,
+        role_id: em.role_id,
+        department_id: em.department_id,
+      },
+    });
+  } catch (error) {
+    console.error("Admin Profile Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+app.put("/admin/profile", verifyToken, async (req, res) => {
+  try {
+    const employeeId = req.admin.employee_id;
+    const { name, email, phone, role_id, department_id } = req.body;
+
+    await promisePool.query(
+      `UPDATE employee_master
+       SET employee_name = ?,
+           employee_email_id = ?,
+           employee_mobile_no = ?,
+           role_id = ?,
+           department_id = ?
+       WHERE id = ?`,
+      [name, email, phone, role_id, department_id, employeeId],
+    );
+    return res.json({ success: true, message: "Profile updated" });
+  } catch (err) {
+    console.error("Admin Profile Update Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // ==================== ATTENDANCE APIs ====================
 
 // Why: On screen load, frontend calls this to know TODAY's state.
@@ -1733,7 +1798,7 @@ app.get("/fetchAttendance", verifyToken, async (req, res) => {
         : null,
     }));
     // only for debugging purpose-- rows are coming or not and correct data coming from db.
-    
+
     return res.json({
       success: true,
       message: "Attendance Fetch Successfully",

@@ -4,11 +4,15 @@ const mysql2 = require("mysql2");
 const readline = require("readline/promises");
 const { stdin: input, stdout: output } = require("process");
 
-const pool = mysql2.createPool({
+const pool = mysql.createPool({
   host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME || "attendease_database",
+  database:
+    process.env.DATABASE || process.env.DB_NAME || "attendease_database",
+  ssl:
+    process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
   waitForConnections: true,
   connectionLimit: 150,
   queueLimit: 0,

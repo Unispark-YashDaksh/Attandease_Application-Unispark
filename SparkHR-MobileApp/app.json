@@ -8,11 +8,7 @@
     "scheme": "sparkhrmobileapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/images/LogoIcon.png",
-      "bundleIdentifier": "com.yash.daksh.SparkHRMobileApp",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+      "icon": "./assets/images/LogoIcon.png"
     },
     "android": {
       "adaptiveIcon": {

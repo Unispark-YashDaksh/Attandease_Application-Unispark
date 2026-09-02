@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import LoadingSpinner from "./LoadingSpinner";
 import "../css/AdminProfile.css";
-import api from "../services/api"
+import api from "../services/api";
 
 /* ─────────────────────────────────────────────────────
  * AdminProfile — view and edit admin profile
@@ -25,6 +25,8 @@ export default function AdminProfile() {
     department: "",
   });
   const [originalProfile, setOriginalProfile] = useState(null);
+  const [roles, setRoles] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -37,32 +39,38 @@ export default function AdminProfile() {
       setError("");
       const response = await api.get(`/admin/profile`);
       const data = response.data.profile || response.data;
-      setProfile(data);
+      setProfile({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        employee_code: data.employee_code,
+        role: data.role_id ?? "",
+        department: data.department_id ?? "",
+      });
       setOriginalProfile(data);
     } catch (err) {
-      // If API doesn't exist yet, use default placeholder
-      if (err.response?.status === 404) {
-        const defaults = {
-          id: 1,
-          name: "Admin User",
-          email: "admin@sparkhrms.com",
-          phone: "+91 9876543210",
-          employee_code: "EMP001",
-          role: "Super Admin",
-          department: "Engineering",
-        };
-        setProfile(defaults);
-        setOriginalProfile(defaults);
-      } else {
-        setError(err.response?.data?.error || "Failed to load profile");
-      }
+      setError(err.response?.data?.error || "Failed to load profile");
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchLookUps = async () => {
+    try {
+      const [roleRes, deptRes] = await Promise.all([
+        api.get(`/fetch-roles`),
+        api.get(`/fetch-departments`),
+      ]);
+      setRoles(roleRes.data?.result || []);
+      setDepartments(deptRes.data?.result || []);
+    } catch (error) {
+      setError(error.response?.data?.error || "Error loading profile options");
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
+    fetchLookUps();
   }, []);
 
   // Handle input changes
@@ -114,7 +122,10 @@ export default function AdminProfile() {
         </div>
         <div className="profile-title">
           <h1>{profile.name || "Admin"}</h1>
-          <span className="profile-badge">{profile.role || "Administrator"}</span>
+          <span className="profile-badge">
+            {roles.find((r) => r.id === profile.role)?.role_name ||
+              "Administrator"}
+          </span>
         </div>
       </div>
 
@@ -179,10 +190,12 @@ export default function AdminProfile() {
               value={profile.role}
               onChange={handleChange}
             >
-              <option value="Super Admin">Super Admin</option>
-              <option value="Admin">Admin</option>
-              <option value="HR Manager">HR Manager</option>
-              <option value="Manager">Manager</option>
+              <option value="">Select Role</option>
+              {roles.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.role_name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -195,11 +208,11 @@ export default function AdminProfile() {
               onChange={handleChange}
             >
               <option value="">Select Department</option>
-              <option value="Engineering">Engineering</option>
-              <option value="Human Resources">Human Resources</option>
-              <option value="Sales">Sales</option>
-              <option value="Finance">Finance</option>
-              <option value="Operations">Operations</option>
+              {departments.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.department_name}
+                </option>
+              ))}
             </select>
           </div>
         </div>

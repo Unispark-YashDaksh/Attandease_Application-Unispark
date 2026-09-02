@@ -72,7 +72,6 @@ function HolidaysManagement() {
   }, []);
 
   const handleFileUpload = (e) => {
-    setLoading(true)
     const file = e.target.files[0];
 
     const reader = new FileReader();

@@ -80,18 +80,10 @@
 }
 
 .employee-photo {
-  aspect-ratio: 1;
   border-radius: 9999px;
-  display: block;
-  flex: 0 0 32px;
-  height: 32px;
+  height: 30px;
   object-fit: cover;
-  object-position: center;
-  max-height: 32px;
-  max-width: 32px;
-  min-height: 32px;
-  min-width: 32px;
-  width: 32px;
+  width: 25px;
 }
 
 .employee-section-heading h3 {
@@ -241,9 +233,4 @@
   .employee-detail-grid {
     grid-template-columns: 1fr;
   }
-}
-
-
-.error-message{
-  color: red;
 }
