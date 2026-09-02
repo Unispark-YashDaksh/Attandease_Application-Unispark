@@ -53,7 +53,7 @@ const router = createBrowserRouter([
       { path: 'dashboard', element: <Dashboard /> },
       { path: 'LeaveManag', element: <LeaveManagement /> },
       { path: 'holidays', element: <HolidaysManagement /> },
-      { path: 'masterMmangement', element: <MasterManagement /> },
+      { path: 'masterManagement', element: <MasterManagement /> },
       { path: 'Employees', element: <Employees /> },
       { path: 'dailyAttendance', element: <DailyAttendance /> },
       { path: 'reports', element: <AttendanceReport /> },
