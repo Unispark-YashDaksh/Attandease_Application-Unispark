@@ -13,7 +13,6 @@ function Roles() {
   const [statusFilter, setStatusFilter] = useState("Active");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-
   const itemsPerPage = 10;
 
   async function getRoles(filter) {
