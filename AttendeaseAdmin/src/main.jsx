@@ -1,7 +1,23 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createBrowserRouter, RouterProvider, Navigate, useRouteError } from 'react-router-dom'
-import LoadingSpinner from './components/LoadingSpinner'
+import { createBrowserRouter, RouterProvider, Navigate, useRouteError, useNavigate } from 'react-router-dom'
+import './index.css'
+import Layout from './layout/Layout'
+import Dashboard from './components/Dashboard'
+import LeaveManagement from './components/LeaveManagement'
+import HolidaysManagement from './components/HolidaysManagement'
+import Employees from './components/Employees'
+import MasterManagement from './components/MasterManagement'
+import DailyAttendance from './components/DailyAttendance'
+import AttendanceReport from './components/AttendanceReport'
+import AdminProfile from './components/AdminProfile'
+import Login from './components/Login'
+import Welcome from './components/Welcome'
+
+function WelcomeWrapper() {
+  const navigate = useNavigate();
+  return <Welcome onLogin={() => navigate('/login')} onGetStarted={() => navigate('/login')} />;
+}
 
 function ErrorBoundary() {
   const error = useRouteError();
@@ -25,19 +41,13 @@ function NotFound() {
     </div>
   );
 }
-import './index.css'
-import Layout from './layout/Layout'
-import Dashboard from './components/Dashboard'
-import LeaveManagement from './components/LeaveManagement'
-import HolidaysManagement from './components/HolidaysManagement'
-import Employees from './components/Employees'
-import MasterManagement from './components/MasterManagement'
-import DailyAttendance from './components/DailyAttendance'
-import AttendanceReport from './components/AttendanceReport'
-import AdminProfile from './components/AdminProfile'
-import Login from './components/Login'
 
 const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <WelcomeWrapper/>,
+    errorElement:<ErrorBoundary/>
+  },
   {
     path: 'login',
     element: <Login />,
@@ -47,7 +57,6 @@ const router = createBrowserRouter([
     element: <Layout />,
     errorElement: <ErrorBoundary />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <Dashboard /> },
       { path: 'LeaveManag', element: <LeaveManagement /> },
       { path: 'holidays', element: <HolidaysManagement /> },
@@ -56,8 +65,11 @@ const router = createBrowserRouter([
       { path: 'dailyAttendance', element: <DailyAttendance /> },
       { path: 'reports', element: <AttendanceReport /> },
       { path: 'profile', element: <AdminProfile /> },
-      { path: '*', element: <NotFound /> },
     ]
+  },
+  {
+    path: '*',
+    element: <NotFound />,
   }
 ])
 
